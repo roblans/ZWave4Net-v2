@@ -26,19 +26,19 @@ namespace ZWave4Net.Channel.Protocol
 
         protected override byte[] GetPayload()
         {
-            var buffer = new List<byte>();
-            buffer.Add((byte)FrameHeader.SOF);
-            buffer.Add(0x00);
-            buffer.Add((byte)Type);
-            buffer.Add((byte)Function);
+            // SOF | Length | Type | Function
+            var buffer = new List<byte> { (byte)FrameHeader.SOF, 0x00, (byte)Type, (byte)Function };
+
+            // SOF | Length | Type | Function | Parameter1 .. ParameterN
             buffer.AddRange(Parameters);
 
-            // update length without SOF
+            // patch length without SOF
             buffer[1] = (byte)(buffer.Count - 1);
             
             // add checksum 
             buffer.Add(buffer.Skip(1).Aggregate((byte)0xFF, (total, next) => total ^= next));
 
+            // done, return payload 
             return buffer.ToArray();
         }
 
