@@ -9,8 +9,6 @@ namespace ZWave4Net.Channel.Protocol
     /// </summary>
     public class Frame : IEquatable<Frame>
     {
-        private byte[] _payload;
-
         /// <summary>
         /// The ACK frame indicates that the receiving end received a valid Data frame
         /// </summary>
@@ -37,19 +35,9 @@ namespace ZWave4Net.Channel.Protocol
         /// </summary>
         public readonly FrameHeader Header;
 
-        public Frame(FrameHeader header)
+        protected Frame(FrameHeader header)
         {
             Header = header;
-        }
-
-        protected virtual byte[] GetPayload()
-        {
-            return new byte[] { (byte)Header };
-        }
-
-        public byte[] Payload
-        {
-            get { return _payload ?? (_payload = GetPayload()); }
         }
 
         public override string ToString()
@@ -64,7 +52,7 @@ namespace ZWave4Net.Channel.Protocol
 
         public bool Equals(Frame other)
         {
-            return other != null && GetType() == other.GetType() && Header == other.Header;
+            return other != null && Header == other.Header && GetType() == other.GetType();
         }
 
         public override int GetHashCode()
