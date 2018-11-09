@@ -38,8 +38,8 @@ namespace ZWave4Net.Channel.Protocol
             // Header | Length | Type | Function | Parameter1 .. ParameterN
             buffer.AddRange(frame.Parameters);
 
-            // patch length without Header
-            buffer[1] = (byte)(buffer.Count - 1);
+            // patch length without Header and length
+            buffer[1] = (byte)(buffer.Count - 2);
 
             // add checksum (skip header)
             buffer.Add(buffer.Skip(1).CalculateChecksum());
