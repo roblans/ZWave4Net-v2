@@ -17,7 +17,10 @@ namespace ZWave4Net.Channel.Protocol
 
         public async Task Write(Frame frame, CancellationToken cancelation)
         {
-            switch(frame.Header)
+            if (frame == null)
+                throw new ArgumentNullException(nameof(frame));
+
+            switch (frame.Header)
             {
                 case FrameHeader.ACK:
                 case FrameHeader.NAK:
@@ -32,17 +35,32 @@ namespace ZWave4Net.Channel.Protocol
 
         private async Task Write(DataFrame frame, CancellationToken cancelation)
         {
-            // Header | Length | Type | Function
-            var buffer = new List<byte> { (byte)frame.Header, 0x00, (byte)frame.Type, (byte)frame.Function };
+            if (frame == null)
+                throw new ArgumentNullException(nameof(frame));
 
-            // Header | Length | Type | Function | Parameter1 .. ParameterN
-            buffer.AddRange(frame.Parameters);
+            // Header | Length | Type | Funtion | N Parameters | Checksum
+            var length = 4 + frame.Parameters.Length + 1;
 
-            // patch length without Header and length
-            buffer[1] = (byte)(buffer.Count - 2);
+            // allocate buffer
+            var buffer = new byte[length];
 
-            // add checksum (skip header)
-            buffer.Add(buffer.Skip(1).CalculateChecksum());
+            // 0 Header
+            buffer[0] = (byte)frame.Header;
+
+            // 1 Length: Type + Funtion + Parameters
+            buffer[1] = (byte)(1 + 1 + frame.Parameters.Length);
+
+            // 2 Type
+            buffer[2] = (byte)(frame.Type);
+
+            // 3 Function
+            buffer[3] = (byte)(frame.Function);
+
+            // 4 Parameters 
+            Array.Copy(frame.Parameters, 0, buffer, 4, frame.Parameters.Length);
+
+            // checksum
+            buffer[length - 1] = buffer.Skip(1).Take(length - 2).CalculateChecksum();
 
             // and write to stream
             await Stream.Write(buffer.ToArray(), cancelation);

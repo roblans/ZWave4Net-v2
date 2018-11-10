@@ -12,7 +12,7 @@ namespace ZWave4Net.Protocol.Tests
         [TestMethod]
         public async Task WriteReadAckFrame()
         {
-            var stream = new ByteStream();
+            var stream = new MockByteStream();
 
             var writer = new FrameWriter(stream);
             var request = Frame.ACK;
@@ -29,7 +29,7 @@ namespace ZWave4Net.Protocol.Tests
         [TestMethod]
         public async Task WriteReadDataFrame()
         {
-            var stream = new ByteStream();
+            var stream = new MockByteStream();
 
             var writer = new FrameWriter(stream);
             var parameters = new byte[] { 0, 1, 2, 3, 4, 5 };

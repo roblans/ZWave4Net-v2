@@ -37,20 +37,32 @@ namespace ZWave4Net.Channel.Protocol
 
         private async Task<DataFrame> ReadDataFrame(CancellationToken cancelation)
         {
+            // read the length
             var length = await Stream.ReadByte(cancelation);
 
-            var buffer = new List<byte> { length };
-            buffer.AddRange(await Stream.Read(length + 1, cancelation));
+            // Length + Type | Funtion | N Parameters | Checksum
+            var data = new byte[] { length }.Concat(await Stream.Read(length + 1, cancelation)).ToArray();
 
-            var actualChecksum = buffer[buffer.Count - 1];
-            var expectedChecksum = buffer.Take(buffer.Count - 1).CalculateChecksum();
+            // 1 Type
+            var type = (DataFrameType)data[1];
+
+            // 2 Function
+            var function = (CommandFunction)data[2];
+
+            // 3 Parameters
+            var payload = data.Skip(3).Take(data.Length - 1).ToArray();
+
+            // checksum
+            var actualChecksum = data[data.Length - 1];
+
+            // calculate required checksum
+            var expectedChecksum = data.Take(data.Length - 1).CalculateChecksum();
+
+            // validate checksum
             if (actualChecksum != expectedChecksum)
                 throw new ChecksumException("Checksum failure");
 
-            var type = (DataFrameType)buffer[1];
-            var function = (CommandFunction)buffer[2];
-            var payload = buffer.Skip(3).Take(buffer.Count - 4).ToArray();
-
+            // and create dataframe
             return new DataFrame(type, function, payload);
         }
     }

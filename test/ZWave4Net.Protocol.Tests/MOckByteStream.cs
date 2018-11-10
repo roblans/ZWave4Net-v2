@@ -9,11 +9,11 @@ using ZWave4Net.Channel;
 
 namespace ZWave4Net.Protocol.Tests
 {
-    public class ByteStream : IByteStream
+    public class MockByteStream : IByteStream
     {
         private readonly Stream _stream;
 
-        public ByteStream()
+        public MockByteStream()
         {
             _stream = new MemoryStream();
         }
@@ -30,7 +30,7 @@ namespace ZWave4Net.Protocol.Tests
             var read = 0;
             while (read < lenght)
             {
-                read += await _stream.ReadAsync(buffer, read, lenght - read);
+                read += await _stream.ReadAsync(buffer, read, lenght - read, cancelation);
             }
 
             return buffer;
@@ -38,7 +38,7 @@ namespace ZWave4Net.Protocol.Tests
 
         public Task Write(byte[] values, CancellationToken cancelation)
         {
-            return _stream.WriteAsync(values, 0, values.Length);
+            return _stream.WriteAsync(values, 0, values.Length, cancelation);
         }
     }
 }
