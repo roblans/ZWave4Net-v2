@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace ZWave4Net.Channel.Protocol
 {
@@ -47,10 +48,10 @@ namespace ZWave4Net.Channel.Protocol
             var type = (DataFrameType)data[1];
 
             // 2 Function
-            var function = (CommandFunction)data[2];
+            var function = (ControllerFunction)data[2];
 
             // 3 Parameters
-            var payload = data.Skip(3).Take(data.Length - 1).ToArray();
+            var payload = data.Skip(3).Take(data.Length - 2).ToArray();
 
             // checksum
             var actualChecksum = data[data.Length - 1];
@@ -62,8 +63,8 @@ namespace ZWave4Net.Channel.Protocol
             if (actualChecksum != expectedChecksum)
                 throw new ChecksumException("Checksum failure");
 
-            // and create dataframe
-            return new DataFrame(type, function, payload);
+            // create and return frame
+            return type == DataFrameType.REQ ? new ResponseDataFrame(function, payload) : new EventDataFrame(function, payload);
         }
     }
 }

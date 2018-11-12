@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ZWave4Net.Channel.Protocol
 {
-    public enum CommandFunction : byte
+    public enum ControllerFunction : byte
     {
         None = 0x00,
         DiscoveryNodes = 0x02,

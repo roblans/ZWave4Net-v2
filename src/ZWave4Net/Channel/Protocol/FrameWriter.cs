@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,18 +29,21 @@ namespace ZWave4Net.Channel.Protocol
                     await Stream.WriteHeader(frame.Header, cancelation);
                     break;
                 case FrameHeader.SOF:
-                    await Write((DataFrame)frame, cancelation);
+                    await Write((RequestDataFrame)frame, cancelation);
                     break;
             }
         }
 
-        private async Task Write(DataFrame frame, CancellationToken cancelation)
+        private async Task Write(RequestDataFrame frame, CancellationToken cancelation)
         {
             if (frame == null)
                 throw new ArgumentNullException(nameof(frame));
 
+            // get the payload from the frame
+            var parameters = frame.Payload;
+
             // Header | Length | Type | Funtion | N Parameters | Checksum
-            var length = 4 + frame.Parameters.Length + 1;
+            var length = 4 + parameters.Length + 1;
 
             // allocate buffer
             var buffer = new byte[length];
@@ -48,16 +52,16 @@ namespace ZWave4Net.Channel.Protocol
             buffer[0] = (byte)frame.Header;
 
             // 1 Length: Type + Funtion + Parameters
-            buffer[1] = (byte)(1 + 1 + frame.Parameters.Length);
+            buffer[1] = (byte)(1 + 1 + parameters.Length);
 
             // 2 Type
-            buffer[2] = (byte)(frame.Type);
+            buffer[2] = (byte)(DataFrameType.REQ);
 
             // 3 Function
             buffer[3] = (byte)(frame.Function);
 
             // 4 Parameters 
-            Array.Copy(frame.Parameters, 0, buffer, 4, frame.Parameters.Length);
+            Array.Copy(parameters, 0, buffer, 4, parameters.Length);
 
             // checksum
             buffer[length - 1] = buffer.Skip(1).Take(length - 2).CalculateChecksum();
