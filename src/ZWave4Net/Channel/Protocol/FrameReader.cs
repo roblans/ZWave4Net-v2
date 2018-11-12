@@ -19,7 +19,7 @@ namespace ZWave4Net.Channel.Protocol
 
         public async Task<Frame> Read(CancellationToken cancelation)
         {
-            while (true)
+            while (!cancelation.IsCancellationRequested)
             {
                 var header = await Stream.ReadHeader(cancelation);
                 switch(header)
@@ -34,6 +34,7 @@ namespace ZWave4Net.Channel.Protocol
                         return await ReadDataFrame(cancelation);
                 }
             }
+            return null;
         }
 
         private async Task<DataFrame> ReadDataFrame(CancellationToken cancelation)
@@ -64,7 +65,7 @@ namespace ZWave4Net.Channel.Protocol
                 throw new ChecksumException("Checksum failure");
 
             // create and return frame
-            return type == DataFrameType.REQ ? new ResponseDataFrame(function, payload) : new EventDataFrame(function, payload);
+            return type == DataFrameType.REQ ? (DataFrame)new ResponseDataFrame(function, payload) : (DataFrame)new EventDataFrame(function, payload);
         }
     }
 }
