@@ -37,28 +37,21 @@ namespace ZWave4Net.Channel.Protocol
             {
                 while (!Cancelation.IsCancellationRequested)
                 {
-                    try
-                    {
-                        var frame = await _reader.Read(Cancelation);
-                        if (frame == null)
-                            break;
+                    var frame = await _reader.Read(Cancelation);
+                    if (frame == null)
+                        break;
 
-                        if (frame is EventDataFrame eventDataFrame)
-                        {
-                            await _writer.Write(Frame.ACK, Cancelation);
-                        }
-
-                        await Publish((subscriber) => subscriber(frame));
-                    }
-                    catch(Exception ex)
+                    if (frame is EventDataFrame eventDataFrame)
                     {
-                        // todo
+                        await _writer.Write(Frame.ACK, Cancelation);
                     }
+
+                    await Publish((subscriber) => subscriber(frame));
                 }
             }, Cancelation);
         }
 
-        public bool Wait(TimeSpan timeout)
+        public bool Stop(TimeSpan timeout)
         {
             if (_task != null)
             {

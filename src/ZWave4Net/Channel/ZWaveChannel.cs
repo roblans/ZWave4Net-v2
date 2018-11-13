@@ -31,7 +31,7 @@ namespace ZWave4Net.Channel
         {
             _cancellationSource.Cancel();
 
-            _frameBroker.Wait(TimeSpan.FromSeconds(1));
+            _frameBroker.Stop(TimeSpan.FromSeconds(1));
         }
     }
 }
