@@ -66,6 +66,8 @@ namespace ZWave4Net.Channel.Protocol
         {
             var completion = new TaskCompletionSource<bool>();
 
+            Cancelation.Register(() => completion.TrySetCanceled());
+
             var subscriber = default(IDisposable);
             subscriber = Subscribe((response) =>
             {
