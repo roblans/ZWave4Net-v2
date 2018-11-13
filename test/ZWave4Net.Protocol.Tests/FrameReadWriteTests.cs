@@ -28,7 +28,7 @@ namespace ZWave4Net.Protocol.Tests
         }
 
         [TestMethod]
-        public async Task ReadEventDataFrame()
+        public async Task ReadRequestDataFrame()
         {
             var stream = new MockByteStream();
             var data = new byte[]
@@ -53,7 +53,7 @@ namespace ZWave4Net.Protocol.Tests
             stream.ResetPosition();
 
             var reader = new FrameReader(stream);
-            var frame = (EventDataFrame)(await reader.Read(CancellationToken.None));
+            var frame = (RequestDataFrame)(await reader.Read(CancellationToken.None));
 
             Assert.AreEqual(frame.Header, FrameHeader.SOF);
             Assert.AreEqual(frame.Function, ControllerFunction.ApplicationCommandHandler);

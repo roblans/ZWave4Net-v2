@@ -33,8 +33,23 @@ namespace ZWave4Net.Channel.Protocol
                         return Frame.NAK;
                     case FrameHeader.CAN:
                         return Frame.CAN;
-                    case FrameHeader.SOF:
+                }
+
+                if (header == FrameHeader.SOF)
+                {
+                    try
+                    {
                         return await ReadDataFrame(cancelation);
+                    }
+                    catch (ChecksumException)
+                    {
+                        // probally partially received frame, skip and wait for next frame
+                        continue;
+                    }
+                }
+                else
+                {
+                    throw new UnknownFrameException($"Unknown frame header: '{header}'");
                 }
             }
         }
@@ -67,7 +82,15 @@ namespace ZWave4Net.Channel.Protocol
                 throw new ChecksumException("Checksum failure");
 
             // create and return frame
-            return type == DataFrameType.RES ? (DataFrame)new ResponseDataFrame(function, payload) : (DataFrame)new EventDataFrame(function, payload);
+            switch (type)
+            {
+                case DataFrameType.REQ:
+                    return new RequestDataFrame(function, payload);
+                case DataFrameType.RES:
+                    return new ResponseDataFrame(function, payload);
+                default:
+                    throw new UnknownFrameException($"Unknown data frame type: '{type}'");
+            }
         }
     }
 }

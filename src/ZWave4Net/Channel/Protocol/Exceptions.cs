@@ -6,7 +6,7 @@ namespace ZWave4Net.Channel.Protocol
 {
     public class ProtocolException : Exception
     {
-        public ProtocolException() : base("Invalid checksum received.") { }
+        public ProtocolException() : base("Error in protocol.") { }
         public ProtocolException(string message) : base(message) { }
         public ProtocolException(string message, Exception inner) : base(message, inner) { }
     }

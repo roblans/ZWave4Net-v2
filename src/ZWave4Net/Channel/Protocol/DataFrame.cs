@@ -8,19 +8,21 @@ namespace ZWave4Net.Channel.Protocol
 {
     public abstract class DataFrame : Frame, IEquatable<DataFrame>
     {
+        public readonly DataFrameType Type;
         public readonly ControllerFunction Function;
         public readonly byte[] Payload;
 
-        protected DataFrame(ControllerFunction function, byte[] payload)
+        protected DataFrame(DataFrameType type, ControllerFunction function, byte[] payload)
             : base(FrameHeader.SOF)
         {
+            Type = type;
             Function = function;
             Payload = payload;
         }
 
         public override string ToString()
         {
-            return $"{Header} {Function} {BitConverter.ToString(Payload)}";
+            return $"{Header} {Type} {Function} {BitConverter.ToString(Payload)}";
         }
 
         public override bool Equals(object obj)

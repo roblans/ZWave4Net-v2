@@ -40,10 +40,8 @@ namespace ZWave4Net.Channel.Protocol
                     Cancelation.ThrowIfCancellationRequested();
 
                     var frame = await _reader.Read(Cancelation);
-                    if (frame == null)
-                        break;
 
-                    if (frame is EventDataFrame eventDataFrame)
+                    if (frame is RequestDataFrame requestDataFrame)
                     {
                         await _writer.Write(Frame.ACK, Cancelation);
                     }

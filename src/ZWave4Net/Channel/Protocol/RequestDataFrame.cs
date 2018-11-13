@@ -8,7 +8,7 @@ namespace ZWave4Net.Channel.Protocol
     public class RequestDataFrame : DataFrame
     {
         public RequestDataFrame(ControllerFunction function, byte[] payload)
-            : base(function, payload)
+            : base(DataFrameType.REQ, function, payload)
         {
         }
 

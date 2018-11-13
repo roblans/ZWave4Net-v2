@@ -55,7 +55,7 @@ namespace ZWave4Net.Channel.Protocol
             buffer[1] = (byte)(1 + 1 + parameters.Length);
 
             // 2 Type
-            buffer[2] = (byte)(DataFrameType.REQ);
+            buffer[2] = (byte)(frame.Type);
 
             // 3 Function
             buffer[3] = (byte)(frame.Function);
