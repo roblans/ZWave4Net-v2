@@ -35,8 +35,10 @@ namespace ZWave4Net.Channel.Protocol
 
             _task = Task.Run(async () =>
             {
-                while (!Cancelation.IsCancellationRequested)
+                while (true)
                 {
+                    Cancelation.ThrowIfCancellationRequested();
+
                     var frame = await _reader.Read(Cancelation);
                     if (frame == null)
                         break;
@@ -60,22 +62,23 @@ namespace ZWave4Net.Channel.Protocol
             return true;
         }
 
-        public Task Send(RequestDataFrame request)
+        public async Task Send(RequestDataFrame request)
         {
             var completion = new TaskCompletionSource<bool>();
 
             var subscriber = default(IDisposable);
-            subscriber = Subscribe(async (response) =>
+            subscriber = Subscribe((response) =>
             {
                 if (response == Frame.ACK)
                 {
                     completion.TrySetResult(true);
                     subscriber.Dispose();
                 }
-                await _writer.Write(request, Cancelation);
             });
 
-            return completion.Task;
+            await _writer.Write(request, Cancelation);
+
+            await completion.Task;
         }
 
         private void Unsubscribe(Action<Frame> subscriber)

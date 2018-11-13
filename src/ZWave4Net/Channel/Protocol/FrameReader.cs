@@ -19,10 +19,13 @@ namespace ZWave4Net.Channel.Protocol
 
         public async Task<Frame> Read(CancellationToken cancelation)
         {
-            while (!cancelation.IsCancellationRequested)
+            while (true)
             {
+                cancelation.ThrowIfCancellationRequested();
+
                 var header = await Stream.ReadHeader(cancelation);
-                switch(header)
+
+                switch (header)
                 {
                     case FrameHeader.ACK:
                         return Frame.ACK;
@@ -34,7 +37,6 @@ namespace ZWave4Net.Channel.Protocol
                         return await ReadDataFrame(cancelation);
                 }
             }
-            return null;
         }
 
         private async Task<DataFrame> ReadDataFrame(CancellationToken cancelation)
