@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace ZWave4Net.Channel.Protocol
 {
-    static partial class Extentions
+    public static partial class Extentions
     {
         public static byte CalculateChecksum(this IEnumerable<byte> values)
         {

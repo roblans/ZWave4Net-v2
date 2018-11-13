@@ -54,7 +54,7 @@ namespace ZWave4Net.Channel.Protocol
             var function = (ControllerFunction)data[2];
 
             // 3 Parameters
-            var payload = data.Skip(3).Take(data.Length - 2).ToArray();
+            var payload = data.Skip(3).Take(data.Length - 4).ToArray();
 
             // checksum
             var actualChecksum = data[data.Length - 1];
@@ -67,7 +67,7 @@ namespace ZWave4Net.Channel.Protocol
                 throw new ChecksumException("Checksum failure");
 
             // create and return frame
-            return type == DataFrameType.REQ ? (DataFrame)new ResponseDataFrame(function, payload) : (DataFrame)new EventDataFrame(function, payload);
+            return type == DataFrameType.RES ? (DataFrame)new ResponseDataFrame(function, payload) : (DataFrame)new EventDataFrame(function, payload);
         }
     }
 }

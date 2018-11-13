@@ -11,7 +11,7 @@ namespace ZWave4Net.Protocol.Tests
 {
     public class MockByteStream : IByteStream
     {
-        private readonly Stream _stream;
+        private readonly MemoryStream _stream;
 
         public MockByteStream()
         {
@@ -23,6 +23,16 @@ namespace ZWave4Net.Protocol.Tests
             _stream.Position = 0;
         }
 
+        public byte[] ToArray()
+        {
+            return _stream.ToArray();
+        }
+
+        public void Write(byte[] values)
+        {
+            _stream.Write(values, 0, values.Length);
+        }
+        
         public async Task<byte[]> Read(int lenght, CancellationToken cancelation)
         {
             var buffer = new byte[lenght];
