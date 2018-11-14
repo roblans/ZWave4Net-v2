@@ -51,6 +51,30 @@ namespace ZWave4Net.Channel.Protocol
         {
             return !(frame1 == frame2);
         }
+
+        public static implicit operator Message(DataFrame frame)
+        {
+            switch (frame.Type)
+            {
+                case DataFrameType.REQ:
+                    return new RequestMessage((ControllerFunction)frame.Payload[0], frame.Payload.Skip(1).ToArray());
+                case DataFrameType.RES:
+                    return new ResponseMessage((ControllerFunction)frame.Payload[0], frame.Payload.Skip(1).ToArray());
+            }
+            throw new InvalidCastException();
+        }
+
+        public static implicit operator DataFrame(Message message)
+        {
+            switch (message)
+            {
+                case RequestMessage request:
+                    return new DataFrame(DataFrameType.REQ, message.Payload);
+                case ResponseMessage response:
+                    return new DataFrame(DataFrameType.RES, message.Payload);
+            }
+            throw new InvalidCastException();
+        }
     }
 
     public class RequestMessage : Message
