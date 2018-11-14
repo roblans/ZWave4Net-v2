@@ -44,38 +44,24 @@ namespace ZWave4Net.Channel.Protocol
             // read the length
             var length = await Stream.ReadByte(cancelation);
 
-            // Length + Data
-            var data = new byte[] { length }.Concat(await Stream.Read(length, cancelation)).ToArray();
+            // read data (payload and checksum)
+            var data = await Stream.Read(length, cancelation);
 
-            // 1 Type
-            var type = (DataFrameType)data[1];
-
-            // 2 Function
-            var function = (ControllerFunction)data[2];
-
-            // 3 Parameters
-            var payload = data.Skip(3).Take(data.Length - 4).ToArray();
+            // payload (data without checksum)
+            var payload = data.Take(data.Length - 1).ToArray();
 
             // checksum
-            var actualChecksum = data[data.Length - 1];
+            var actualChecksum = data.Last();
 
-            // calculate required checksum
-            var expectedChecksum = data.Take(data.Length - 1).CalculateChecksum();
+            // calculate required checksum (include length)
+            var expectedChecksum = new byte[] { length }.Concat(payload).CalculateChecksum();
 
             // validate checksum
             if (actualChecksum != expectedChecksum)
                 throw new ChecksumException("Checksum failure");
 
-            // create and return frame
-            switch (type)
-            {
-                case DataFrameType.REQ:
-                    return new RequestDataFrame(function, payload);
-                case DataFrameType.RES:
-                    return new ResponseDataFrame(function, payload);
-                default:
-                    throw new UnknownFrameException($"Unknown data frame type: '{type}'");
-            }
+            // return dataframe
+            return new DataFrame((DataFrameType)payload[0], payload.Skip(1).ToArray());
         }
     }
 }

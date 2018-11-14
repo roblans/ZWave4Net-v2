@@ -9,7 +9,7 @@ namespace ZWave4Net.Channel
 {
     public class ZWaveChannel
     {
-        private readonly FrameBroker _frameBroker;
+        private readonly MessageBroker _frameBroker;
 
         private readonly CancellationTokenSource _cancellationSource;
         public readonly ISerialPort Port;
@@ -20,7 +20,7 @@ namespace ZWave4Net.Channel
 
             _cancellationSource = new CancellationTokenSource();
 
-            _frameBroker = new FrameBroker(port, _cancellationSource.Token);
+            _frameBroker = new MessageBroker(port, _cancellationSource.Token);
         }
 
         public async Task Open()

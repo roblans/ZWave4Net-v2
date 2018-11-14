@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,25 +9,21 @@ using System.Threading.Tasks;
 
 namespace ZWave4Net.Channel.Protocol
 {
-    public class FrameBroker
+    public class MessageBroker
     {
         private readonly ConcurrentDictionary<Delegate, object> _subscribers = new ConcurrentDictionary<Delegate, object>();
         private FrameReader _reader;
         private FrameWriter _writer;
         private Task _task;
+
         public readonly CancellationToken Cancelation;
 
-        public FrameBroker(IByteStream stream, CancellationToken cancelation)
+        public MessageBroker(IByteStream stream, CancellationToken cancelation)
         {
             _reader = new FrameReader(stream);
             _writer = new FrameWriter(stream);
 
             Cancelation = cancelation;
-        }
-
-        private void Unsubscribe(Delegate subscriber)
-        {
-            _subscribers.TryRemove(subscriber, out _);
         }
 
         private IDisposable Subscribe(Action<Frame> subscriber)
@@ -35,19 +32,50 @@ namespace ZWave4Net.Channel.Protocol
             return new Unsubscriber<Frame>(subscriber, (item) => Unsubscribe(item));
         }
 
-        private Task Publish(Frame frame)
+        private void Unsubscribe(Delegate subscriber)
+        {
+            _subscribers.TryRemove(subscriber, out _);
+        }
+
+        private Task Publish(object message)
         {
             return Task.Run(() => Parallel.ForEach(_subscribers, (subscriber) =>
             {
-                if (subscriber.Key is Action<Frame>)
+                if (subscriber.Key is Action<Frame> frameAction)
                 {
-                    ((Action<Frame>)subscriber.Key)(frame);
+                    frameAction((Frame)message);
+                    return;
                 }
-                if (subscriber.Key is Action<DataFrame> && frame is DataFrame dataFrame)
+                if (subscriber.Key is Action<Message> messageAction)
                 {
-                    ((Action<DataFrame>)subscriber.Key)(dataFrame);
+                    messageAction((Message)message);
+                    return;
                 }
             }));
+        }
+
+        private Message Convert(DataFrame frame)
+        {
+            switch (frame.Type)
+            {
+                case DataFrameType.REQ:
+                    return new RequestMessage((ControllerFunction)frame.Payload[0], frame.Payload.Skip(1).ToArray());
+                case DataFrameType.RES:
+                    return new ResponseMessage((ControllerFunction)frame.Payload[0], frame.Payload.Skip(1).ToArray());
+            }
+            throw new ProtocolException($"Unexpected frametype: '{frame.Type}'");
+        }
+
+        private DataFrame Convert(Message message)
+        {
+            switch(message)
+            {
+                case RequestMessage request:
+                    return new DataFrame(DataFrameType.REQ, message.Payload);
+                case ResponseMessage response:
+                    return new DataFrame(DataFrameType.RES, message.Payload);
+            }
+            throw new ProtocolException($"Unexpected messagetype: '{message.GetType()}'");
         }
 
         public void Start()
@@ -77,13 +105,15 @@ namespace ZWave4Net.Channel.Protocol
                         continue;
                     }
 
-                    if (frame is RequestDataFrame requestDataFrame)
+                    if (frame is DataFrame dataFrame)
                     {
                         Debug.WriteLine($"Writing: {Frame.ACK}");
                         await _writer.Write(Frame.ACK, Cancelation);
+
+                        var message = Convert(dataFrame);
+                        await Publish(message);
                     }
 
-                    await Publish(frame);
                 }
             }, Cancelation);
         }
@@ -97,7 +127,7 @@ namespace ZWave4Net.Channel.Protocol
             return true;
         }
 
-        public async Task Send(RequestDataFrame request)
+        public async Task Send(RequestMessage message)
         {
             var completion = new TaskCompletionSource<bool>();
 
@@ -113,15 +143,16 @@ namespace ZWave4Net.Channel.Protocol
                 }
             });
 
-            await _writer.Write(request, Cancelation);
+            var dataFrame = Convert(message);
+            await _writer.Write(dataFrame, Cancelation);
 
             await completion.Task;
         }
 
-        public IDisposable Subscribe(Action<DataFrame> subscriber)
+        public IDisposable Subscribe(Action<Message> subscriber)
         {
             _subscribers.TryAdd(subscriber, null);
-            return new Unsubscriber<DataFrame>(subscriber, (item) => Unsubscribe(item));
+            return new Unsubscriber<Message>(subscriber, (item) => Unsubscribe(item));
         }
 
         private class Unsubscriber<T> : IDisposable

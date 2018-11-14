@@ -37,11 +37,11 @@ namespace ZWave4Net.Protocol.Tests
             stream.Write(input);
             stream.ResetPosition();
             var reader = new FrameReader(stream);
-            var response = (RequestDataFrame)(await reader.Read(CancellationToken.None));
+            var response = (DataFrame)(await reader.Read(CancellationToken.None));
 
             stream.ResetPosition();
 
-            var request = new RequestDataFrame(ControllerFunction.ApplicationCommandHandler, response.Payload);
+            var request = new DataFrame(DataFrameType.REQ, response.Payload);
             var writer = new FrameWriter(stream);
             await writer.Write(request, CancellationToken.None);
 

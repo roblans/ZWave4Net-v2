@@ -6,23 +6,16 @@ using System.IO;
 
 namespace ZWave4Net.Channel.Protocol
 {
-    public abstract class DataFrame : Frame, IEquatable<DataFrame>
+    public class DataFrame : Frame, IEquatable<DataFrame>
     {
         public readonly DataFrameType Type;
-        public readonly ControllerFunction Function;
         public readonly byte[] Payload;
 
-        protected DataFrame(DataFrameType type, ControllerFunction function, byte[] payload)
+        public DataFrame(DataFrameType type, byte[] payload)
             : base(FrameHeader.SOF)
         {
             Type = type;
-            Function = function;
             Payload = payload;
-        }
-
-        public override string ToString()
-        {
-            return $"{Header} {Type} {Function} {BitConverter.ToString(Payload)}";
         }
 
         public override bool Equals(object obj)
@@ -34,16 +27,21 @@ namespace ZWave4Net.Channel.Protocol
         {
             return other != null &&
                    base.Equals(other) &&
-                   Function == other.Function &&
+                   Type == other.Type &&
                    Payload.SequenceEqual(other.Payload);
         }
 
         public override int GetHashCode()
         {
-            var hashCode = -988694756;
+            var hashCode = 876327360;
             hashCode = hashCode * -1521134295 + base.GetHashCode();
-            hashCode = hashCode * -1521134295 + Function.GetHashCode();
+            hashCode = hashCode * -1521134295 + Type.GetHashCode();
             return hashCode;
+        }
+
+        public override string ToString()
+        {
+            return $"{Header} {Type} {BitConverter.ToString(Payload)}";
         }
 
         public static bool operator ==(DataFrame frame1, DataFrame frame2)
