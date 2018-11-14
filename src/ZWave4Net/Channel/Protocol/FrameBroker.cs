@@ -10,7 +10,7 @@ namespace ZWave4Net.Channel.Protocol
 {
     public class FrameBroker
     {
-        private readonly ConcurrentDictionary<Action<Frame>, object> _subscribers = new ConcurrentDictionary<Action<Frame>, object>();
+        private readonly ConcurrentDictionary<Delegate, object> _subscribers = new ConcurrentDictionary<Delegate, object>();
         private FrameReader _reader;
         private FrameWriter _writer;
         private Task _task;
@@ -24,9 +24,30 @@ namespace ZWave4Net.Channel.Protocol
             Cancelation = cancelation;
         }
 
-        private Task Publish(Action<Action<Frame>> action)
+        private void Unsubscribe(Delegate subscriber)
         {
-            return Task.Run(() => Parallel.ForEach(_subscribers, (subscriber) => action(subscriber.Key)));
+            _subscribers.TryRemove(subscriber, out _);
+        }
+
+        private IDisposable Subscribe(Action<Frame> subscriber)
+        {
+            _subscribers.TryAdd(subscriber, null);
+            return new Unsubscriber<Frame>(subscriber, (item) => Unsubscribe(item));
+        }
+
+        private Task Publish(Frame frame)
+        {
+            return Task.Run(() => Parallel.ForEach(_subscribers, (subscriber) =>
+            {
+                if (subscriber.Key is Action<Frame>)
+                {
+                    ((Action<Frame>)subscriber.Key)(frame);
+                }
+                if (subscriber.Key is Action<DataFrame> && frame is DataFrame dataFrame)
+                {
+                    ((Action<DataFrame>)subscriber.Key)(dataFrame);
+                }
+            }));
         }
 
         public void Start()
@@ -50,6 +71,7 @@ namespace ZWave4Net.Channel.Protocol
                     {
                         Debug.WriteLine(ex.Message);
 
+                        Debug.WriteLine($"Writing: {Frame.NAK}");
                         await _writer.Write(Frame.NAK, Cancelation);
 
                         continue;
@@ -58,11 +80,10 @@ namespace ZWave4Net.Channel.Protocol
                     if (frame is RequestDataFrame requestDataFrame)
                     {
                         Debug.WriteLine($"Writing: {Frame.ACK}");
-
                         await _writer.Write(Frame.ACK, Cancelation);
                     }
 
-                    await Publish((subscriber) => subscriber(frame));
+                    await Publish(frame);
                 }
             }, Cancelation);
         }
@@ -97,23 +118,18 @@ namespace ZWave4Net.Channel.Protocol
             await completion.Task;
         }
 
-        private void Unsubscribe(Action<Frame> subscriber)
-        {
-            _subscribers.TryRemove(subscriber, out _);
-        }
-
-        public IDisposable Subscribe(Action<Frame> subscriber)
+        public IDisposable Subscribe(Action<DataFrame> subscriber)
         {
             _subscribers.TryAdd(subscriber, null);
-            return new Unsubscriber(subscriber, (item) => Unsubscribe(item));
+            return new Unsubscriber<DataFrame>(subscriber, (item) => Unsubscribe(item));
         }
 
-        private class Unsubscriber : IDisposable
+        private class Unsubscriber<T> : IDisposable
         {
-            private readonly Action<Frame> _subscriber;
-            private readonly Action<Action<Frame>> _onUnsubscribe;
+            private readonly Action<T> _subscriber;
+            private readonly Action<Action<T>> _onUnsubscribe;
 
-            public Unsubscriber(Action<Frame> subscriber, Action<Action<Frame>> onUnsubscribe)
+            public Unsubscriber(Action<T> subscriber, Action<Action<T>> onUnsubscribe)
             {
                 _subscriber = subscriber;
                 _onUnsubscribe = onUnsubscribe;
