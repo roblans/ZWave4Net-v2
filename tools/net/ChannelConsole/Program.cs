@@ -22,6 +22,8 @@ namespace ChannelConsole
             Console.ReadLine();
 
             await channel.Close();
+
+            Console.ReadLine();
         }
     }
 }

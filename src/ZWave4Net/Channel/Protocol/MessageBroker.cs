@@ -85,10 +85,8 @@ namespace ZWave4Net.Channel.Protocol
 
             _task = Task.Run(async () =>
             {
-                while (true)
+                while (!Cancelation.IsCancellationRequested)
                 {
-                    Cancelation.ThrowIfCancellationRequested();
-
                     var frame = default(Frame);
                     try
                     {

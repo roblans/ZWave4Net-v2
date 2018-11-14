@@ -40,7 +40,14 @@ namespace ZWave4Net.Channel
             var read = 0;
             while (read < lenght)
             {
-                read += await _port.BaseStream.ReadAsync(buffer, read, lenght - read, cancelation);
+                try
+                {
+                    read += await _port.BaseStream.ReadAsync(buffer, read, lenght - read, cancelation);
+                }
+                catch(System.IO.IOException ex)
+                {
+                    throw new TaskCanceledException(ex.Message, ex);
+                }
             }
 
             return buffer;
