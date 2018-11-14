@@ -42,7 +42,7 @@ namespace ZWave4Net.Channel.Protocol
             // get the payload from the frame
             var parameters = frame.Payload;
 
-            // Header | Length | Type | Funtion | N Parameters | Checksum
+            // Header | Length | Type | Funtion | N Parameters | checksum
             var length = 4 + parameters.Length + 1;
 
             // allocate buffer
@@ -51,8 +51,8 @@ namespace ZWave4Net.Channel.Protocol
             // 0 Header
             buffer[0] = (byte)frame.Header;
 
-            // 1 Length: Type + Funtion + Parameters
-            buffer[1] = (byte)(1 + 1 + parameters.Length);
+            // 1 Length (no header and checksum)
+            buffer[1] = (byte)(length - 2);
 
             // 2 Type
             buffer[2] = (byte)(frame.Type);
@@ -64,7 +64,7 @@ namespace ZWave4Net.Channel.Protocol
             Array.Copy(parameters, 0, buffer, 4, parameters.Length);
 
             // checksum
-            buffer[length - 1] = buffer.Skip(1).Take(length - 2).CalculateChecksum();
+            buffer[buffer.Length - 1] = buffer.Skip(1).Take(buffer.Length - 2).CalculateChecksum();
 
             // and write to stream
             await Stream.Write(buffer.ToArray(), cancelation);

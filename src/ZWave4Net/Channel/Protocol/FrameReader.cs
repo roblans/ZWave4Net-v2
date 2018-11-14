@@ -33,23 +33,8 @@ namespace ZWave4Net.Channel.Protocol
                         return Frame.NAK;
                     case FrameHeader.CAN:
                         return Frame.CAN;
-                }
-
-                if (header == FrameHeader.SOF)
-                {
-                    try
-                    {
+                    case FrameHeader.SOF:
                         return await ReadDataFrame(cancelation);
-                    }
-                    catch (ChecksumException)
-                    {
-                        // probally partially received frame, skip and wait for next frame
-                        continue;
-                    }
-                }
-                else
-                {
-                    throw new UnknownFrameException($"Unknown frame header: '{header}'");
                 }
             }
         }
@@ -59,8 +44,8 @@ namespace ZWave4Net.Channel.Protocol
             // read the length
             var length = await Stream.ReadByte(cancelation);
 
-            // Length + Type | Funtion | N Parameters | Checksum
-            var data = new byte[] { length }.Concat(await Stream.Read(length + 1, cancelation)).ToArray();
+            // Length + Data
+            var data = new byte[] { length }.Concat(await Stream.Read(length, cancelation)).ToArray();
 
             // 1 Type
             var type = (DataFrameType)data[1];

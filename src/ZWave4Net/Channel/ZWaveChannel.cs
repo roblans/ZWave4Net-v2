@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using ZWave4Net.Channel.Protocol;
 
 namespace ZWave4Net.Channel
@@ -11,27 +12,31 @@ namespace ZWave4Net.Channel
         private readonly FrameBroker _frameBroker;
 
         private readonly CancellationTokenSource _cancellationSource;
-        public readonly IByteStream Stream;
+        public readonly ISerialPort Port;
         
-        public ZWaveChannel(IByteStream stream)
+        public ZWaveChannel(ISerialPort port)
         {
-            Stream = stream ?? throw new ArgumentNullException(nameof(stream));
+            Port = port ?? throw new ArgumentNullException(nameof(port));
 
             _cancellationSource = new CancellationTokenSource();
 
-            _frameBroker = new FrameBroker(stream, _cancellationSource.Token);
+            _frameBroker = new FrameBroker(port, _cancellationSource.Token);
         }
 
-        public void Open()
+        public async Task Open()
         {
+            await Port.Open();
+
             _frameBroker.Start();
         }
 
-        public void Close()
+        public async Task Close()
         {
             _cancellationSource.Cancel();
 
             _frameBroker.Stop(TimeSpan.FromSeconds(1));
+
+            await Port.Close();
         }
     }
 }

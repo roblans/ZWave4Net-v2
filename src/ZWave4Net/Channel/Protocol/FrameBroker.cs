@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,10 +40,25 @@ namespace ZWave4Net.Channel.Protocol
                 {
                     Cancelation.ThrowIfCancellationRequested();
 
-                    var frame = await _reader.Read(Cancelation);
+                    var frame = default(Frame);
+                    try
+                    {
+                        frame = await _reader.Read(Cancelation);
+                        Debug.WriteLine($"Received: {frame}");
+                    }
+                    catch (ChecksumException ex)
+                    {
+                        Debug.WriteLine(ex.Message);
+
+                        await _writer.Write(Frame.NAK, Cancelation);
+
+                        continue;
+                    }
 
                     if (frame is RequestDataFrame requestDataFrame)
                     {
+                        Debug.WriteLine($"Writing: {Frame.ACK}");
+
                         await _writer.Write(Frame.ACK, Cancelation);
                     }
 
