@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ZWave4Net.Channel
 {
-    public interface IByteStream
+    public interface IDuplexStream
     {
         Task Write(byte[] values, CancellationToken cancelation);
         Task<byte[]> Read(int lenght, CancellationToken cancelation);

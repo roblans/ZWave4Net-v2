@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ZWave4Net.Utilities
 {
-    public class ValueMonitor<T>
+    public class ValueChangedEvent<T>
     {
         private readonly object _lock = new object();
         private T _currentValue;
@@ -14,12 +14,12 @@ namespace ZWave4Net.Utilities
 
         public readonly T InitialValue;
 
-        public ValueMonitor(T initialValue)
+        public ValueChangedEvent(T initialValue)
         {
             InitialValue = initialValue;
         }
 
-        public void ResetValue()
+        public void Reset()
         {
             lock (_lock)
             {
@@ -31,7 +31,7 @@ namespace ZWave4Net.Utilities
             }
         }
 
-        public void UpdateValue(T value)
+        public void Signal(T value)
         {
             lock (_lock)
             {
@@ -43,7 +43,7 @@ namespace ZWave4Net.Utilities
             }
         }
 
-        public Task<T> WaitForUpdate()
+        public Task<T> Wait()
         {
             lock (_lock)
             {
@@ -51,9 +51,9 @@ namespace ZWave4Net.Utilities
             }
         }
 
-        public async Task<T> WaitForUpdate(CancellationToken cancellationToken)
+        public async Task<T> Wait(CancellationToken cancellationToken)
         {
-            var waitTask = WaitForUpdate();
+            var waitTask = Wait();
 
             if (waitTask.IsCompleted)
                 await waitTask;

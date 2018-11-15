@@ -14,12 +14,12 @@ namespace ZWave4Net.Channel.Protocol
     {
         private readonly FrameReader _reader;
         private readonly FrameWriter _writer;
-        private readonly ValueMonitor<Frame> _lastFrame = new ValueMonitor<Frame>(null);
+        private readonly ValueChangedEvent<Frame> _lastFrameEvent = new ValueChangedEvent<Frame>(null);
         private Task _task;
 
         public readonly CancellationToken Cancelation;
 
-        public MessageBroker(IByteStream stream, CancellationToken cancelation)
+        public MessageBroker(IDuplexStream stream, CancellationToken cancelation)
         {
             _reader = new FrameReader(stream);
             _writer = new FrameWriter(stream);
@@ -41,7 +41,7 @@ namespace ZWave4Net.Channel.Protocol
                     {
                         frame = await _reader.Read(Cancelation);
 
-                        _lastFrame.UpdateValue(frame);
+                        _lastFrameEvent.Signal(frame);
 
                         Debug.WriteLine($"Received: {frame}");
                     }
@@ -78,11 +78,11 @@ namespace ZWave4Net.Channel.Protocol
         {
             while (true)
             {
-                _lastFrame.ResetValue();
+                _lastFrameEvent.Reset();
 
-                await _writer.Write(message, Cancelation);
+                await _writer.Write((Frame)message, Cancelation);
 
-                var response = await _lastFrame.WaitForUpdate();
+                var response = await _lastFrameEvent.Wait();
                 if (response == Frame.ACK)
                     break;
             }

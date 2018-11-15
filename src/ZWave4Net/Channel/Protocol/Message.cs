@@ -52,7 +52,7 @@ namespace ZWave4Net.Channel.Protocol
             return !(frame1 == frame2);
         }
 
-        public static implicit operator Message(DataFrame frame)
+        public static explicit operator Message(DataFrame frame)
         {
             switch (frame.Type)
             {
@@ -64,7 +64,7 @@ namespace ZWave4Net.Channel.Protocol
             throw new InvalidCastException();
         }
 
-        public static implicit operator DataFrame(Message message)
+        public static explicit operator DataFrame(Message message)
         {
             switch (message)
             {

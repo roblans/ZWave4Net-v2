@@ -14,17 +14,17 @@ namespace ZWave4Net.Channel.Protocol
             return values.Aggregate((byte)0xFF, (total, next) => total ^= next);
         }
 
-        public static Task WriteHeader(this IByteStream stream, FrameHeader header, CancellationToken cancelation)
+        public static Task WriteHeader(this IDuplexStream stream, FrameHeader header, CancellationToken cancelation)
         {
             return stream.Write(new[] { (byte)header }, cancelation);
         }
 
-        public static async Task<byte> ReadByte(this IByteStream stream, CancellationToken cancelation)
+        public static async Task<byte> ReadByte(this IDuplexStream stream, CancellationToken cancelation)
         {
             return (await stream.Read(1, cancelation)).Single();
         }
 
-        public static async Task<FrameHeader> ReadHeader(this IByteStream stream, CancellationToken cancelation)
+        public static async Task<FrameHeader> ReadHeader(this IDuplexStream stream, CancellationToken cancelation)
         {
             return (FrameHeader)(await stream.Read(1, cancelation)).Single();
         }

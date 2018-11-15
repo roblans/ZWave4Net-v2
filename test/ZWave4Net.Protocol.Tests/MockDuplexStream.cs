@@ -9,11 +9,11 @@ using ZWave4Net.Channel;
 
 namespace ZWave4Net.Protocol.Tests
 {
-    public class MockByteStream : IByteStream
+    public class MockDuplexStream : IDuplexStream
     {
         private readonly MemoryStream _stream;
 
-        public MockByteStream()
+        public MockDuplexStream()
         {
             _stream = new MemoryStream();
         }

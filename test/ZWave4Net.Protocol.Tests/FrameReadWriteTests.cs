@@ -13,7 +13,7 @@ namespace ZWave4Net.Protocol.Tests
         [TestMethod]
         public async Task WriteReadAckFrame()
         {
-            var stream = new MockByteStream();
+            var stream = new MockDuplexStream();
 
             var writer = new FrameWriter(stream);
             var request = Frame.ACK;
@@ -32,7 +32,7 @@ namespace ZWave4Net.Protocol.Tests
         public async Task WriteReadDataFrame()
         {
             var input = new byte[] {1,12,0,4,0,15,6,49,5,4,34,0,3,239};
-            var stream = new MockByteStream();
+            var stream = new MockDuplexStream();
 
             stream.Write(input);
             stream.ResetPosition();

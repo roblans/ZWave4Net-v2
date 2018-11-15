@@ -9,9 +9,9 @@ namespace ZWave4Net.Channel.Protocol
 {
     public class FrameWriter
     {
-        public readonly IByteStream Stream;
+        public readonly IDuplexStream Stream;
 
-        public FrameWriter(IByteStream stream)
+        public FrameWriter(IDuplexStream stream)
         {
             Stream = stream ?? throw new ArgumentNullException(nameof(stream));
         }

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace ZWave4Net.Channel
 {
-    public interface ISerialPort : IByteStream
+    public interface ISerialPort : IDuplexStream
     {
         Task Open();
         Task Close();
