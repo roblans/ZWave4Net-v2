@@ -5,12 +5,12 @@ using System.Text;
 
 namespace ZWave4Net.Channel.Protocol
 {
-    public class Message : IEquatable<Message>
+    public abstract class Message : IEquatable<Message>
     {
         public readonly ControllerFunction Function;
         public readonly byte[] Payload;
 
-        public Message(ControllerFunction function, byte[] payload)
+        protected Message(ControllerFunction function, byte[] payload)
         {
             Function = function;
             Payload = payload;
@@ -30,6 +30,7 @@ namespace ZWave4Net.Channel.Protocol
         {
             return other != null &&
                    base.Equals(other) &&
+                   GetType() == other.GetType() &&
                    Function == other.Function &&
                    Payload.SequenceEqual(other.Payload);
         }
@@ -51,30 +52,6 @@ namespace ZWave4Net.Channel.Protocol
         {
             return !(frame1 == frame2);
         }
-
-        public static explicit operator Message(DataFrame frame)
-        {
-            switch (frame.Type)
-            {
-                case DataFrameType.REQ:
-                    return new RequestMessage((ControllerFunction)frame.Payload[0], frame.Payload.Skip(1).ToArray());
-                case DataFrameType.RES:
-                    return new ResponseMessage((ControllerFunction)frame.Payload[0], frame.Payload.Skip(1).ToArray());
-            }
-            throw new InvalidCastException();
-        }
-
-        public static explicit operator DataFrame(Message message)
-        {
-            switch (message)
-            {
-                case RequestMessage request:
-                    return new DataFrame(DataFrameType.REQ, message.Payload);
-                case ResponseMessage response:
-                    return new DataFrame(DataFrameType.RES, message.Payload);
-            }
-            throw new InvalidCastException();
-        }
     }
 
     public class RequestMessage : Message
@@ -82,12 +59,34 @@ namespace ZWave4Net.Channel.Protocol
         public RequestMessage(ControllerFunction function, byte[] payload) : base(function, payload)
         {
         }
+
+        public override string ToString()
+        {
+            return $"Request {Function} {BitConverter.ToString(Payload)}";
+        }
     }
 
     public class ResponseMessage : Message
     {
         public ResponseMessage(ControllerFunction function, byte[] payload) : base(function, payload)
         {
+        }
+
+        public override string ToString()
+        {
+            return $"Response {Function} {BitConverter.ToString(Payload)}";
+        }
+    }
+
+    public class EventMessage : Message
+    {
+        public EventMessage(ControllerFunction function, byte[] payload) : base(function, payload)
+        {
+        }
+
+        public override string ToString()
+        {
+            return $"Event {Function} {BitConverter.ToString(Payload)}";
         }
     }
 }
