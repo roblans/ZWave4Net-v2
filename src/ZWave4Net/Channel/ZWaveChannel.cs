@@ -20,22 +20,21 @@ namespace ZWave4Net.Channel
 
             _cancellationSource = new CancellationTokenSource();
 
-            _frameBroker = new MessageBroker(port, _cancellationSource.Token);
+            _frameBroker = new MessageBroker(port);
         }
 
         public async Task Open()
         {
             await Port.Open();
 
-            _frameBroker.Start();
+            _frameBroker.Run(_cancellationSource.Token);
         }
 
         public async Task Close()
         {
             _cancellationSource.Cancel();
 
-            _frameBroker.Stop(TimeSpan.FromSeconds(1));
-
+            await _frameBroker;
             await Port.Close();
         }
     }

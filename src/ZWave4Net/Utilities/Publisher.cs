@@ -44,7 +44,7 @@ namespace ZWave4Net.Utilities
                 _lock.ExitReadLock();
             }
 
-            foreach (var subscriber in _subscribers)
+            foreach (var subscriber in subcribers)
             {
                 subscriber.Handle(value);
             }

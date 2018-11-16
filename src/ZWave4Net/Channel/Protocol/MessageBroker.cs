@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ZWave4Net.Utilities;
+using System.Runtime.CompilerServices;
 
 namespace ZWave4Net.Channel.Protocol
 {
@@ -18,29 +19,30 @@ namespace ZWave4Net.Channel.Protocol
         private readonly SemaphoreSlim _sendLock = new SemaphoreSlim(1, 1);
         private Task _task;
 
-        public readonly CancellationToken Cancelation;
-
-        public MessageBroker(IDuplexStream stream, CancellationToken cancelation)
+        public MessageBroker(IDuplexStream stream)
         {
             _reader = new FrameReader(stream);
             _writer = new FrameWriter(stream);
-
-            Cancelation = cancelation;
         }
 
-        public void Start()
+        public TaskAwaiter GetAwaiter()
+        {
+            return _task?.GetAwaiter() ?? default(TaskAwaiter);
+        }
+
+        public void Run(CancellationToken cancelation)
         {
             if (_task != null)
-                throw new InvalidOperationException("Broker already started");
+                throw new InvalidOperationException("Broker already running");
 
             _task = Task.Run(async () =>
             {
-                while (!Cancelation.IsCancellationRequested)
+                while (!cancelation.IsCancellationRequested)
                 {
                     var frame = default(Frame);
                     try
                     {
-                        frame = await _reader.Read(Cancelation);
+                        frame = await _reader.Read(cancelation);
 
                         Debug.WriteLine($"Received: {frame}");
 
@@ -51,7 +53,7 @@ namespace ZWave4Net.Channel.Protocol
                         Debug.WriteLine(ex.Message);
 
                         Debug.WriteLine($"Writing: {Frame.NAK}");
-                        await _writer.Write(Frame.NAK, Cancelation);
+                        await _writer.Write(Frame.NAK, cancelation);
 
                         continue;
                     }
@@ -59,7 +61,7 @@ namespace ZWave4Net.Channel.Protocol
                     if (frame is DataFrame dataFrame)
                     {
                         Debug.WriteLine($"Writing: {Frame.ACK}");
-                        await _writer.Write(Frame.ACK, Cancelation);
+                        await _writer.Write(Frame.ACK, cancelation);
 
                         switch (dataFrame.Type)
                         {
@@ -73,25 +75,16 @@ namespace ZWave4Net.Channel.Protocol
                     }
 
                 }
-            }, Cancelation);
+            }, cancelation);
         }
 
-        public bool Stop(TimeSpan timeout)
-        {
-            if (_task != null)
-            {
-                return _task.Wait(timeout);
-            }
-            return true;
-        }
-
-        public async Task Send(RequestMessage message)
+        public async Task Send(RequestMessage message, CancellationToken cancelation)
         {
             var stopwatch = Stopwatch.StartNew();
 
             // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.5.2 Request/Response frame flow
             // Note that due to the simple nature of the simple acknowledge mechanism, only one REQ->RES session is allowed.
-            await _sendLock.WaitAsync(Cancelation);
+            await _sendLock.WaitAsync(cancelation);
             try
             {
                 // number of retransmissions
@@ -110,7 +103,7 @@ namespace ZWave4Net.Channel.Protocol
                     }))
                     {
                         // send the request
-                        await _writer.Write(new DataFrame(DataFrameType.REQ, message.Payload), Cancelation);
+                        await _writer.Write(new DataFrame(DataFrameType.REQ, message.Payload), cancelation);
 
                         // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 5.1 ACK frame
                         // The host MUST wait for a period of 1500ms before timing out waiting for the ACK frame
