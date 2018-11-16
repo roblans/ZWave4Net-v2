@@ -12,7 +12,7 @@ namespace ZWave4Net.Utilities
 
         private List<Subcription> _subscribers = new List<Subcription>();
 
-        public IDisposable Subscibe<T>(Action<T> callback)
+        public IDisposable Subcribe<T>(Action<T> callback)
         {
             _lock.EnterWriteLock();
             try

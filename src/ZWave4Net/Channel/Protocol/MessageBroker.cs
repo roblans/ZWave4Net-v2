@@ -101,7 +101,7 @@ namespace ZWave4Net.Channel.Protocol
                 {
 
                     var completion = new TaskCompletionSource<Frame>();
-                    using (var subscription = _publisher.Subscibe<Frame>((frame) =>
+                    using (var subscription = _publisher.Subcribe<Frame>((frame) =>
                     {
                         if (frame == Frame.ACK || frame == Frame.NAK || frame == Frame.CAN)
                         {

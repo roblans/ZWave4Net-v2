@@ -16,12 +16,12 @@ namespace ZWave4Net.Tests
             var result1 = default(int);
             var result2 = default(string);
 
-            var publisher1 = publisher.Subscibe((int value) =>
+            var publisher1 = publisher.Subcribe((int value) =>
             {
                 result1 = value;
             });
 
-            var publisher2 = publisher.Subscibe((string value) =>
+            var publisher2 = publisher.Subcribe((string value) =>
             {
                 result2 = value;
             });
