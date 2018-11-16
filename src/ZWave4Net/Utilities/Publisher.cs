@@ -8,22 +8,17 @@ namespace ZWave4Net.Utilities
 {
     public class Publisher
     {
-        private ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
+        private object _lock = new object();
 
         private List<Subcription> _subscribers = new List<Subcription>();
 
         public IDisposable Subcribe<T>(Action<T> callback)
         {
-            _lock.EnterWriteLock();
-            try
+            lock (_lock)
             {
                 var subscription = new Subcription<T>(callback, Unsubscribe);
                 _subscribers.Add(subscription);
                 return subscription;
-            }
-            finally
-            {
-                _lock.ExitWriteLock();
             }
         }
 
@@ -34,14 +29,9 @@ namespace ZWave4Net.Utilities
 
             var subcribers = default(Subcription[]);
 
-            _lock.EnterReadLock();
-            try
+            lock (_lock)
             {
                 subcribers = _subscribers.ToArray();
-            }
-            finally
-            {
-                _lock.ExitReadLock();
             }
 
             foreach (var subscriber in subcribers)
@@ -52,14 +42,9 @@ namespace ZWave4Net.Utilities
 
         private void Unsubscribe(Subcription subcription)
         {
-            _lock.EnterWriteLock();
-            try
+            lock (_lock)
             {
                 _subscribers.Remove(subcription);
-            }
-            finally
-            {
-                _lock.ExitWriteLock();
             }
         }
 

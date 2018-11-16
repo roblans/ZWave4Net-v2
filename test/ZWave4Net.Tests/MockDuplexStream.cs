@@ -43,7 +43,9 @@ namespace ZWave4Net.Tests
 
             Debug.WriteLine($"Write: {BitConverter.ToString(values)}");
 
-            AfterWrite?.Invoke(this, EventArgs.Empty);
+#pragma warning disable 4014
+            Task.Run(() => AfterWrite?.Invoke(this, EventArgs.Empty));
+#pragma warning restore 4014
         }
     }
 }

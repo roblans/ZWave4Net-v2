@@ -90,27 +90,40 @@ namespace ZWave4Net.Channel.Protocol
                 // number of retransmissions
                 var retransmissions = 0;
 
+                // return only on ACK or Exception
                 while (true)
                 {
-
+                    // create completion source, will be completed on an expected response (ACK, NAK, CAN)
                     var completion = new TaskCompletionSource<Frame>();
-                    using (var subscription = _publisher.Subcribe<Frame>((frame) =>
+
+                    // callback, called on every frame received
+                    void onVerifyResponse(Frame frame)
                     {
+                        // one of the expected responses?
                         if (frame == Frame.ACK || frame == Frame.NAK || frame == Frame.CAN)
                         {
+                            // yes, so set complete
                             completion.TrySetResult(frame);
                         }
-                    }))
+                    };
+
+                    // start listening for received frames, call onVerifyResponse for every received frame 
+                    using (var subscription = _publisher.Subcribe<Frame>(onVerifyResponse))
                     {
                         // send the request
+                        Debug.WriteLine($"Send request, attempt: {retransmissions+1}");
                         await _writer.Write(new DataFrame(DataFrameType.REQ, message.Payload), cancelation);
 
+                        // mesasure time until frame received
+                        stopwatch.Restart();
+                        
                         // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 5.1 ACK frame
                         // The host MUST wait for a period of 1500ms before timing out waiting for the ACK frame
-                        var timeout = Task.Delay(1500);
+                        var timeout = Task.Delay(SerialProtocol.ACKWaitTime, cancelation);
 
                         var response = default(Frame);
 
+                        Debug.WriteLine($"wait for ACK, NAK or CAN or timeout");
                         // wait for ACK, NAK or CAN or timeout
                         if ((await Task.WhenAny(completion.Task, timeout)) == completion.Task)
                         {
@@ -130,7 +143,7 @@ namespace ZWave4Net.Channel.Protocol
                         {
                             // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.3 Retransmission
                             // A host or Z-Wave chip MUST NOT carry out more than 3 retransmissions
-                            if (retransmissions > 3)
+                            if (retransmissions >= SerialProtocol.MaxRetryAttempts)
                             {
                                 // translate to exceptions
                                 if (response == Frame.CAN)
@@ -140,17 +153,24 @@ namespace ZWave4Net.Channel.Protocol
                                 if (timeout.IsCompleted)
                                     throw new TimeoutException("Timeout while waiting for an ACK");
                             }
-
-                            // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.3 Retransmission
-                            // Twaiting = 100ms + n*1000ms 
-                            // where n is incremented at each retransmission. n = 0 is used for the first waiting period.
-                            await Task.Delay(100 + retransmissions++ * 1000);
                         }
+
+                        // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.3 Retransmission
+                        // Twaiting = 100ms + n*1000ms 
+                        // where n is incremented at each retransmission. n = 0 is used for the first waiting period.
+                        var waitTime = SerialProtocol.RetryWaitTimeOffset.TotalMilliseconds + (retransmissions++ * SerialProtocol.RetryWaitTimeAttempt.TotalMilliseconds);
+
+                        // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.2.2 Data frame delivery timeout
+                        // The transmitter MAY compensate for the 1600ms already elapsed when calculating the retransmission waiting period
+                        waitTime -= stopwatch.ElapsedMilliseconds;
+                        if (waitTime > 0)
+                            await Task.Delay((int)waitTime, cancelation);
                     }
                 }
             }
             finally
             {
+                // done, so release lock, other send operations allowed
                 _sendLock.Release();
             }
         }
