@@ -7,11 +7,14 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ZWave4Net.Channel;
+using ZWave4Net.Utilities;
 
 namespace ZWave4Net.Tests
 {
     public class MockDuplexStream : IDuplexStream
     {
+        private readonly ILogger _logger = Logging.CreatLogger("MockDuplexStream");
+
         public EventHandler<EventArgs> AfterWrite;
 
         public readonly MemoryStream Input;
@@ -41,7 +44,7 @@ namespace ZWave4Net.Tests
         {
             await Output.WriteAsync(values, 0, values.Length, cancellation);
 
-            Debug.WriteLine($"Write: {BitConverter.ToString(values)}");
+            _logger.Log($"Write: {BitConverter.ToString(values)}");
 
 #pragma warning disable 4014
             Task.Run(() => AfterWrite?.Invoke(this, EventArgs.Empty));

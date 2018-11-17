@@ -13,6 +13,7 @@ namespace ZWave4Net.Channel.Protocol
 {
     public class MessageBroker
     {
+        private readonly ILogger _logger = Logging.CreatLogger("MessageBroker");
         private readonly FrameReader _reader;
         private readonly FrameWriter _writer;
         private readonly Publisher _publisher = new Publisher();
@@ -44,15 +45,15 @@ namespace ZWave4Net.Channel.Protocol
                     {
                         frame = await _reader.Read(cancellation);
 
-                        Debug.WriteLine($"Received: {frame}");
+                        _logger.Log($"Received: {frame}");
 
                         _publisher.Publish(frame);
                     }
                     catch (ChecksumException ex)
                     {
-                        Debug.WriteLine(ex.Message);
+                        _logger.Log(ex.Message);
 
-                        Debug.WriteLine($"Writing: {Frame.NAK}");
+                        _logger.Log($"Writing: {Frame.NAK}");
                         await _writer.Write(Frame.NAK, cancellation);
 
                         continue;
@@ -60,7 +61,7 @@ namespace ZWave4Net.Channel.Protocol
 
                     if (frame is DataFrame dataFrame)
                     {
-                        Debug.WriteLine($"Writing: {Frame.ACK}");
+                        _logger.Log($"Writing: {Frame.ACK}");
                         await _writer.Write(Frame.ACK, cancellation);
 
                         switch (dataFrame.Type)
@@ -111,9 +112,9 @@ namespace ZWave4Net.Channel.Protocol
                     using (var subscription = _publisher.Subcribe<Frame>(onVerifyResponse))
                     {
                         if (retransmissions == 0)
-                            Debug.WriteLine($"Sending frame");
+                            _logger.Log($"Sending frame");
                         else                           
-                            Debug.WriteLine($"Sending frame, retransmission: {retransmissions}");
+                            _logger.Log($"Sending frame, retransmission: {retransmissions}");
 
                         // send the request
                         await _writer.Write(new DataFrame(DataFrameType.REQ, message.Payload), cancellation);
@@ -125,7 +126,7 @@ namespace ZWave4Net.Channel.Protocol
                         // The host MUST wait for a period of 1500ms before timing out waiting for the ACK frame
                         var timeout = Task.Delay(SerialProtocol.ACKWaitTime, cancellation);
 
-                        Debug.WriteLine($"Wait for ACK, NAK or CAN or timeout");
+                        _logger.Log($"Wait for ACK, NAK or CAN or timeout");
 
                         // wait for ACK, NAK or CAN or timeout
                         if ((await Task.WhenAny(completion.Task, timeout)) == completion.Task)
@@ -133,7 +134,7 @@ namespace ZWave4Net.Channel.Protocol
                             // response received, see what we got
                             var response = await completion.Task;
 
-                            Debug.WriteLine($"{response} received");
+                            _logger.Log($"{response} received");
 
                             // ACK received, so where done 
                             if (response == Frame.ACK)

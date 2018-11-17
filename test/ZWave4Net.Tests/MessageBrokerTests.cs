@@ -7,12 +7,21 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ZWave4Net.Channel.Protocol;
+using ZWave4Net.Utilities;
 
 namespace ZWave4Net.Tests
 {
     [TestClass]
     public class MessageBrokerTests
     {
+        public TestContext TestContext { get; set; }
+
+        [TestInitialize()]
+        public void TestInitialize()
+        {
+            Logging.Subscribe((message) => TestContext.WriteLine(message));
+        }
+
         [TestMethod]
         [ExpectedException(typeof(TimeoutException))]
         public async Task MessageBroker_SendMessage_No_ACK_ShouldTimeout()
