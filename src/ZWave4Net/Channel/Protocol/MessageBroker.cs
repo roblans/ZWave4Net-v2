@@ -163,7 +163,7 @@ namespace ZWave4Net.Channel.Protocol
                         // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.3 Retransmission
                         // Twaiting = 100ms + n*1000ms 
                         // where n is incremented at each retransmission. n = 0 is used for the first waiting period.
-                        var waitTime = SerialProtocol.RetryWaitTimeDelay.TotalMilliseconds + (retransmissions++ * SerialProtocol.RetryWaitTimeAttempt.TotalMilliseconds);
+                        var waitTime = SerialProtocol.RetryDelayWaitTime.TotalMilliseconds + (retransmissions++ * SerialProtocol.RetryAttemptWaitTime.TotalMilliseconds);
 
                         // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.2.2 Data frame delivery timeout
                         // The transmitter MAY compensate for the 1600ms already elapsed when calculating the retransmission waiting period
