@@ -17,16 +17,16 @@ namespace ZWave4Net.Tests
         [ExpectedException(typeof(TimeoutException))]
         public async Task MessageBroker_SendMessage_No_ACK_ShouldTimeout()
         {
-            var cancelation = new CancellationTokenSource();
+            var cancellation = new CancellationTokenSource();
 
             var stream = new MockDuplexStream();
             var broker = new MessageBroker(stream);
 
-            broker.Run(cancelation.Token);
+            broker.Run(cancellation.Token);
 
-            await broker.Send(new RequestMessage(ControllerFunction.ApplicationUpdate, new byte[] { 1, 2, 3 }), cancelation.Token);
+            await broker.Send(new RequestMessage(ControllerFunction.ApplicationUpdate, new byte[] { 1, 2, 3 }), cancellation.Token);
 
-            cancelation.Cancel();
+            cancellation.Cancel();
 
             await broker;
         }
@@ -34,7 +34,7 @@ namespace ZWave4Net.Tests
         [TestMethod]
         public async Task MessageBroker_SendMessage_With_ACK_ShouldSucceed()
         {
-            var cancelation = new CancellationTokenSource();
+            var cancellation = new CancellationTokenSource();
 
             var stream = new MockDuplexStream();
             stream.AfterWrite += (s, e) =>
@@ -44,11 +44,11 @@ namespace ZWave4Net.Tests
             };
 
             var broker = new MessageBroker(stream);
-            broker.Run(cancelation.Token);
+            broker.Run(cancellation.Token);
 
-            await broker.Send(new RequestMessage(ControllerFunction.ApplicationUpdate, new byte[] { 1, 2, 3 }), cancelation.Token);
+            await broker.Send(new RequestMessage(ControllerFunction.ApplicationUpdate, new byte[] { 1, 2, 3 }), cancellation.Token);
 
-            cancelation.Cancel();
+            cancellation.Cancel();
 
             await broker;
         }
@@ -57,7 +57,7 @@ namespace ZWave4Net.Tests
         [ExpectedException(typeof(NakResponseException))]
         public async Task MessageBroker_SendMessage_With_NAK_Should_Throw_NakResponseException()
         {
-            var cancelation = new CancellationTokenSource();
+            var cancellation = new CancellationTokenSource();
 
             var stream = new MockDuplexStream();
             stream.AfterWrite += (s, e) =>
@@ -68,11 +68,11 @@ namespace ZWave4Net.Tests
 
             var broker = new MessageBroker(stream);
 
-            broker.Run(cancelation.Token);
+            broker.Run(cancellation.Token);
 
-            await broker.Send(new RequestMessage(ControllerFunction.ApplicationUpdate, new byte[] { 1, 2, 3 }), cancelation.Token);
+            await broker.Send(new RequestMessage(ControllerFunction.ApplicationUpdate, new byte[] { 1, 2, 3 }), cancellation.Token);
 
-            cancelation.Cancel();
+            cancellation.Cancel();
 
             await broker;
         }
@@ -81,7 +81,7 @@ namespace ZWave4Net.Tests
         [ExpectedException(typeof(CanResponseException))]
         public async Task MessageBroker_SendMessage_With_CAN_Should_Throw_CanResponseException()
         {
-            var cancelation = new CancellationTokenSource();
+            var cancellation = new CancellationTokenSource();
 
             var stream = new MockDuplexStream();
             stream.AfterWrite += (s, e) =>
@@ -92,11 +92,11 @@ namespace ZWave4Net.Tests
 
             var broker = new MessageBroker(stream);
 
-            broker.Run(cancelation.Token);
+            broker.Run(cancellation.Token);
 
-            await broker.Send(new RequestMessage(ControllerFunction.ApplicationUpdate, new byte[] { 1, 2, 3 }), cancelation.Token);
+            await broker.Send(new RequestMessage(ControllerFunction.ApplicationUpdate, new byte[] { 1, 2, 3 }), cancellation.Token);
 
-            cancelation.Cancel();
+            cancellation.Cancel();
 
             await broker;
         }
@@ -104,7 +104,7 @@ namespace ZWave4Net.Tests
         [TestMethod]
         public async Task MessageBroker_SendMessage_With_NAK_NAK_ACK_Should_Succeed()
         {
-            var cancelation = new CancellationTokenSource();
+            var cancellation = new CancellationTokenSource();
 
             var stream = new MockDuplexStream();
             var counter = 0;
@@ -124,11 +124,11 @@ namespace ZWave4Net.Tests
 
             var broker = new MessageBroker(stream);
 
-            broker.Run(cancelation.Token);
+            broker.Run(cancellation.Token);
 
-            await broker.Send(new RequestMessage(ControllerFunction.ApplicationUpdate, new byte[] { 1, 2, 3 }), cancelation.Token);
+            await broker.Send(new RequestMessage(ControllerFunction.ApplicationUpdate, new byte[] { 1, 2, 3 }), cancellation.Token);
 
-            cancelation.Cancel();
+            cancellation.Cancel();
 
             await broker;
         }

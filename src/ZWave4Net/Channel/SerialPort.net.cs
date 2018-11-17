@@ -33,7 +33,7 @@ namespace ZWave4Net.Channel
             return Task.CompletedTask;
         }
 
-        public async Task<byte[]> Read(int lenght, CancellationToken cancelation)
+        public async Task<byte[]> Read(int lenght, CancellationToken cancellation)
         {
             var buffer = new byte[lenght];
 
@@ -42,7 +42,7 @@ namespace ZWave4Net.Channel
             {
                 try
                 {
-                    read += await _port.BaseStream.ReadAsync(buffer, read, lenght - read, cancelation);
+                    read += await _port.BaseStream.ReadAsync(buffer, read, lenght - read, cancellation);
                 }
                 catch(System.IO.IOException ex)
                 {
@@ -53,9 +53,9 @@ namespace ZWave4Net.Channel
             return buffer;
         }
 
-        public Task Write(byte[] values, CancellationToken cancelation)
+        public Task Write(byte[] values, CancellationToken cancellation)
         {
-           return _port.BaseStream.WriteAsync(values, 0, values.Length, cancelation);
+           return _port.BaseStream.WriteAsync(values, 0, values.Length, cancellation);
         }
     }
 #endif

@@ -17,13 +17,13 @@ namespace ZWave4Net.Channel.Protocol
             Stream = stream ?? throw new ArgumentNullException(nameof(stream));
         }
 
-        public async Task<Frame> Read(CancellationToken cancelation)
+        public async Task<Frame> Read(CancellationToken cancellation)
         {
             while (true)
             {
-                cancelation.ThrowIfCancellationRequested();
+                cancellation.ThrowIfCancellationRequested();
 
-                var header = await Stream.ReadHeader(cancelation);
+                var header = await Stream.ReadHeader(cancellation);
 
                 switch (header)
                 {
@@ -34,12 +34,12 @@ namespace ZWave4Net.Channel.Protocol
                     case FrameHeader.CAN:
                         return Frame.CAN;
                     case FrameHeader.SOF:
-                        return await ReadDataFrame(cancelation);
+                        return await ReadDataFrame(cancellation);
                 }
             }
         }
 
-        private async Task<DataFrame> ReadDataFrame(CancellationToken cancelation)
+        private async Task<DataFrame> ReadDataFrame(CancellationToken cancellation)
         {
             // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.2.1 Data frame reception timeout
             // A receiving host or Z-Wave chip MUST abort reception of a Data frame if the reception has lasted for 
@@ -47,7 +47,7 @@ namespace ZWave4Net.Channel.Protocol
             using (var timeoutCancelation = new CancellationTokenSource(SerialProtocol.DataFrameWaitTime))
             {
                 // combine the passed and the timeout cancelationtokens  
-                using (var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancelation, timeoutCancelation.Token))
+                using (var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellation, timeoutCancelation.Token))
                 {
                     // read the length
                     var length = await Stream.ReadByte(linkedCancellation.Token);
