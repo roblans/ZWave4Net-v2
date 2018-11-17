@@ -50,10 +50,10 @@ namespace ZWave4Net.Channel.Protocol
                 using (var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancelation, timeoutCancelation.Token))
                 {
                     // read the length
-                    var length = await Stream.ReadByte(cancelation);
+                    var length = await Stream.ReadByte(linkedCancellation.Token);
 
                     // read data (payload and checksum)
-                    var data = await Stream.Read(length, cancelation);
+                    var data = await Stream.Read(length, linkedCancellation.Token);
 
                     // payload (data without checksum)
                     var payload = data.Take(data.Length - 1).ToArray();
