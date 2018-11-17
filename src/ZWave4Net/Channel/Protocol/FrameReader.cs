@@ -44,7 +44,7 @@ namespace ZWave4Net.Channel.Protocol
             // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.2.1 Data frame reception timeout
             // A receiving host or Z-Wave chip MUST abort reception of a Data frame if the reception has lasted for 
             // more than 1500ms after the reception of the SOF byte.
-            using (var timeoutCancelation = new CancellationTokenSource(SerialProtocol.SOFWaitTime))
+            using (var timeoutCancelation = new CancellationTokenSource(SerialProtocol.DataFrameWaitTime))
             {
                 // combine the passed and the timeout cancelationtokens  
                 using (var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancelation, timeoutCancelation.Token))
