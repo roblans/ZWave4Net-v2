@@ -55,12 +55,12 @@ namespace ZWave4Net.Utilities
 
         class Subcriber<T> : ISubcriber
         {
-            private readonly Action<T> _onCallback;
+            private readonly Action<T> _onNotify;
             private Action<ISubcriber> _onDispose;
 
-            public Subcriber(Action<T> onCallback, Action<ISubcriber> onDispose)
+            public Subcriber(Action<T> onNotify, Action<ISubcriber> onDispose)
             {
-                _onCallback = onCallback ?? throw new ArgumentNullException(nameof(onCallback));
+                _onNotify = onNotify ?? throw new ArgumentNullException(nameof(onNotify));
                 _onDispose = onDispose ?? throw new ArgumentNullException(nameof(onDispose));
             }
 
@@ -71,7 +71,7 @@ namespace ZWave4Net.Utilities
 
                 if (typeof(T).IsAssignableFrom(value.GetType()))
                 {
-                    _onCallback((T)value);
+                    _onNotify((T)value);
                 }
             }
 
