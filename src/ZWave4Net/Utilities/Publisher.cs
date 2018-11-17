@@ -10,15 +10,15 @@ namespace ZWave4Net.Utilities
     {
         private object _lock = new object();
 
-        private List<Subcription> _subscribers = new List<Subcription>();
+        private List<ISubcriber> _subscribers = new List<ISubcriber>();
 
         public IDisposable Subcribe<T>(Action<T> callback)
         {
             lock (_lock)
             {
-                var subscription = new Subcription<T>(callback, Unsubscribe);
-                _subscribers.Add(subscription);
-                return subscription;
+                var subcriber = new Subcriber<T>(callback, Unsubscribe);
+                _subscribers.Add(subcriber);
+                return subcriber;
             }
         }
 
@@ -27,7 +27,7 @@ namespace ZWave4Net.Utilities
             if (value == null)
                 throw new ArgumentNullException(nameof(value));
 
-            var subcribers = default(Subcription[]);
+            var subcribers = default(ISubcriber[]);
 
             lock (_lock)
             {
@@ -36,45 +36,35 @@ namespace ZWave4Net.Utilities
 
             foreach (var subscriber in subcribers)
             {
-                subscriber.Handle(value);
+                subscriber.Notify(value);
             }
         }
 
-        private void Unsubscribe(Subcription subcription)
+        private void Unsubscribe(ISubcriber subcriber)
         {
             lock (_lock)
             {
-                _subscribers.Remove(subcription);
+                _subscribers.Remove(subcriber);
             }
         }
 
-        abstract class Subcription : IDisposable
+        interface ISubcriber : IDisposable
         {
-            private readonly Action<Subcription> _onDispose;
+            void Notify(object value);
+        }
 
-            public Subcription(Action<Subcription> onDispose)
+        class Subcriber<T> : ISubcriber
+        {
+            private readonly Action<T> _onCallback;
+            private Action<ISubcriber> _onDispose;
+
+            public Subcriber(Action<T> onCallback, Action<ISubcriber> onDispose)
             {
+                _onCallback = onCallback ?? throw new ArgumentNullException(nameof(onCallback));
                 _onDispose = onDispose ?? throw new ArgumentNullException(nameof(onDispose));
             }
 
-            public abstract void Handle(object value);
-
-            public void Dispose()
-            {
-                _onDispose(this);
-            }
-        }
-
-        class Subcription<T> : Subcription
-        {
-            private readonly Action<T> _onCallback;
-
-            public Subcription(Action<T> onCallback, Action<Subcription> onDispose) : base(onDispose)
-            {
-                _onCallback = onCallback ?? throw new ArgumentNullException(nameof(onCallback));
-            }
-
-            public override void Handle(object value)
+            public void Notify(object value)
             {
                 if (value == null)
                     return;
@@ -83,6 +73,12 @@ namespace ZWave4Net.Utilities
                 {
                     _onCallback((T)value);
                 }
+            }
+
+            public void Dispose()
+            {
+                // Interlocked allows the action to be executed only once
+                Interlocked.Exchange(ref _onDispose, null)?.Invoke(this);
             }
         }
     }
