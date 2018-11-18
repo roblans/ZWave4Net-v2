@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ZWave4Net.Channel.Protocol;
+using ZWave4Net.Channel.Protocol.Frames;
 using ZWave4Net.Utilities;
 
 namespace ZWave4Net.Tests

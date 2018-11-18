@@ -46,7 +46,7 @@ namespace ZWave4Net.Channel
                 }
                 catch(System.IO.IOException ex)
                 {
-                    throw new TaskCanceledException(ex.Message, ex);
+                    throw new StreamClosedException(ex.Message, ex);
                 }
             }
 

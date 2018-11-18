@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ZWave4Net.Channel.Protocol
+namespace ZWave4Net.Channel.Protocol.Frames
 {
     public enum FrameHeader : byte
     {

@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ZWave4Net.Channel.Protocol
+namespace ZWave4Net.Channel.Protocol.Frames
 {
-    public static class SerialProtocol
+    public static class ProtocolSettings
     {
         public static TimeSpan ACKWaitTime = TimeSpan.FromMilliseconds(1500);
         public static TimeSpan DataFrameWaitTime = TimeSpan.FromMilliseconds(1500);

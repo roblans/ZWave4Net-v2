@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 
-namespace ZWave4Net.Channel.Protocol
+namespace ZWave4Net.Channel.Protocol.Frames
 {
     public class DataFrame : Frame, IEquatable<DataFrame>
     {

@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ZWave4Net.Utilities;
 using System.Runtime.CompilerServices;
+using ZWave4Net.Channel.Protocol.Frames;
 
 namespace ZWave4Net.Channel.Protocol
 {
@@ -38,41 +39,76 @@ namespace ZWave4Net.Channel.Protocol
 
             _task = Task.Run(async () =>
             {
+                // execute until externally cancelled
                 while (!cancellation.IsCancellationRequested)
                 {
                     var frame = default(Frame);
                     try
                     {
+                        // read next frame
                         frame = await _reader.Read(cancellation);
 
                         _logger.Log($"Received: {frame}");
-
-                        _publisher.Publish(frame);
+                    }
+                    catch (StreamClosedException ex)
+                    {
+                        // most likely removal of ZStick from host
+                        _logger.Log(ex.Message);
+                        throw; 
+                    }
+                    catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+                    {
+                        // the read was cancelled by the passed cancellationtoken so end gracefully 
+                        break;
                     }
                     catch (ChecksumException ex)
                     {
+                        // checksum failure on received frame, might happen during startup when we 
+                        // are not synchronized and receive a partially frame
                         _logger.Log(ex.Message);
 
+                        // send NACK and hopefully the controller will send this frame again
                         _logger.Log($"Writing: {Frame.NAK}");
                         await _writer.Write(Frame.NAK, cancellation);
 
+                        // wait for next frame
+                        continue;
+                    }
+
+                    // 
+                    if (frame == Frame.ACK || frame == Frame.NAK || frame == Frame.CAN)
+                    {
+                        // publish the frame
+                        _publisher.Publish(frame);
+
+                        // wait for next frame
                         continue;
                     }
 
                     if (frame is DataFrame dataFrame)
                     {
+                        // dataframes must be aknowledged
                         _logger.Log($"Writing: {Frame.ACK}");
                         await _writer.Write(Frame.ACK, cancellation);
 
+                        // check the type of the frame
                         switch (dataFrame.Type)
                         {
+                            // response on a request
                             case DataFrameType.RES:
+                                // so create and publish ResponseMessage
                                 _publisher.Publish(new ResponseMessage((ControllerFunction)dataFrame.Payload[0], dataFrame.Payload.Skip(1).ToArray()));
                                 break;
+                            
+                            // unsolicited event
                             case DataFrameType.REQ:
+                                // so create and publish EventMessage
                                 _publisher.Publish(new EventMessage((ControllerFunction)dataFrame.Payload[0], dataFrame.Payload.Skip(1).ToArray()));
                                 break;
                         }
+
+                        // wait for next frame
+                        continue;
                     }
 
                 }
@@ -124,7 +160,7 @@ namespace ZWave4Net.Channel.Protocol
                         
                         // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 5.1 ACK frame
                         // The host MUST wait for a period of 1500ms before timing out waiting for the ACK frame
-                        var timeout = Task.Delay(SerialProtocol.ACKWaitTime, cancellation);
+                        var timeout = Task.Delay(ProtocolSettings.ACKWaitTime, cancellation);
 
                         _logger.Log($"Wait for ACK, NAK or CAN or timeout");
 
@@ -142,7 +178,7 @@ namespace ZWave4Net.Channel.Protocol
 
                             // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.3 Retransmission
                             // A host or Z-Wave chip MUST NOT carry out more than 3 retransmissions
-                            if (retransmissions >= SerialProtocol.MaxRetryAttempts)
+                            if (retransmissions >= ProtocolSettings.MaxRetryAttempts)
                             {
                                 if (response == Frame.CAN)
                                     throw new CanResponseException();
@@ -156,7 +192,7 @@ namespace ZWave4Net.Channel.Protocol
                             
                             // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.3 Retransmission
                             // A host or Z-Wave chip MUST NOT carry out more than 3 retransmissions
-                            if (retransmissions >= SerialProtocol.MaxRetryAttempts)
+                            if (retransmissions >= ProtocolSettings.MaxRetryAttempts)
                                 throw new TimeoutException("Timeout while waiting for an ACK");
                         }
 
@@ -164,7 +200,7 @@ namespace ZWave4Net.Channel.Protocol
                         // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.3 Retransmission
                         // Twaiting = 100ms + n*1000ms 
                         // where n is incremented at each retransmission. n = 0 is used for the first waiting period.
-                        var waitTime = SerialProtocol.RetryDelayWaitTime.TotalMilliseconds + (retransmissions++ * SerialProtocol.RetryAttemptWaitTime.TotalMilliseconds);
+                        var waitTime = ProtocolSettings.RetryDelayWaitTime.TotalMilliseconds + (retransmissions++ * ProtocolSettings.RetryAttemptWaitTime.TotalMilliseconds);
 
                         // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.2.2 Data frame delivery timeout
                         // The transmitter MAY compensate for the 1600ms already elapsed when calculating the retransmission waiting period

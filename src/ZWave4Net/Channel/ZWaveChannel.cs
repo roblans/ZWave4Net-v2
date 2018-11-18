@@ -33,7 +33,6 @@ namespace ZWave4Net.Channel
         public async Task Close()
         {
             _cancellationSource.Cancel();
-
             await _frameBroker;
             await Port.Close();
         }
