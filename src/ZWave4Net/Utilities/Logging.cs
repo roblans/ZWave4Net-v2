@@ -4,21 +4,29 @@ using System.Text;
 
 namespace ZWave4Net.Utilities
 {
+    public enum LogLevel
+    {
+        Debug,
+        Info,
+        Warning,
+        Error,
+        Critical,
+    }
 
     public static class Logging
     {
         private static readonly Publisher _publisher = new Publisher();
 
-        public static IDisposable Subscribe(Action<string> action)
+        public static IDisposable Subscribe(Action<(LogLevel Level, string Message)> action)
         {
             return _publisher.Subcribe(action);
         }
 
-        public static void Log(string message)
+        public static void Log((string Category, LogLevel Level, string Message) record)
         {
-            var text = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\t{message}";
-            
-            _publisher.Publish(text);
+            record.Message = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\t{record.Level}\t{record.Category}\t{record.Message}";
+           
+            _publisher.Publish((record.Level, record.Message));
         }
 
         public static ILogger CreatLogger(string name)
@@ -29,17 +37,17 @@ namespace ZWave4Net.Utilities
         class Logger : ILogger
         {
             private readonly string _name;
-            private readonly Action<string> _onLog;
+            private readonly Action<(string Category, LogLevel Level, string Message)> _onLog;
 
-            public Logger(string name, Action<string> onLog)
+            public Logger(string name, Action<(string Category, LogLevel Level, string Message)> onLog)
             {
                 _name = name;
                 _onLog = onLog;
             }
 
-            public void Log(string message)
+            public void Log(LogLevel level, string message)
             {
-                _onLog(message);
+                _onLog((_name, level, message));
             }
 
             public override string ToString()
@@ -51,6 +59,34 @@ namespace ZWave4Net.Utilities
     
     public interface ILogger
     {
-        void Log(string message);
+        void Log(LogLevel level, string message);
+    }
+
+    public static partial class Extentions
+    {
+        public static void LogDebug(this ILogger logger, string message)
+        {
+            logger.Log(LogLevel.Debug, message);
+        }
+
+        public static void LogInfo(this ILogger logger, string message)
+        {
+            logger.Log(LogLevel.Info, message);
+        }
+
+        public static void LogWarning(this ILogger logger, string message)
+        {
+            logger.Log(LogLevel.Warning, message);
+        }
+
+        public static void LogError(this ILogger logger, string message)
+        {
+            logger.Log(LogLevel.Error, message);
+        }
+
+        public static void LogCritical(this ILogger logger, string message)
+        {
+            logger.Log(LogLevel.Critical, message);
+        }
     }
 }

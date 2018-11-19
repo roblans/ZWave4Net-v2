@@ -44,7 +44,7 @@ namespace ZWave4Net.Tests
         {
             await Output.WriteAsync(values, 0, values.Length, cancellation);
 
-            _logger.Log($"Write: {BitConverter.ToString(values)}");
+            _logger.LogDebug($"Write {BitConverter.ToString(values)}");
 
 #pragma warning disable 4014
             Task.Run(() => AfterWrite?.Invoke(this, EventArgs.Empty));

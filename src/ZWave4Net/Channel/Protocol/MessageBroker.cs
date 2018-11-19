@@ -47,13 +47,11 @@ namespace ZWave4Net.Channel.Protocol
                     {
                         // read next frame
                         frame = await _reader.Read(cancellation);
-
-                        _logger.Log($"Received: {frame}");
                     }
                     catch (StreamClosedException ex)
                     {
                         // most likely removal of ZStick from host
-                        _logger.Log(ex.Message);
+                        _logger.LogDebug(ex.Message);
                         throw; 
                     }
                     catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
@@ -65,10 +63,10 @@ namespace ZWave4Net.Channel.Protocol
                     {
                         // checksum failure on received frame, might happen during startup when we 
                         // are not synchronized and receive a partially frame
-                        _logger.Log(ex.Message);
+                        _logger.LogWarning(ex.Message);
 
                         // send NACK and hopefully the controller will send this frame again
-                        _logger.Log($"Writing: {Frame.NAK}");
+                        _logger.LogDebug($"Writing {Frame.NAK}");
                         await _writer.Write(Frame.NAK, cancellation);
 
                         // wait for next frame
@@ -78,6 +76,11 @@ namespace ZWave4Net.Channel.Protocol
                     // 
                     if (frame == Frame.ACK || frame == Frame.NAK || frame == Frame.CAN)
                     {
+                        if (frame == Frame.ACK)
+                            _logger.LogDebug($"Received {frame}");
+                        else
+                            _logger.LogWarning($"Received {frame}");
+
                         // publish the frame
                         _publisher.Publish(frame);
 
@@ -88,7 +91,7 @@ namespace ZWave4Net.Channel.Protocol
                     if (frame is DataFrame dataFrame)
                     {
                         // dataframes must be aknowledged
-                        _logger.Log($"Writing: {Frame.ACK}");
+                        _logger.LogDebug($"Writing {Frame.ACK}");
                         await _writer.Write(Frame.ACK, cancellation);
 
                         // check the type of the frame
@@ -97,13 +100,13 @@ namespace ZWave4Net.Channel.Protocol
                             // response on a request
                             case DataFrameType.RES:
                                 // so create and publish ResponseMessage
-                                _publisher.Publish(new ResponseMessage((ControllerFunction)dataFrame.Payload[0], dataFrame.Payload.Skip(1).ToArray()));
+                                _publisher.Publish(new ResponseMessage(dataFrame.Payload));
                                 break;
                             
                             // unsolicited event
                             case DataFrameType.REQ:
                                 // so create and publish EventMessage
-                                _publisher.Publish(new EventMessage((ControllerFunction)dataFrame.Payload[0], dataFrame.Payload.Skip(1).ToArray()));
+                                _publisher.Publish(new EventMessage(dataFrame.Payload));
                                 break;
                         }
 
@@ -147,13 +150,15 @@ namespace ZWave4Net.Channel.Protocol
                     // start listening for received frames, call onVerifyResponse for every received frame 
                     using (var subscription = _publisher.Subcribe<Frame>(onVerifyResponse))
                     {
+                        var frame = new DataFrame(DataFrameType.REQ, message.Payload);
+
                         if (retransmissions == 0)
-                            _logger.Log($"Sending frame");
+                            _logger.LogDebug($"Sending frame {frame}");
                         else                           
-                            _logger.Log($"Sending frame, retransmission: {retransmissions}");
+                            _logger.LogWarning($"Resending frame {frame}, attempt: {retransmissions}");
 
                         // send the request
-                        await _writer.Write(new DataFrame(DataFrameType.REQ, message.Payload), cancellation);
+                        await _writer.Write(frame, cancellation);
 
                         // mesasure time until frame received
                         stopwatch.Restart();
@@ -162,15 +167,13 @@ namespace ZWave4Net.Channel.Protocol
                         // The host MUST wait for a period of 1500ms before timing out waiting for the ACK frame
                         var timeout = Task.Delay(ProtocolSettings.ACKWaitTime, cancellation);
 
-                        _logger.Log($"Wait for ACK, NAK or CAN or timeout");
+                        _logger.LogDebug($"Wait for ACK, NAK or CAN or timeout");
 
                         // wait for ACK, NAK or CAN or timeout
                         if ((await Task.WhenAny(completion.Task, timeout)) == completion.Task)
                         {
                             // response received, see what we got
                             var response = await completion.Task;
-
-                            _logger.Log($"{response} received");
 
                             // ACK received, so where done 
                             if (response == Frame.ACK)

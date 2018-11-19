@@ -20,7 +20,7 @@ namespace ZWave4Net.Tests
         [TestInitialize()]
         public void TestInitialize()
         {
-            Logging.Subscribe((message) => TestContext.WriteLine(message));
+            Logging.Subscribe((record) => TestContext.WriteLine(record.Message));
         }
 
         [TestMethod]
@@ -34,7 +34,7 @@ namespace ZWave4Net.Tests
 
             broker.Run(cancellation.Token);
 
-            await broker.Send(new RequestMessage(ControllerFunction.ApplicationUpdate, new byte[] { 1, 2, 3 }), cancellation.Token);
+            await broker.Send(new RequestMessage(new byte[] { 0x49, 1, 2, 3 }), cancellation.Token);
 
             cancellation.Cancel();
 
@@ -56,7 +56,7 @@ namespace ZWave4Net.Tests
             var broker = new MessageBroker(stream);
             broker.Run(cancellation.Token);
 
-            await broker.Send(new RequestMessage(ControllerFunction.ApplicationUpdate, new byte[] { 1, 2, 3 }), cancellation.Token);
+            await broker.Send(new RequestMessage(new byte[] { 0x49, 1, 2, 3 }), cancellation.Token);
 
             cancellation.Cancel();
 
@@ -80,7 +80,7 @@ namespace ZWave4Net.Tests
 
             broker.Run(cancellation.Token);
 
-            await broker.Send(new RequestMessage(ControllerFunction.ApplicationUpdate, new byte[] { 1, 2, 3 }), cancellation.Token);
+            await broker.Send(new RequestMessage(new byte[] { 0x49, 1, 2, 3 }), cancellation.Token);
 
             cancellation.Cancel();
 
@@ -104,7 +104,7 @@ namespace ZWave4Net.Tests
 
             broker.Run(cancellation.Token);
 
-            await broker.Send(new RequestMessage(ControllerFunction.ApplicationUpdate, new byte[] { 1, 2, 3 }), cancellation.Token);
+            await broker.Send(new RequestMessage(new byte[] { 0x49, 1, 2, 3 }), cancellation.Token);
 
             cancellation.Cancel();
 
@@ -136,7 +136,7 @@ namespace ZWave4Net.Tests
 
             broker.Run(cancellation.Token);
 
-            await broker.Send(new RequestMessage(ControllerFunction.ApplicationUpdate, new byte[] { 1, 2, 3 }), cancellation.Token);
+            await broker.Send(new RequestMessage(new byte[] { 0x49, 1, 2, 3 }), cancellation.Token);
 
             cancellation.Cancel();
 

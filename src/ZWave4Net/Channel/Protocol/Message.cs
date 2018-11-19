@@ -7,18 +7,16 @@ namespace ZWave4Net.Channel.Protocol
 {
     public abstract class Message : IEquatable<Message>
     {
-        public readonly ControllerFunction Function;
         public readonly byte[] Payload;
 
-        protected Message(ControllerFunction function, byte[] payload)
+        protected Message(byte[] payload)
         {
-            Function = function;
             Payload = payload;
         }
 
         public override string ToString()
         {
-            return $"{Function} {BitConverter.ToString(Payload)}";
+            return $"{(ControllerFunction)Payload[0]} {BitConverter.ToString(Payload.Skip(1).ToArray())}";
         }
 
         public override bool Equals(object obj)
@@ -31,7 +29,6 @@ namespace ZWave4Net.Channel.Protocol
             return other != null &&
                    base.Equals(other) &&
                    GetType() == other.GetType() &&
-                   Function == other.Function &&
                    Payload.SequenceEqual(other.Payload);
         }
 
@@ -39,7 +36,7 @@ namespace ZWave4Net.Channel.Protocol
         {
             var hashCode = -988694756;
             hashCode = hashCode * -1521134295 + base.GetHashCode();
-            hashCode = hashCode * -1521134295 + Function.GetHashCode();
+            hashCode = hashCode * -1521134295 + Payload[0].GetHashCode();
             return hashCode;
         }
 
@@ -56,37 +53,37 @@ namespace ZWave4Net.Channel.Protocol
 
     public class RequestMessage : Message
     {
-        public RequestMessage(ControllerFunction function, byte[] payload) : base(function, payload)
+        public RequestMessage(byte[] payload) : base(payload)
         {
         }
 
         public override string ToString()
         {
-            return $"Request {Function} {BitConverter.ToString(Payload)}";
+            return $"Request {base.ToString()}";
         }
     }
 
     public class ResponseMessage : Message
     {
-        public ResponseMessage(ControllerFunction function, byte[] payload) : base(function, payload)
+        public ResponseMessage(byte[] payload) : base(payload)
         {
         }
 
         public override string ToString()
         {
-            return $"Response {Function} {BitConverter.ToString(Payload)}";
+            return $"Response {base.ToString()}";
         }
     }
 
     public class EventMessage : Message
     {
-        public EventMessage(ControllerFunction function, byte[] payload) : base(function, payload)
+        public EventMessage(byte[] payload) : base(payload)
         {
         }
 
         public override string ToString()
         {
-            return $"Event {Function} {BitConverter.ToString(Payload)}";
+            return $"Event {base.ToString()}";
         }
     }
 }
