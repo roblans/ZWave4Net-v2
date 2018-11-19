@@ -24,9 +24,8 @@ namespace ZWave4Net.Utilities
 
         public static void Log((string Category, LogLevel Level, string Message) record)
         {
-            record.Message = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\t{record.Level}\t{record.Category}\t{record.Message}";
-           
-            _publisher.Publish((record.Level, record.Message));
+            var formatted = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\t{record.Level}\t{record.Category}\t{record.Message}";
+            _publisher.Publish((record.Level, formatted));
         }
 
         public static ILogger CreatLogger(string name)
