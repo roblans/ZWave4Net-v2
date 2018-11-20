@@ -17,15 +17,15 @@ namespace ZWave4Net.Utilities
     {
         private static readonly Publisher _publisher = new Publisher();
 
-        public static IDisposable Subscribe(Action<(LogLevel Level, string Message)> action)
+        public static IDisposable Subscribe(Action<string> action)
         {
             return _publisher.Subcribe(action);
         }
 
-        public static void Log((string Category, LogLevel Level, string Message) record)
+        private static void Log((string Category, LogLevel Level, string Message) record)
         {
-            var formatted = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\t{record.Level}\t{record.Category}\t{record.Message}";
-            _publisher.Publish((record.Level, formatted));
+            var line = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\t{record.Level}\t{record.Category}\t{record.Message}";
+            _publisher.Publish(line);
         }
 
         public static ILogger CreatLogger(string name)
