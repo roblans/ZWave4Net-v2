@@ -13,19 +13,38 @@ namespace ZWave4Net.Utilities
         Critical,
     }
 
+    public class LogRecord
+    {
+        public readonly string Category;
+        public readonly LogLevel Level;
+        public readonly string Message;
+
+        public LogRecord(string category, LogLevel level, string message)
+        {
+            Category = category;
+            Level = level;
+            Message = message;
+        }
+
+        public override string ToString()
+        {
+            return Message;
+        }
+    }
+
     public static class Logging
     {
         private static readonly Publisher _publisher = new Publisher();
 
-        public static IDisposable Subscribe(Action<string> action)
+        public static IDisposable Subscribe(Action<LogRecord> action)
         {
             return _publisher.Subcribe(action);
         }
 
-        private static void Log((string Category, LogLevel Level, string Message) record)
+        private static void Log(LogRecord record)
         {
-            var line = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\t{record.Level}\t{record.Category}\t{record.Message}";
-            _publisher.Publish(line);
+            var formattedMessage = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}\t{record.Level}\t{record.Category}\t{record.Message}";
+            _publisher.Publish(new LogRecord(record.Category, record.Level, formattedMessage));
         }
 
         public static ILogger CreatLogger(string name)
@@ -36,9 +55,9 @@ namespace ZWave4Net.Utilities
         class Logger : ILogger
         {
             private readonly string _name;
-            private readonly Action<(string Category, LogLevel Level, string Message)> _onLog;
+            private readonly Action<LogRecord> _onLog;
 
-            public Logger(string name, Action<(string Category, LogLevel Level, string Message)> onLog)
+            public Logger(string name, Action<LogRecord> onLog)
             {
                 _name = name;
                 _onLog = onLog;
@@ -46,7 +65,7 @@ namespace ZWave4Net.Utilities
 
             public void Log(LogLevel level, string message)
             {
-                _onLog((_name, level, message));
+                _onLog(new LogRecord(_name, level, message));
             }
 
             public override string ToString()
