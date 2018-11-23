@@ -7,14 +7,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ZWave4Net.Channel;
-using ZWave4Net.Utilities;
+using ZWave4Net.Diagnostics;
 
 namespace ZWave4Net.Tests
 {
     public class MockDuplexStream : IDuplexStream
     {
-        private readonly ILogger _logger = Logging.CreatLogger("MockDuplexStream");
-
+        private readonly ILogger _logger = LogFactory.CreatLogger("MockDuplexStream");
         public EventHandler<EventArgs> AfterWrite;
 
         public readonly MemoryStream Input;
@@ -36,6 +35,8 @@ namespace ZWave4Net.Tests
             {
                 read += await Input.ReadAsync(buffer, read, lenght - read, cancellation);
             }
+
+            _logger.LogDebug($"Read {BitConverter.ToString(buffer)}");
 
             return buffer;
         }

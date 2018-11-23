@@ -6,15 +6,16 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using ZWave4Net.Utilities;
 using System.Runtime.CompilerServices;
 using ZWave4Net.Channel.Protocol.Frames;
+using ZWave4Net.Diagnostics;
+using ZWave4Net.Utilities;
 
 namespace ZWave4Net.Channel.Protocol
 {
     public class MessageBroker
     {
-        private readonly ILogger _logger = Logging.CreatLogger("MessageBroker");
+        private readonly ILogger _logger = LogFactory.CreatLogger("MessageBroker");
         private readonly FrameReader _reader;
         private readonly FrameWriter _writer;
         private readonly Publisher _publisher = new Publisher();

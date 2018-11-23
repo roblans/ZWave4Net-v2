@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ZWave4Net.Channel.Protocol;
 using ZWave4Net.Channel.Protocol.Frames;
-using ZWave4Net.Utilities;
+using ZWave4Net.Diagnostics;
 
 namespace ZWave4Net.Tests
 {
@@ -20,7 +20,7 @@ namespace ZWave4Net.Tests
         [TestInitialize()]
         public void TestInitialize()
         {
-            Logging.Subscribe((record) => TestContext.WriteLine(record.Message));
+            LogFactory.Subscribe((record) => TestContext.WriteLine(record.Message));
         }
 
         [TestMethod]
