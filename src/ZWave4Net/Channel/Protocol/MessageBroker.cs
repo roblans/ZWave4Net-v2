@@ -28,6 +28,29 @@ namespace ZWave4Net.Channel.Protocol
             _writer = new FrameWriter(stream);
         }
 
+        private Message Decode(DataFrame frame)
+        {
+            switch (frame.Type)
+            {
+                // response on a request
+                case DataFrameType.RES:
+                    // so create ResponseMessage
+                    return new ResponseMessage((ControllerFunction)frame.Payload[0], frame.Payload.Skip(1).ToArray());
+
+                // unsolicited event
+                case DataFrameType.REQ:
+                    // so create EventMessage
+                    return new EventMessage((ControllerFunction)frame.Payload[0], frame.Payload.Skip(1).ToArray());
+            }
+
+            throw new ProtocolException("Invalid DataFrame type");
+        }
+
+        private DataFrame Encode(RequestMessage message)
+        {
+            return new DataFrame(DataFrameType.REQ, new byte[] { (byte)message.Function }.Concat(message.Payload).ToArray());
+        }
+
         public TaskAwaiter GetAwaiter()
         {
             return _task?.GetAwaiter() ?? default(TaskAwaiter);
@@ -95,21 +118,11 @@ namespace ZWave4Net.Channel.Protocol
                         _logger.LogDebug($"Writing {Frame.ACK}");
                         await _writer.Write(Frame.ACK, cancellation);
 
-                        // check the type of the frame
-                        switch (dataFrame.Type)
-                        {
-                            // response on a request
-                            case DataFrameType.RES:
-                                // so create and publish ResponseMessage
-                                _publisher.Publish(new ResponseMessage(dataFrame.Payload));
-                                break;
-                            
-                            // unsolicited event
-                            case DataFrameType.REQ:
-                                // so create and publish EventMessage
-                                _publisher.Publish(new EventMessage(dataFrame.Payload));
-                                break;
-                        }
+                        // decode the dataframe
+                        var message = Decode(dataFrame);
+
+                        // and publish the message
+                        _publisher.Publish(message);
 
                         // wait for next frame
                         continue;
@@ -117,6 +130,11 @@ namespace ZWave4Net.Channel.Protocol
 
                 }
             }, cancellation);
+        }
+
+        public IDisposable Subscribe(Action<Message> callback)
+        {
+            return _publisher.Subcribe(callback);
         }
 
         public async Task Send(RequestMessage message, CancellationToken cancellation)
@@ -151,7 +169,8 @@ namespace ZWave4Net.Channel.Protocol
                     // start listening for received frames, call onVerifyResponse for every received frame 
                     using (var subscription = _publisher.Subcribe<Frame>(onVerifyResponse))
                     {
-                        var frame = new DataFrame(DataFrameType.REQ, message.Payload);
+                        // encode the message to a dataframe
+                        var frame = Encode(message);
 
                         if (retransmissions == 0)
                             _logger.LogDebug($"Sending frame {frame}");

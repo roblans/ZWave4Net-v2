@@ -8,16 +8,18 @@ namespace ZWave4Net.Channel.Protocol
 {
     public abstract class Message : IEquatable<Message>
     {
+        public readonly ControllerFunction Function;
         public readonly byte[] Payload;
 
-        protected Message(byte[] payload)
+        protected Message(ControllerFunction function, byte[] payload)
         {
+            Function = function;
             Payload = payload;
         }
 
         public override string ToString()
         {
-            return $"{(ControllerFunction)Payload[0]} {BitConverter.ToString(Payload.Skip(1).ToArray())}";
+            return $"{Function} {BitConverter.ToString(Payload)}";
         }
 
         public override bool Equals(object obj)
@@ -30,6 +32,7 @@ namespace ZWave4Net.Channel.Protocol
             return other != null &&
                    base.Equals(other) &&
                    GetType() == other.GetType() &&
+                   Function == other.Function &&
                    Payload.SequenceEqual(other.Payload);
         }
 
@@ -54,7 +57,7 @@ namespace ZWave4Net.Channel.Protocol
 
     public class RequestMessage : Message
     {
-        public RequestMessage(byte[] payload) : base(payload)
+        public RequestMessage(ControllerFunction function, byte[] payload) : base(function, payload)
         {
         }
 
@@ -66,7 +69,7 @@ namespace ZWave4Net.Channel.Protocol
 
     public class ResponseMessage : Message
     {
-        public ResponseMessage(byte[] payload) : base(payload)
+        public ResponseMessage(ControllerFunction function, byte[] payload) : base(function, payload)
         {
         }
 
@@ -78,7 +81,7 @@ namespace ZWave4Net.Channel.Protocol
 
     public class EventMessage : Message
     {
-        public EventMessage(byte[] payload) : base(payload)
+        public EventMessage(ControllerFunction function, byte[] payload) : base(function, payload)
         {
         }
 
