@@ -14,7 +14,7 @@ namespace ChannelConsole
         public static async Task Main(string[] args)
         {
 
-            LogFactory.Subscribe((message) => Console.WriteLine(message));
+            Logging.Factory.Subscribe((message) => Console.WriteLine(message));
 
             var port = new SerialPort(SerialPort.GetPortNames().Where(element => element != "COM1").First());
             var channel = new ZWaveChannel(port);

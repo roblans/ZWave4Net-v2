@@ -20,7 +20,7 @@ namespace ZWave4Net.Tests
         [TestInitialize()]
         public void TestInitialize()
         {
-            LogFactory.Subscribe((record) => TestContext.WriteLine(record.Message));
+            Logging.Factory.Subscribe((record) => TestContext.WriteLine(record.Message));
         }
 
         [TestMethod]

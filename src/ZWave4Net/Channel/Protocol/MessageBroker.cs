@@ -15,7 +15,7 @@ namespace ZWave4Net.Channel.Protocol
 {
     public class MessageBroker
     {
-        private readonly ILogger _logger = LogFactory.CreatLogger("MessageBroker");
+        private readonly ILogger _logger = Logging.Factory.CreatLogger("MessageBroker");
         private readonly FrameReader _reader;
         private readonly FrameWriter _writer;
         private readonly Publisher _publisher = new Publisher();

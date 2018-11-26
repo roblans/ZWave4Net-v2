@@ -13,7 +13,7 @@ namespace ZWave4Net.Tests
 {
     public class MockDuplexStream : IDuplexStream
     {
-        private readonly ILogger _logger = LogFactory.CreatLogger("MockDuplexStream");
+        private readonly ILogger _logger = Logging.Factory.CreatLogger("MockDuplexStream");
         public EventHandler<EventArgs> AfterWrite;
 
         public readonly MemoryStream Input;
