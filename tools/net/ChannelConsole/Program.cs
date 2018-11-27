@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ZWave4Net;
 using ZWave4Net.Channel;
 using ZWave4Net.Channel.Protocol;
 using ZWave4Net.Diagnostics;
@@ -19,16 +20,14 @@ namespace ChannelConsole
             Logging.Factory.Subscribe((message) => WriteConsole(message));
 
             var port = new SerialPort(SerialPort.GetPortNames().Where(element => element != "COM1").First());
-            var channel = new ZWaveChannel(port);
+            var controller = new ZWaveController(port);
 
-            await channel.Open();
+            await controller.Open();
 
-            var result = await channel.Send(new RequestMessage(Function.MemoryGetId, new byte[0]), default);
-            await Task.Delay(5000);
 
             Console.ReadLine();
 
-            await channel.Close();
+            await controller.Close();
 
             Console.ReadLine();
         }

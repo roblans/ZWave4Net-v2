@@ -63,6 +63,10 @@ namespace ZWave4Net.Channel.Protocol
         {
         }
 
+        public RequestMessage(Function function) : base(function, new byte[0])
+        {
+        }
+
         public override string ToString()
         {
             return $"Request {base.ToString()}";

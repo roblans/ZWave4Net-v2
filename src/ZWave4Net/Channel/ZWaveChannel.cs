@@ -31,7 +31,7 @@ namespace ZWave4Net.Channel
             _broker.Run(_cancellationSource.Token);
         }
 
-        public async Task<ResponseMessage> Send(RequestMessage request, CancellationToken cancellation)
+        public async Task<ResponseMessage> Send(RequestMessage request, CancellationToken cancellation = default(CancellationToken))
         {
             await _sendLock.WaitAsync(cancellation);
             try
@@ -43,7 +43,7 @@ namespace ZWave4Net.Channel
                 while (true)
                 {
                     // create completion source, will be completed on an expected response
-                    var completion = new TaskCompletionSource<ResponseMessage>();
+                    var completion = new TaskCompletionSource<ResponseMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
 
                     // callback, called on every message received
                     void onVerifyResponse(ResponseMessage response)

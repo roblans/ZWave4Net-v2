@@ -155,7 +155,7 @@ namespace ZWave4Net.Channel.Protocol
                 while (true)
                 {
                     // create completion source, will be completed on an expected response (ACK, NAK, CAN)
-                    var completion = new TaskCompletionSource<Frame>();
+                    var completion = new TaskCompletionSource<Frame>(TaskCreationOptions.RunContinuationsAsynchronously);
 
                     // callback, called on every frame received
                     void onVerifyResponse(Frame frame)
