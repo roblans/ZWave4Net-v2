@@ -15,7 +15,7 @@ namespace ZWave4Net.Channel.Protocol
 {
     public class MessageBroker
     {
-        private readonly ILogger _logger = Logging.Factory.CreatLogger("MessageBroker");
+        private readonly ILogger _logger = Logging.Factory.CreatLogger("Broker");
         private readonly FrameReader _reader;
         private readonly FrameWriter _writer;
         private readonly Publisher _publisher = new Publisher();
@@ -35,12 +35,12 @@ namespace ZWave4Net.Channel.Protocol
                 // response on a request
                 case DataFrameType.RES:
                     // so create ResponseMessage
-                    return new ResponseMessage((ControllerFunction)frame.Payload[0], frame.Payload.Skip(1).ToArray());
+                    return new ResponseMessage((Function)frame.Payload[0], frame.Payload.Skip(1).ToArray());
 
                 // unsolicited event
                 case DataFrameType.REQ:
                     // so create EventMessage
-                    return new EventMessage((ControllerFunction)frame.Payload[0], frame.Payload.Skip(1).ToArray());
+                    return new EventMessage((Function)frame.Payload[0], frame.Payload.Skip(1).ToArray());
             }
 
             throw new ProtocolException("Invalid DataFrame type");
@@ -90,7 +90,7 @@ namespace ZWave4Net.Channel.Protocol
                         _logger.LogWarning(ex.Message);
 
                         // send NACK and hopefully the controller will send this frame again
-                        _logger.LogDebug($"Writing {Frame.NAK}");
+                        _logger.LogDebug($"Writing: {Frame.NAK}");
                         await _writer.Write(Frame.NAK, cancellation);
 
                         // wait for next frame
@@ -101,9 +101,9 @@ namespace ZWave4Net.Channel.Protocol
                     if (frame == Frame.ACK || frame == Frame.NAK || frame == Frame.CAN)
                     {
                         if (frame == Frame.ACK)
-                            _logger.LogDebug($"Received {frame}");
+                            _logger.LogDebug($"Received: {frame}");
                         else
-                            _logger.LogWarning($"Received {frame}");
+                            _logger.LogWarning($"Received: {frame}");
 
                         // publish the frame
                         _publisher.Publish(frame);
@@ -114,8 +114,10 @@ namespace ZWave4Net.Channel.Protocol
 
                     if (frame is DataFrame dataFrame)
                     {
+                        _logger.LogDebug($"Received: {frame}");
+
                         // dataframes must be aknowledged
-                        _logger.LogDebug($"Writing {Frame.ACK}");
+                        _logger.LogDebug($"Writing: {Frame.ACK}");
                         await _writer.Write(Frame.ACK, cancellation);
 
                         // decode the dataframe
@@ -132,7 +134,7 @@ namespace ZWave4Net.Channel.Protocol
             }, cancellation);
         }
 
-        public IDisposable Subscribe(Action<Message> callback)
+        public IDisposable Subscribe(Action<ResponseMessage> callback)
         {
             return _publisher.Subcribe(callback);
         }
@@ -173,9 +175,9 @@ namespace ZWave4Net.Channel.Protocol
                         var frame = Encode(message);
 
                         if (retransmissions == 0)
-                            _logger.LogDebug($"Sending frame {frame}");
+                            _logger.LogDebug($"Sending: {frame}");
                         else                           
-                            _logger.LogWarning($"Resending frame {frame}, attempt: {retransmissions}");
+                            _logger.LogWarning($"Resending: {frame}, attempt: {retransmissions}");
 
                         // send the request
                         await _writer.Write(frame, cancellation);
@@ -212,7 +214,8 @@ namespace ZWave4Net.Channel.Protocol
                         else
                         {
                             // Timeout
-                            
+                            _logger.LogWarning($"Timeout while waiting for an ACK");
+
                             // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.3 Retransmission
                             // A host or Z-Wave chip MUST NOT carry out more than 3 retransmissions
                             if (retransmissions >= ProtocolSettings.MaxRetryAttempts)

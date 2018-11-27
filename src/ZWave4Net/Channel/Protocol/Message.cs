@@ -8,10 +8,10 @@ namespace ZWave4Net.Channel.Protocol
 {
     public abstract class Message : IEquatable<Message>
     {
-        public readonly ControllerFunction Function;
+        public readonly Function Function;
         public readonly byte[] Payload;
 
-        protected Message(ControllerFunction function, byte[] payload)
+        protected Message(Function function, byte[] payload)
         {
             Function = function;
             Payload = payload;
@@ -57,7 +57,9 @@ namespace ZWave4Net.Channel.Protocol
 
     public class RequestMessage : Message
     {
-        public RequestMessage(ControllerFunction function, byte[] payload) : base(function, payload)
+        public TimeSpan Timeout = TimeSpan.FromSeconds(1);
+
+        public RequestMessage(Function function, byte[] payload) : base(function, payload)
         {
         }
 
@@ -69,7 +71,7 @@ namespace ZWave4Net.Channel.Protocol
 
     public class ResponseMessage : Message
     {
-        public ResponseMessage(ControllerFunction function, byte[] payload) : base(function, payload)
+        public ResponseMessage(Function function, byte[] payload) : base(function, payload)
         {
         }
 
@@ -81,7 +83,7 @@ namespace ZWave4Net.Channel.Protocol
 
     public class EventMessage : Message
     {
-        public EventMessage(ControllerFunction function, byte[] payload) : base(function, payload)
+        public EventMessage(Function function, byte[] payload) : base(function, payload)
         {
         }
 

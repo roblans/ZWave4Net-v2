@@ -42,7 +42,7 @@ namespace ZWave4Net.Channel.Protocol.Frames
 
         public override string ToString()
         {
-            return $"{Header} {Type} {(ControllerFunction)Payload[0]} {BitConverter.ToString(Payload.Skip(1).ToArray())}";
+            return $"{Header} {Type} {(Function)Payload[0]} {BitConverter.ToString(Payload.Skip(1).ToArray())}";
         }
 
         public static bool operator ==(DataFrame frame1, DataFrame frame2)
