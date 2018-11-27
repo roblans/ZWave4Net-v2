@@ -23,11 +23,28 @@ namespace ZWave4Net
         {
             await _channel.Open();
 
-            var result = await _channel.Send(new RequestMessage(Function.MemoryGetId));
-            using (var reader = new PayloadReader(result.Payload))
+            var getVersion = await _channel.Send(new RequestMessage(Function.GetVersion));
+            using (var reader = new PayloadReader(getVersion.Payload))
+            {
+                var version = reader.ReadString();
+            }
+
+            var memoryGetId = await _channel.Send(new RequestMessage(Function.MemoryGetId));
+            using (var reader = new PayloadReader(memoryGetId.Payload))
             {
                 HomeID = reader.ReadUInt32();
                 NodeID = reader.ReadByte();
+            }
+
+            var discoveryNodes = await _channel.Send(new RequestMessage(Function.DiscoveryNodes));
+            using (var reader = new PayloadReader(discoveryNodes.Payload))
+            {
+                var version = reader.ReadByte();
+                var capabilities = reader.ReadByte();
+                var length = reader.ReadByte();
+                var nodes = reader.ReadBytes(length);
+                var chipType = reader.ReadByte();
+                var chipVersion = reader.ReadByte();
             }
         }
 

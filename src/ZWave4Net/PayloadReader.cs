@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using System.Text;
+using System.Collections.Generic;
 
 namespace ZWave4Net
 {
@@ -64,6 +65,26 @@ namespace ZWave4Net
         {
             FillBuffer(4);
             return (uint)(_buffer[0] << 24 | _buffer[1] << 16 | _buffer[2] << 8 | _buffer[3]);
+        }
+
+        public byte[] ReadBytes(int length)
+        {
+            FillBuffer(length);
+            return _buffer.Take(length).ToArray();
+        }
+
+        public string ReadString()
+        {
+            var bytes = new List<byte>();
+            while(true)
+            {
+                var b = ReadByte();
+                if (b == 0)
+                    break;
+
+                bytes.Add(b);
+            }
+            return Encoding.ASCII.GetString(bytes.ToArray(), 0, bytes.Count);
         }
 
         public void Dispose()
