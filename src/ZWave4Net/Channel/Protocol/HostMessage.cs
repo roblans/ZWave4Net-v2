@@ -4,15 +4,18 @@ using System.Text;
 
 namespace ZWave4Net.Channel.Protocol
 {
-    public class RequestMessage : Message
+    /// <summary>
+    /// Message from host to controller
+    /// </summary>
+    public class HostMessage : Message
     {
         public TimeSpan Timeout = TimeSpan.FromSeconds(1);
 
-        public RequestMessage(Function function, byte[] payload) : base(function, payload)
+        public HostMessage(Function function, byte[] payload) : base(function, payload)
         {
         }
 
-        public RequestMessage(Function function) : base(function, new byte[0])
+        public HostMessage(Function function) : base(function, new byte[0])
         {
         }
 

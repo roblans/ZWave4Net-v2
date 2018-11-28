@@ -22,13 +22,20 @@ namespace ChannelConsole
             var port = new SerialPort(SerialPort.GetPortNames().Where(element => element != "COM1").First());
             var controller = new ZWaveController(port);
 
-            await controller.Open();
+            try
+            {
+                await controller.Open();
 
 
-            Console.ReadLine();
+                Console.ReadLine();
 
-            await controller.Close();
+                await controller.Close();
 
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
             Console.ReadLine();
         }
 

@@ -46,7 +46,7 @@ namespace ZWave4Net.Channel.Protocol
             throw new ProtocolException("Invalid DataFrame type");
         }
 
-        private DataFrame Encode(RequestMessage message)
+        private DataFrame Encode(HostMessage message)
         {
             return new DataFrame(DataFrameType.REQ, new byte[] { (byte)message.Function }.Concat(message.Payload).ToArray());
         }
@@ -134,12 +134,12 @@ namespace ZWave4Net.Channel.Protocol
             }, cancellation);
         }
 
-        public IDisposable Subscribe(Action<ResponseMessage> callback)
+        public IDisposable Subscribe(Action<ControllerMessage> callback)
         {
             return _publisher.Subcribe(callback);
         }
 
-        public async Task Send(RequestMessage message, CancellationToken cancellation)
+        public async Task Send(HostMessage message, CancellationToken cancellation)
         {
             var stopwatch = Stopwatch.StartNew();
 

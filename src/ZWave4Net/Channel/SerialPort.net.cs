@@ -33,6 +33,7 @@ namespace ZWave4Net.Channel
         public Task Close()
         {
             _port.Close();
+
             return Task.CompletedTask;
         }
 

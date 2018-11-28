@@ -14,7 +14,6 @@ namespace ZWave4Net.Channel
         private readonly ILogger _logger = Logging.Factory.CreatLogger("Channel");
         private readonly MessageBroker _broker;
         private readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
-        private readonly SemaphoreSlim _sendLock = new SemaphoreSlim(1, 1);
         public readonly ISerialPort Port;
         
         public ZWaveChannel(ISerialPort port)
@@ -31,67 +30,77 @@ namespace ZWave4Net.Channel
             _broker.Run(_cancellationSource.Token);
         }
 
-        public async Task<ResponseMessage> Send(RequestMessage request, CancellationToken cancellation = default(CancellationToken))
+        private async Task<ControllerMessage> Send(HostMessage request, Func<ControllerMessage, bool> predicate, CancellationToken cancellation = default(CancellationToken))
         {
-            await _sendLock.WaitAsync(cancellation);
-            try
-            {
-                // number of retransmissions
-                var retransmissions = 0;
+            // number of retransmissions
+            var retransmissions = 0;
 
-                // return only on response or exception
-                while (true)
+            // return only on response or exception
+            while (true)
+            {
+                // create completion source, will be completed on an expected response
+                var completion = new TaskCompletionSource<ControllerMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+                // callback, called on every message received
+                void onVerifyResponse(ControllerMessage response)
                 {
-                    // create completion source, will be completed on an expected response
-                    var completion = new TaskCompletionSource<ResponseMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-                    // callback, called on every message received
-                    void onVerifyResponse(ResponseMessage response)
+                    // matching response?
+                    if (predicate(response))
                     {
-                        // matching response?
-                        if (response.Function == request.Function)
-                        {
-                            // yes, so set complete
-                            completion.TrySetResult(response);
-                        }
-                    };
-
-                    using (var subscription = _broker.Subscribe(onVerifyResponse))
-                    {
-                        if (retransmissions == 0)
-                            _logger.LogDebug($"Sending: {request}");
-                        else
-                            _logger.LogWarning($"Resending: {request}, attempt: {retransmissions}");
-
-                        await _broker.Send(request, cancellation);
-
-                        var timeout = Task.Delay(request.Timeout, cancellation);
-                        _logger.LogDebug($"Wait for response or timeout");
-
-                        if ((await Task.WhenAny(completion.Task, timeout)) == completion.Task)
-                        {
-                            var response = await completion.Task;
-                            _logger.LogDebug($"Received: {response}");
-
-                            return response;
-                        }
-                        else
-                        {
-                            _logger.LogWarning($"Timeout while waiting for a response");
-
-                            // Timeout
-                            if (retransmissions >= ProtocolSettings.MaxRetryAttempts)
-                                throw new TimeoutException("Timeout while waiting for a response");
-                        }
+                        // yes, so set complete
+                        completion.TrySetResult(response);
                     }
+                };
 
-                    retransmissions++;
+                using (var subscription = _broker.Subscribe(onVerifyResponse))
+                {
+                    if (retransmissions == 0)
+                        _logger.LogDebug($"Sending: {request}");
+                    else
+                        _logger.LogWarning($"Resending: {request}, attempt: {retransmissions}");
+
+                    await _broker.Send(request, cancellation);
+
+                    var timeout = Task.Delay(request.Timeout, cancellation);
+                    _logger.LogDebug($"Wait for response or timeout");
+
+                    if ((await Task.WhenAny(completion.Task, timeout)) == completion.Task)
+                    {
+                        var response = await completion.Task;
+                        _logger.LogDebug($"Received: {response}");
+
+                        return response;
+                    }
+                    else
+                    {
+                        _logger.LogWarning($"Timeout while waiting for a response");
+
+                        // Timeout
+                        if (retransmissions >= ProtocolSettings.MaxRetryAttempts)
+                            throw new TimeoutException("Timeout while waiting for a response");
+                    }
                 }
+
+                retransmissions++;
             }
-            finally
+        }
+
+        public async Task<ResponseMessage> Send(HostMessage request, CancellationToken cancellation = default(CancellationToken))
+        {
+            return (ResponseMessage)await Send(request, (response) => response.Function == request.Function, cancellation);
+        }
+
+        public async Task<EventMessage> Send(HostMessage request, Func<EventMessage, bool> predicate, CancellationToken cancellation = default(CancellationToken))
+        {
+            return (EventMessage)await Send(request, (response) =>
             {
-                _sendLock.Release();
-            }
+                if (response.Function == request.Function && response is EventMessage @event)
+                {
+                    return predicate(@event);
+                }
+                return false;
+
+            }, cancellation);
         }
 
         public async Task Close()

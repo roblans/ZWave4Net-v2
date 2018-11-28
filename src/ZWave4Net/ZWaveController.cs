@@ -9,6 +9,8 @@ namespace ZWave4Net
 {
     public class ZWaveController
     {
+        private static readonly object _lock = new object();
+        private static byte _callbackID = 0;
         private readonly ZWaveChannel _channel;
 
         public uint HomeID { get; private set; }
@@ -21,24 +23,32 @@ namespace ZWave4Net
             _channel = new ZWaveChannel(port);
         }
 
+        private static byte GetNextCallbackID()
+        {
+            lock (_lock) { return _callbackID = (byte)((_callbackID % 255) + 1); }
+        }
+
         public async Task Open()
         {
             await _channel.Open();
 
-            var getVersion = await _channel.Send(new RequestMessage(Function.GetVersion));
+            // small delay, otherwise lots of CAN's received during startup
+            await Task.Delay(1500);
+
+            var getVersion = await _channel.Send(new HostMessage(Function.GetVersion));
             using (var reader = new PayloadReader(getVersion.Payload))
             {
                 Version = reader.ReadString();
             }
 
-            var memoryGetId = await _channel.Send(new RequestMessage(Function.MemoryGetId));
+            var memoryGetId = await _channel.Send(new HostMessage(Function.MemoryGetId));
             using (var reader = new PayloadReader(memoryGetId.Payload))
             {
                 HomeID = reader.ReadUInt32();
                 NodeID = reader.ReadByte();
             }
 
-            var discoveryNodes = await _channel.Send(new RequestMessage(Function.DiscoveryNodes));
+            var discoveryNodes = await _channel.Send(new HostMessage(Function.DiscoveryNodes));
             using (var reader = new PayloadReader(discoveryNodes.Payload))
             {
                 var version = reader.ReadByte();
@@ -48,6 +58,12 @@ namespace ZWave4Net
 
                 ChipType = (ZWaveChipType)reader.ReadUInt16();
             }
+
+            var payload = new byte[] { 42, GetNextCallbackID() };
+            var requestNodeNeighborUpdate = await _channel.Send(new HostMessage(Function.RequestNodeNeighborUpdate,  payload), (response) =>
+            {
+                return true;
+            });
         }
 
         public async Task Close()

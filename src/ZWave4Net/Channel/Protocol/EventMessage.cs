@@ -4,7 +4,10 @@ using System.Text;
 
 namespace ZWave4Net.Channel.Protocol
 {
-    public class EventMessage : Message
+    /// <summary>
+    /// Event from controller to host
+    /// </summary>
+    public class EventMessage : ControllerMessage
     {
         public EventMessage(Function function, byte[] payload) : base(function, payload)
         {
