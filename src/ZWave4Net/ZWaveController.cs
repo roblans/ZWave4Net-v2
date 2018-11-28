@@ -13,6 +13,8 @@ namespace ZWave4Net
 
         public uint HomeID { get; private set; }
         public byte NodeID { get; private set; }
+        public string Version { get; private set; }
+        public ZWaveChipType ChipType { get; private set; }
 
         public ZWaveController(ISerialPort port)
         {
@@ -26,7 +28,7 @@ namespace ZWave4Net
             var getVersion = await _channel.Send(new RequestMessage(Function.GetVersion));
             using (var reader = new PayloadReader(getVersion.Payload))
             {
-                var version = reader.ReadString();
+                Version = reader.ReadString();
             }
 
             var memoryGetId = await _channel.Send(new RequestMessage(Function.MemoryGetId));
@@ -43,8 +45,8 @@ namespace ZWave4Net
                 var capabilities = reader.ReadByte();
                 var length = reader.ReadByte();
                 var nodes = reader.ReadBytes(length);
-                var chipType = reader.ReadByte();
-                var chipVersion = reader.ReadByte();
+
+                ChipType = (ZWaveChipType)reader.ReadUInt16();
             }
         }
 

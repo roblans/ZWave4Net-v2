@@ -24,6 +24,9 @@ namespace ZWave4Net.Channel
         public Task Open()
         {
             _port.Open();
+            _port.DiscardInBuffer();
+            _port.DiscardOutBuffer();
+
             return Task.CompletedTask;
         }
 

@@ -54,46 +54,4 @@ namespace ZWave4Net.Channel.Protocol
             return !(frame1 == frame2);
         }
     }
-
-    public class RequestMessage : Message
-    {
-        public TimeSpan Timeout = TimeSpan.FromSeconds(1);
-
-        public RequestMessage(Function function, byte[] payload) : base(function, payload)
-        {
-        }
-
-        public RequestMessage(Function function) : base(function, new byte[0])
-        {
-        }
-
-        public override string ToString()
-        {
-            return $"Request {base.ToString()}";
-        }
-    }
-
-    public class ResponseMessage : Message
-    {
-        public ResponseMessage(Function function, byte[] payload) : base(function, payload)
-        {
-        }
-
-        public override string ToString()
-        {
-            return $"Response {base.ToString()}";
-        }
-    }
-
-    public class EventMessage : Message
-    {
-        public EventMessage(Function function, byte[] payload) : base(function, payload)
-        {
-        }
-
-        public override string ToString()
-        {
-            return $"Event {base.ToString()}";
-        }
-    }
 }
