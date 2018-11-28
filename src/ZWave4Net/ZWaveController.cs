@@ -62,7 +62,7 @@ namespace ZWave4Net
 
         }
 
-        public async Task<NeighborUpdateStatus> RequestNeighborUpdate(byte nodeID, Action<NeighborUpdateStatus> progress, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<NeighborUpdateStatus> RequestNeighborUpdate(byte nodeID, Action<NeighborUpdateStatus> onProgress, CancellationToken cancellationToken = default(CancellationToken))
         {
             using (var writer = new PayloadWriter())
             {
@@ -91,15 +91,14 @@ namespace ZWave4Net
                             var status = (NeighborUpdateStatus)reader.ReadByte();
 
                             // if callback delegate provided then invoke with progress 
-                            progress?.Invoke(status);
+                            onProgress?.Invoke(status);
 
                             // return true when final state reached (we're done)
                             return status == NeighborUpdateStatus.Done || status == NeighborUpdateStatus.Failed;
                         }
                     }
-
                     return false;
-                });
+                }, cancellationToken);
 
                 using (var reader = new PayloadReader(requestNodeNeighborUpdate.Payload))
                 {
