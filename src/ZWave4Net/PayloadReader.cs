@@ -31,6 +31,11 @@ namespace ZWave4Net
             get { return (int)_stream.Position; }
         }
 
+        public void SkipBytes(int count)
+        {
+            _stream.Seek(count, SeekOrigin.Current);
+        }
+
         public byte ReadByte()
         {
             FillBuffer(1);

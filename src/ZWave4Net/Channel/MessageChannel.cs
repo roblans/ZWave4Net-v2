@@ -9,14 +9,14 @@ using ZWave4Net.Diagnostics;
 
 namespace ZWave4Net.Channel
 {
-    public class ZWaveChannel
+    public class MessageChannel
     {
         private readonly ILogger _logger = Logging.Factory.CreatLogger("Channel");
         private readonly MessageBroker _broker;
         private readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
         public readonly ISerialPort Port;
         
-        public ZWaveChannel(ISerialPort port)
+        public MessageChannel(ISerialPort port)
         {
             Port = port ?? throw new ArgumentNullException(nameof(port));
 

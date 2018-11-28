@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ZWave4Net.Channel;
 using ZWave4Net.Channel.Protocol;
@@ -11,7 +12,7 @@ namespace ZWave4Net
     {
         private static readonly object _lock = new object();
         private static byte _callbackID = 0;
-        private readonly ZWaveChannel _channel;
+        private readonly MessageChannel _channel;
 
         public uint HomeID { get; private set; }
         public byte NodeID { get; private set; }
@@ -20,7 +21,7 @@ namespace ZWave4Net
 
         public ZWaveController(ISerialPort port)
         {
-            _channel = new ZWaveChannel(port);
+            _channel = new MessageChannel(port);
         }
 
         private static byte GetNextCallbackID()
@@ -59,11 +60,56 @@ namespace ZWave4Net
                 ChipType = (ZWaveChipType)reader.ReadUInt16();
             }
 
-            var payload = new byte[] { 42, GetNextCallbackID() };
-            var requestNodeNeighborUpdate = await _channel.Send(new HostMessage(Function.RequestNodeNeighborUpdate,  payload), (response) =>
+        }
+
+        public async Task<NeighborUpdateStatus> RequestNeighborUpdate(byte nodeID, Action<NeighborUpdateStatus> progress, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            using (var writer = new PayloadWriter())
             {
-                return true;
-            });
+                // get next callbackID (1..255) 
+                var callbackID = GetNextCallbackID();
+
+                // write the ID of the node
+                writer.WriteByte(nodeID);
+                
+                // write the callback
+                writer.WriteByte(callbackID);
+
+                // build the host message
+                var message = new HostMessage(Function.RequestNodeNeighborUpdate, writer.GetPayload());
+
+                // send request
+                var requestNodeNeighborUpdate = await _channel.Send(message, (response) =>
+                {
+                    // response received, so open a reader
+                    using (var reader = new PayloadReader(response.Payload))
+                    {
+                        // check if callback matches request 
+                        if (reader.ReadByte() == callbackID)
+                        {
+                            // yes, so read status
+                            var status = (NeighborUpdateStatus)reader.ReadByte();
+
+                            // if callback delegate provided then invoke with progress 
+                            progress?.Invoke(status);
+
+                            // return true when final state reached (we're done)
+                            return status == NeighborUpdateStatus.Done || status == NeighborUpdateStatus.Failed;
+                        }
+                    }
+
+                    return false;
+                });
+
+                using (var reader = new PayloadReader(requestNodeNeighborUpdate.Payload))
+                {
+                    // skip the callback
+                    reader.SkipBytes(1);
+
+                    // return the status of the final response
+                    return (NeighborUpdateStatus)reader.ReadByte();
+                }
+            }
         }
 
         public async Task Close()
