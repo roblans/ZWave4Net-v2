@@ -23,9 +23,30 @@ namespace ZWave4Net.Channel
             _broker = new MessageBroker(port);
         }
 
+        private async Task SoftReset()
+        {
+            // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.1 Initializatio
+            // 1) Close host serial port if it is open
+            // 2) Open the host serial port at 115200 baud 8N1.
+            // 3) Send the NAK
+            // 4) Send SerialAPI command: FUNC_ID_SERIAL_API_SOFT_RESET
+            // 5) Wait 1.5s
+
+            var message = new HostMessage(Function.SerialApiSoftReset);
+            var frame = MessageBroker.Encode(message);
+
+            var writer = new FrameWriter(Port);
+            await writer.Write(Frame.NAK, CancellationToken.None);
+            await writer.Write(frame, CancellationToken.None);
+
+            await Task.Delay(1500);
+        }
+
         public async Task Open()
         {
             await Port.Open();
+
+            await SoftReset();
 
             _broker.Run(_cancellationSource.Token);
         }

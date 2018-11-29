@@ -7,6 +7,7 @@ namespace ZWave4Net.Channel
 {
     public interface ISerialPort : IDuplexStream
     {
+        bool IsOpen { get; }
         Task Open();
         Task Close();
     }

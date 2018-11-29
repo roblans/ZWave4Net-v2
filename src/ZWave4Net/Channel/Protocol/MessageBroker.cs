@@ -28,7 +28,7 @@ namespace ZWave4Net.Channel.Protocol
             _writer = new FrameWriter(stream);
         }
 
-        private Message Decode(DataFrame frame)
+        public static Message Decode(DataFrame frame)
         {
             switch (frame.Type)
             {
@@ -46,7 +46,7 @@ namespace ZWave4Net.Channel.Protocol
             throw new ProtocolException("Invalid DataFrame type");
         }
 
-        private DataFrame Encode(HostMessage message)
+        public static DataFrame Encode(HostMessage message)
         {
             return new DataFrame(DataFrameType.REQ, new byte[] { (byte)message.Function }.Concat(message.Payload).ToArray());
         }

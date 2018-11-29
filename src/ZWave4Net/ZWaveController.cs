@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ZWave4Net.Channel;
 using ZWave4Net.Channel.Protocol;
+using ZWave4Net.Channel.Protocol.Frames;
 
 namespace ZWave4Net
 {
@@ -32,9 +33,6 @@ namespace ZWave4Net
         public async Task Open()
         {
             await _channel.Open();
-
-            // small delay, otherwise lots of CAN's received during startup
-            await Task.Delay(1500);
 
             var getVersion = await _channel.Send(new HostMessage(Function.GetVersion));
             using (var reader = new PayloadReader(getVersion.Payload))

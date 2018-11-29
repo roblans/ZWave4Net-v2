@@ -10,6 +10,7 @@ namespace ZWave4Net.Channel
     public class SerialPort : ISerialPort
     {
         private readonly System.IO.Ports.SerialPort _port;
+        public bool IsOpen { get; private set; } = false;
 
         public static string[] GetPortNames()
         {
@@ -23,16 +24,26 @@ namespace ZWave4Net.Channel
 
         public Task Open()
         {
+            if (IsOpen)
+                throw new InvalidOperationException("Port is already open");
+
             _port.Open();
             _port.DiscardInBuffer();
             _port.DiscardOutBuffer();
+
+            IsOpen = true;
 
             return Task.CompletedTask;
         }
 
         public Task Close()
         {
+            if (!IsOpen)
+                throw new InvalidOperationException("Port is already closed");
+
             _port.Close();
+
+            IsOpen = false;
 
             return Task.CompletedTask;
         }
@@ -48,7 +59,7 @@ namespace ZWave4Net.Channel
                 {
                     read += await _port.BaseStream.ReadAsync(buffer, read, lenght - read, cancellation);
                 }
-                catch(System.IO.IOException ex)
+                catch (System.IO.IOException ex)
                 {
                     throw new StreamClosedException(ex.Message, ex);
                 }
@@ -59,7 +70,7 @@ namespace ZWave4Net.Channel
 
         public Task Write(byte[] values, CancellationToken cancellation)
         {
-           return _port.BaseStream.WriteAsync(values, 0, values.Length, cancellation);
+            return _port.BaseStream.WriteAsync(values, 0, values.Length, cancellation);
         }
     }
 #endif
