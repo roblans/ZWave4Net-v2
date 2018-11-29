@@ -26,6 +26,10 @@ namespace ChannelConsole
             {
                 await controller.Open();
 
+                Console.WriteLine($"Controller Version: {controller.Version}");
+                Console.WriteLine($"Controller ChipType: {controller.ChipType}");
+                Console.WriteLine($"Controller HomeID: {controller.HomeID:X}");
+                Console.WriteLine($"Controller NodeID: {controller.NodeID}");
 
                 Console.ReadLine();
 
