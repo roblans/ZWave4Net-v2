@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -13,16 +14,17 @@ namespace ZWave4Net
     {
         private static readonly object _lock = new object();
         private static byte _callbackID = 0;
-        private readonly MessageChannel _channel;
+        internal readonly MessageChannel Channel;
 
         public uint HomeID { get; private set; }
         public byte NodeID { get; private set; }
         public string Version { get; private set; }
         public ZWaveChipType ChipType { get; private set; }
+        public NodeCollection Nodes { get; private set; } = new NodeCollection();
 
         public ZWaveController(ISerialPort port)
         {
-            _channel = new MessageChannel(port);
+            Channel = new MessageChannel(port);
         }
 
         private static byte GetNextCallbackID()
@@ -32,28 +34,38 @@ namespace ZWave4Net
 
         public async Task Open()
         {
-            await _channel.Open();
+            await Channel.Open();
 
-            var getVersion = await _channel.Send(new HostMessage(Function.GetVersion));
+            var getVersion = await Channel.Send(new HostMessage(Function.GetVersion));
             using (var reader = new PayloadReader(getVersion.Payload))
             {
                 Version = reader.ReadString();
             }
 
-            var memoryGetId = await _channel.Send(new HostMessage(Function.MemoryGetId));
+            var memoryGetId = await Channel.Send(new HostMessage(Function.MemoryGetId));
             using (var reader = new PayloadReader(memoryGetId.Payload))
             {
                 HomeID = reader.ReadUInt32();
                 NodeID = reader.ReadByte();
             }
 
-            var discoveryNodes = await _channel.Send(new HostMessage(Function.DiscoveryNodes));
+            var discoveryNodes = await Channel.Send(new HostMessage(Function.DiscoveryNodes));
             using (var reader = new PayloadReader(discoveryNodes.Payload))
             {
                 var version = reader.ReadByte();
                 var capabilities = reader.ReadByte();
                 var length = reader.ReadByte();
                 var nodes = reader.ReadBytes(length);
+
+                var bits = new BitArray(nodes);
+                for (byte i = 0; i < bits.Length; i++)
+                {
+                    if (bits[i])
+                    {
+                        var node = new Node((byte)(i + 1), this);
+                        Nodes.Add(node);
+                    }
+                }
 
                 ChipType = (ZWaveChipType)reader.ReadUInt16();
             }
@@ -77,7 +89,7 @@ namespace ZWave4Net
                 var message = new HostMessage(Function.RequestNodeNeighborUpdate, writer.GetPayload());
 
                 // send request
-                var requestNodeNeighborUpdate = await _channel.Send(message, (response) =>
+                var requestNodeNeighborUpdate = await Channel.Send(message, (response) =>
                 {
                     // response received, so open a reader
                     using (var reader = new PayloadReader(response.Payload))
@@ -111,7 +123,7 @@ namespace ZWave4Net
 
         public async Task Close()
         {
-            await _channel.Close();
+            await Channel.Close();
         }
     }
 }

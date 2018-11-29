@@ -17,7 +17,7 @@ namespace ChannelConsole
         public static async Task Main(string[] args)
         {
 
-            Logging.Factory.Subscribe((message) => WriteConsole(message));
+            //Logging.Factory.Subscribe((message) => WriteConsole(message));
 
             var port = new SerialPort(SerialPort.GetPortNames().Where(element => element != "COM1").First());
             var controller = new ZWaveController(port);
@@ -31,6 +31,11 @@ namespace ChannelConsole
                 Console.WriteLine($"Controller HomeID: {controller.HomeID:X}");
                 Console.WriteLine($"Controller NodeID: {controller.NodeID}");
 
+                foreach(var node in controller.Nodes)
+                {
+                    var protocolInfo = await node.GetProtocolInfo();
+                    Console.WriteLine($"Node: {node}, Specific = {protocolInfo.SpecificType}, Generic = {protocolInfo.GenericType}, Basic = {protocolInfo.BasicType}, Listening = {protocolInfo.IsListening} ");
+                }
                 Console.ReadLine();
 
                 await controller.Close();
