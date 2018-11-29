@@ -71,7 +71,7 @@ namespace ZWave4Net.Channel
                 var completion = new TaskCompletionSource<ControllerMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
 
                 // callback, called on every message received
-                void onVerifyResponse(ControllerMessage response)
+                void onValidateResponse(ControllerMessage response)
                 {
                     // matching response?
                     if (predicate(response))
@@ -81,35 +81,50 @@ namespace ZWave4Net.Channel
                     }
                 };
 
-                using (var subscription = _broker.Subscribe(onVerifyResponse))
+                using (var timeoutCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellation))
                 {
-                    if (retransmissions == 0)
-                        _logger.LogDebug($"Sending: {request}");
-                    else
-                        _logger.LogWarning($"Resending: {request}, attempt: {retransmissions}");
+                    // use timeout from request
+                    timeoutCancellation.CancelAfter(request.Timeout);
+                    timeoutCancellation.Token.Register(() => completion.TrySetCanceled());
 
-                    await _broker.Send(request, cancellation);
-
-                    var timeout = Task.Delay(request.Timeout, cancellation);
-                    _logger.LogDebug($"Wait for response or timeout");
-
-                    if ((await Task.WhenAny(completion.Task, timeout)) == completion.Task)
+                    // start listening for received messages, call onVerifyResponse for every controllermessage
+                    using (var subscription = _broker.Subscribe(onValidateResponse))
                     {
-                        var response = await completion.Task;
-                        _logger.LogDebug($"Received: {response}");
+                        if (retransmissions == 0)
+                            _logger.LogDebug($"Sending: {request}");
+                        else
+                            _logger.LogWarning($"Resending: {request}, attempt: {retransmissions}");
 
-                        return response;
-                    }
-                    else
-                    {
-                        _logger.LogWarning($"Timeout while waiting for a response");
+                        // send the request
+                        await _broker.Send(request, cancellation);
 
-                        // Timeout
-                        if (retransmissions >= ProtocolSettings.MaxRetryAttempts)
-                            throw new TimeoutException("Timeout while waiting for a response");
+                        _logger.LogDebug($"Wait for response or timeout");
+                        try
+                        {
+                            // wait for validated response
+                            var response = await completion.Task;
+
+                            _logger.LogDebug($"Received: {response}");
+
+                            // done, so return response
+                            return response;
+                        }
+                        catch (TaskCanceledException) when (cancellation.IsCancellationRequested)
+                        {
+                            // operation was externally canceled, so rethrow
+                            throw;
+                        }
+                        catch (TaskCanceledException) when (timeoutCancellation.IsCancellationRequested)
+                        {
+                            // operation timed-out
+                            _logger.LogWarning($"Timeout while waiting for a response");
+
+                            // check if maximum retries reached
+                            if (retransmissions >= ProtocolSettings.MaxRetryAttempts)
+                                throw new TimeoutException("Timeout while waiting for a response");
+                        }
                     }
                 }
-
                 retransmissions++;
             }
         }
