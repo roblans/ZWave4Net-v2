@@ -16,7 +16,6 @@ namespace ChannelConsole
     {
         public static async Task Main(string[] args)
         {
-
             //Logging.Factory.Subscribe((message) => WriteConsole(message));
 
             var port = new SerialPort(SerialPort.GetPortNames().Where(element => element != "COM1").First());
@@ -36,6 +35,10 @@ namespace ChannelConsole
                     var protocolInfo = await node.GetProtocolInfo();
                     Console.WriteLine($"Node: {node}, Specific = {protocolInfo.SpecificType}, Generic = {protocolInfo.GenericType}, Basic = {protocolInfo.BasicType}, Listening = {protocolInfo.IsListening} ");
                 }
+
+                //var powerSwitch = controller.Nodes[24];
+                //await powerSwitch.RequestNeighborUpdate((status) => Console.WriteLine($"RequestNeighborUpdate: {status}"));
+
                 Console.ReadLine();
 
                 await controller.Close();

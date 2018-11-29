@@ -40,6 +40,58 @@ namespace ZWave4Net
             } 
         }
 
+        public async Task<NeighborUpdateStatus> RequestNeighborUpdate(Action<NeighborUpdateStatus> onProgress, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            using (var writer = new PayloadWriter())
+            {
+                // get next callbackID (1..255) 
+                var callbackID = MessageChannel.GetNextCallbackID();
+
+                // write the ID of the node
+                writer.WriteByte(NodeID);
+
+                // write the callback
+                writer.WriteByte(callbackID);
+
+                // build the host message
+                var message = new HostMessage(Function.RequestNodeNeighborUpdate, writer.GetPayload())
+                {
+                    Timeout = TimeSpan.FromSeconds(5),
+                };
+
+                // send request
+                var requestNodeNeighborUpdate = await Channel.Send(message, (response) =>
+                {
+                    // response received, so open a reader
+                    using (var reader = new PayloadReader(response.Payload))
+                    {
+                        // check if callback matches request 
+                        if (reader.ReadByte() == callbackID)
+                        {
+                            // yes, so read status
+                            var status = (NeighborUpdateStatus)reader.ReadByte();
+
+                            // if callback delegate provided then invoke with progress 
+                            onProgress?.Invoke(status);
+
+                            // return true when final state reached (we're done)
+                            return status == NeighborUpdateStatus.Done || status == NeighborUpdateStatus.Failed;
+                        }
+                    }
+                    return false;
+                }, cancellationToken);
+
+                using (var reader = new PayloadReader(requestNodeNeighborUpdate.Payload))
+                {
+                    // skip the callback
+                    reader.SkipBytes(1);
+
+                    // return the status of the final response
+                    return (NeighborUpdateStatus)reader.ReadByte();
+                }
+            }
+        }
+
         public override bool Equals(object obj)
         {
             return Equals(obj as Node);
