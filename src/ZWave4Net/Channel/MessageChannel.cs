@@ -59,7 +59,7 @@ namespace ZWave4Net.Channel
             _broker.Run(_cancellationSource.Token);
         }
 
-        private async Task<ControllerMessage> Send(HostMessage request, Func<ControllerMessage, bool> predicate, CancellationToken cancellation = default(CancellationToken))
+        public async Task<ControllerMessage> Send(HostMessage request, Func<ControllerMessage, bool> predicate, CancellationToken cancellation = default(CancellationToken))
         {
             // number of retransmissions
             var retransmissions = 0;
@@ -129,23 +129,6 @@ namespace ZWave4Net.Channel
             }
         }
 
-        public async Task<ResponseMessage> Send(HostMessage request, CancellationToken cancellation = default(CancellationToken))
-        {
-            return (ResponseMessage)await Send(request, (response) => response.Function == request.Function, cancellation);
-        }
-
-        public async Task<EventMessage> Send(HostMessage request, Func<EventMessage, bool> predicate, CancellationToken cancellation = default(CancellationToken))
-        {
-            return (EventMessage)await Send(request, (response) =>
-            {
-                if (response.Function == request.Function && response is EventMessage @event)
-                {
-                    return predicate(@event);
-                }
-                return false;
-
-            }, cancellation);
-        }
 
         public async Task Close()
         {

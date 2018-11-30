@@ -12,7 +12,7 @@ namespace ZWave4Net.Channel.Protocol
         public TimeSpan Timeout = TimeSpan.FromSeconds(5);
         public int MaxRetryAttempts = 0;
 
-        public HostMessage(Function function, byte[] payload) : base(function, payload)
+        public HostMessage(Function function, params byte[] payload) : base(function, payload)
         {
         }
 
