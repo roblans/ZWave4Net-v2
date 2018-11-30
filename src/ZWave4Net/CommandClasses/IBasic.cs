@@ -4,8 +4,9 @@ using System.Text;
 
 namespace ZWave4Net.CommandClasses
 {
-    public class BasicCommand
+    public interface IBasic
     {
-        public byte Value { get; set; }
+        byte GetValue();
+        void SetValue();
     }
 }
