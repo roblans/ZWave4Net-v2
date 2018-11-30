@@ -11,9 +11,13 @@ namespace ZWave4Net
 {
     public class Node : Endpoint, IEquatable<Node>
     {
-        public Node(byte nodeID, ZWaveController controller) 
-            : base(nodeID, 0, controller)
+        public byte NodeID { get; private set; }
+        public EndpointCollection Endpoints { get; private set; }
+
+        public Node(byte nodeID, ZWaveController controller) : base(controller)
         {
+            NodeID = nodeID;
+            Endpoints = new EndpointCollection(this);
         }
 
         public async Task<NodeProtocolInfo> GetProtocolInfo(CancellationToken cancellationToken = default(CancellationToken))
