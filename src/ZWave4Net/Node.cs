@@ -40,7 +40,7 @@ namespace ZWave4Net
             } 
         }
 
-        public async Task<NeighborUpdateStatus> RequestNeighborUpdate(Action<NeighborUpdateStatus> onProgress, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<NeighborUpdateStatus> RequestNeighborUpdate(Action<NeighborUpdateStatus> onProgress = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             using (var writer = new PayloadWriter())
             {
@@ -54,10 +54,7 @@ namespace ZWave4Net
                 writer.WriteByte(callbackID);
 
                 // build the host message
-                var message = new HostMessage(Function.RequestNodeNeighborUpdate, writer.GetPayload())
-                {
-                    Timeout = TimeSpan.FromSeconds(5),
-                };
+                var message = new HostMessage(Function.RequestNodeNeighborUpdate, writer.GetPayload());
 
                 // send request
                 var requestNodeNeighborUpdate = await Channel.Send(message, (response) =>

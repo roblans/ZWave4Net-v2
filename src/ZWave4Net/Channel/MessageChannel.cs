@@ -120,7 +120,7 @@ namespace ZWave4Net.Channel
                             _logger.LogWarning($"Timeout while waiting for a response");
 
                             // check if maximum retries reached
-                            if (retransmissions >= ProtocolSettings.MaxRetryAttempts)
+                            if (retransmissions >= request.MaxRetryAttempts)
                                 throw new TimeoutException("Timeout while waiting for a response");
                         }
                     }

@@ -36,8 +36,11 @@ namespace ChannelConsole
                     Console.WriteLine($"Node: {node}, Specific = {protocolInfo.SpecificType}, Generic = {protocolInfo.GenericType}, Basic = {protocolInfo.BasicType}, Listening = {protocolInfo.IsListening} ");
                 }
 
-                //var powerSwitch = controller.Nodes[24];
-                //await powerSwitch.RequestNeighborUpdate((status) => Console.WriteLine($"RequestNeighborUpdate: {status}"));
+                var powerSwitch = controller.Nodes[24];
+                await powerSwitch.RequestNeighborUpdate((status) =>
+                {
+                    Console.WriteLine($"RequestNeighborUpdate: {status}");
+                });
 
                 Console.ReadLine();
 
@@ -47,8 +50,8 @@ namespace ChannelConsole
             catch(Exception ex)
             {
                 Console.WriteLine(ex);
+                Console.ReadLine();
             }
-            Console.ReadLine();
         }
 
         private static void WriteConsole(LogRecord record)
