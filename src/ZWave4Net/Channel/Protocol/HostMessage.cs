@@ -9,7 +9,7 @@ namespace ZWave4Net.Channel.Protocol
     /// </summary>
     public class HostMessage : Message
     {
-        public TimeSpan Timeout = TimeSpan.FromSeconds(5);
+        public TimeSpan ResponseTimeout = TimeSpan.FromSeconds(5);
         public int MaxRetryAttempts = 0;
 
         public HostMessage(Payload payload) : base(payload)

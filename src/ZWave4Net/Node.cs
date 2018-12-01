@@ -22,7 +22,7 @@ namespace ZWave4Net
 
         public async Task<NodeProtocolInfo> GetProtocolInfo(CancellationToken cancellationToken = default(CancellationToken))
         {
-            var command = new RequestCommand<Payload>(Function.GetNodeProtocolInfo, new Payload(NodeID));
+            var command = new Command(Function.GetNodeProtocolInfo, NodeID);
             return await Channel.Send<NodeProtocolInfo>(command, cancellationToken);
         }
 
@@ -30,10 +30,10 @@ namespace ZWave4Net
         {
             var results = new List<Node>();
 
-            var command = new RequestCommand(Function.GetRoutingTableLine, new Payload(NodeID));
+            var command = new Command(Function.GetRoutingTableLine, NodeID);
 
             // send request
-            var response = await Channel.Send(command, cancellationToken);
+            var response = await Channel.Send<Payload>(command, cancellationToken);
 
             var bits = new BitArray(response.ToArray());
             for (byte i = 0; i < bits.Length; i++)
@@ -49,20 +49,27 @@ namespace ZWave4Net
 
         public async Task<NeighborUpdateStatus> RequestNeighborUpdate(Action<NeighborUpdateStatus> onProgress = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var command = new RequestCommand(Function.RequestNodeNeighborUpdate, new Payload(NodeID), useCallbackID: true);
+            var command = new Command(Function.RequestNodeNeighborUpdate, true, NodeID);
 
-            var requestNodeNeighborUpdate = await Channel.Send(command, (progress) =>
+            var requestNodeNeighborUpdate = await Channel.Send<Payload>(command, (progress) =>
             {
-                var status = (NeighborUpdateStatus)progress.ToArray()[0];
+                using (var reader = new PayloadReader(progress))
+                {
+                    var status = (NeighborUpdateStatus)reader.ReadByte();
 
-                onProgress?.Invoke(status);
+                    onProgress?.Invoke(status);
 
-                return status == NeighborUpdateStatus.Done || status == NeighborUpdateStatus.Failed;
+                    return status == NeighborUpdateStatus.Done || status == NeighborUpdateStatus.Failed;
+                }
+
             },
             cancellationToken);
 
             // return the status of the final response
-            return (NeighborUpdateStatus)requestNodeNeighborUpdate.ToArray()[0];
+            using (var reader = new PayloadReader(requestNodeNeighborUpdate))
+            {
+                return (NeighborUpdateStatus)reader.ReadByte();
+            }
         }
 
         public override bool Equals(object obj)

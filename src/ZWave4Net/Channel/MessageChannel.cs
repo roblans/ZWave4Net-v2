@@ -51,7 +51,7 @@ namespace ZWave4Net.Channel
             _broker.Run(_cancellationSource.Token);
         }
 
-        public async Task<ControllerMessage> Send(HostMessage request, Func<ControllerMessage, bool> predicate, CancellationToken cancellation = default(CancellationToken))
+        private async Task<ControllerMessage> Send(HostMessage request, Func<ControllerMessage, bool> predicate, CancellationToken cancellation = default(CancellationToken))
         {
             // number of retransmissions
             var retransmissions = 0;
@@ -76,7 +76,7 @@ namespace ZWave4Net.Channel
                 using (var timeoutCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellation))
                 {
                     // use timeout from request
-                    timeoutCancellation.CancelAfter(request.Timeout);
+                    timeoutCancellation.CancelAfter(request.ResponseTimeout);
                     timeoutCancellation.Token.Register(() => completion.TrySetCanceled());
 
                     // start listening for received messages, call onVerifyResponse for every controllermessage
@@ -121,6 +121,110 @@ namespace ZWave4Net.Channel
             }
         }
 
+        public async Task<T> Send<T>(Command command, Func<T, bool> predicate, CancellationToken cancellation) where T : IPayloadReadable, new()
+        {
+            // create writer to serialize te request
+            using (var writer = new PayloadWriter())
+            {
+                // write the command
+                writer.WriteObject(command);
+
+                // create a hostmessage, use the serialized payload  
+                var hostMessage = new HostMessage(writer.GetPayload());
+                
+                // custom timeout specified?
+                if (command.ResponseTimeout != null)
+                {
+                    // yes, so override default
+                    hostMessage.ResponseTimeout = command.ResponseTimeout.Value;
+                }
+
+                // custom retry specified?
+                if (command.MaxRetryAttempts != null)
+                {
+                    // yes, so override default
+                    hostMessage.MaxRetryAttempts = command.MaxRetryAttempts.Value;
+                }
+                
+                // send the result, the callback delegate will be called on every message received from the controller
+                var responseMessage = await Send(hostMessage, (controllerMessage) =>
+                {
+                    // check if this response matches the request
+                    if (!TryParseMatchingResponse<T>(controllerMessage, command, out var payload))
+                        return false;
+
+                    // if we have a custom predicate the use it to verify the response
+                    if (predicate != null && !predicate(payload))
+                        return false;
+
+                    // OK, matching response, so return true
+                    return true;
+                },
+                cancellation);
+
+
+                return ParseMatchingResponse<T>(responseMessage, command);
+            }
+        }
+
+        private bool TryParseMatchingResponse<T>(ControllerMessage response, Command command, out T payload) where T : IPayloadReadable, new()
+        {
+            payload = default(T);
+
+            using (var reader = new PayloadReader(response.Payload))
+            {
+                // read the function
+                var function = (Function)reader.ReadByte();
+
+                // check if expected function
+                if (!object.Equals(function, command.Function))
+                    return false;
+
+                // does the command has a callbackID?
+                if (command.UseCallbackID)
+                {
+                    // yes, so read callbackID
+                    var callbackID = reader.ReadByte();
+
+                    // check if expected callback
+                    if (!object.Equals(callbackID, command.CallbackID))
+                        return false;
+                }
+
+                // OK, seems we have a matching response. Deserialize the payload
+                payload = reader.ReadObject<T>();
+
+                // we're done
+                return true;
+            }
+        }
+
+        private T ParseMatchingResponse<T>(ControllerMessage message, Command command) where T : IPayloadReadable, new()
+        {
+            using (var reader = new PayloadReader(message.Payload))
+            {
+                // read the function
+                var function = (Function)reader.ReadByte();
+
+                // check if expected function
+                if (!object.Equals(function, command.Function))
+                    throw new ReponseFormatException("Function mismatch");
+
+                // does the request has a callbackID?
+                if (command.UseCallbackID)
+                {
+                    // yes, so read callbackID
+                    var callbackID = reader.ReadByte();
+
+                    // check if expected callback
+                    if (!object.Equals(callbackID, command.CallbackID))
+                        throw new ReponseFormatException("CallbackID mismatch");
+                }
+
+                // OK, seems we have a matching response. Deserialize the payload
+                return reader.ReadObject<T>();
+            }
+        }
 
         public async Task Close()
         {
