@@ -22,21 +22,20 @@ namespace ZWave4Net
 
         public async Task<NodeProtocolInfo> GetProtocolInfo(CancellationToken cancellationToken = default(CancellationToken))
         {
-            var message = new HostMessage(Function.GetNodeProtocolInfo, NodeID);
-            return await Channel.Send<NodeProtocolInfo>(message, cancellationToken);
+            var command = new RequestCommand<Payload>(Function.GetNodeProtocolInfo, new Payload(NodeID));
+            return await Channel.Send<NodeProtocolInfo>(command, cancellationToken);
         }
 
         public async Task<Node[]> GetNeighbours(CancellationToken cancellationToken = default(CancellationToken))
         {
             var results = new List<Node>();
 
-            // build the host message
-            var message = new HostMessage(Function.GetRoutingTableLine, NodeID);
+            var command = new RequestCommand(Function.GetRoutingTableLine, new Payload(NodeID));
 
             // send request
-            var response = await Channel.Send(message, cancellationToken);
+            var response = await Channel.Send(command, cancellationToken);
 
-            var bits = new BitArray(response.Payload);
+            var bits = new BitArray(response.ToArray());
             for (byte i = 0; i < bits.Length; i++)
             {
                 if (bits[i])
@@ -50,34 +49,20 @@ namespace ZWave4Net
 
         public async Task<NeighborUpdateStatus> RequestNeighborUpdate(Action<NeighborUpdateStatus> onProgress = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            // get next callbackID (1..255) 
-            var callbackID = MessageChannel.GetNextCallbackID();
+            var command = new RequestCommand(Function.RequestNodeNeighborUpdate, new Payload(NodeID), useCallbackID: true);
 
-            // build the host message
-            var message = new HostMessage(Function.RequestNodeNeighborUpdate, NodeID, callbackID);
-
-            // send request
-            var requestNodeNeighborUpdate = await Channel.Send(message, (response) =>
+            var requestNodeNeighborUpdate = await Channel.Send(command, (progress) =>
             {
-                // check if callback matches request 
-                if (response.Payload[0] == callbackID)
-                {
-                    // yes, so read status
-                    var status = (NeighborUpdateStatus)response.Payload[1];
+                var status = (NeighborUpdateStatus)progress.ToArray()[0];
 
-                    // if callback delegate provided then invoke with progress 
-                    onProgress?.Invoke(status);
+                onProgress?.Invoke(status);
 
-                    // return true when final state reached (we're done)
-                    return status == NeighborUpdateStatus.Done || status == NeighborUpdateStatus.Failed;
-                }
-                return false;
-
-            }, cancellationToken);
-
+                return status == NeighborUpdateStatus.Done || status == NeighborUpdateStatus.Failed;
+            },
+            cancellationToken);
 
             // return the status of the final response
-            return (NeighborUpdateStatus)requestNodeNeighborUpdate.Payload[1];
+            return (NeighborUpdateStatus)requestNodeNeighborUpdate.ToArray()[0];
         }
 
         public override bool Equals(object obj)

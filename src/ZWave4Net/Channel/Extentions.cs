@@ -9,33 +9,83 @@ namespace ZWave4Net.Channel
 {
     public static partial class Extentions
     {
-        public static async Task<ResponseMessage> Send(this MessageChannel channel, HostMessage request, CancellationToken cancellation = default(CancellationToken))
+        public static Task<T> Send<T>(this MessageChannel channel, IRequestCommand request) where T : IPayloadReadable, new()
         {
-            return (ResponseMessage)await channel.Send(request, (response) => response.Function == request.Function, cancellation);
+            return channel.Send<T>(request, null, default(CancellationToken));
         }
 
-        public static async Task<EventMessage> Send(this MessageChannel channel, HostMessage request, Func<EventMessage, bool> predicate, CancellationToken cancellation = default(CancellationToken))
+        public static Task<T> Send<T>(this MessageChannel channel, IRequestCommand request, CancellationToken cancellation) where T : IPayloadReadable, new()
         {
-            return (EventMessage)await channel.Send(request, (response) =>
+            return channel.Send<T>(request, null, cancellation);
+        }
+
+        public static Task<T> Send<T>(this MessageChannel channel, IRequestCommand request, Func<T, bool> predicate) where T : IPayloadReadable, new()
+        {
+            return channel.Send<T>(request, predicate, default(CancellationToken));
+        }
+
+        public static async Task<T> Send<T>(this MessageChannel channel, IRequestCommand request, Func<T, bool> predicate, CancellationToken cancellation) where T : IPayloadReadable, new()
+        {
+            using (var writer = new PayloadWriter())
             {
-                if (response.Function == request.Function && response is EventMessage @event)
+                request.WriteTo(writer);
+
+                var hostMessage = new HostMessage(writer.GetPayload());
+
+                var result = await channel.Send(hostMessage, (controllerMessage) =>
                 {
-                    return predicate(@event);
-                }
-                return false;
+                    using (var reader = new PayloadReader(controllerMessage.Payload))
+                    {
+                        var response = new ResponseCommand<T>
+                        {
+                            UseCallbackID = request.UseCallbackID
+                        };
+                        response.ReadFrom(reader);
 
-            }, cancellation);
+                        if (!object.Equals(response.Function, request.Function))
+                            return false;
+
+                        if (!object.Equals(response.CallbackID, request.CallbackID))
+                            return false;
+
+                        if (predicate != null && !predicate(response.Payload))
+                            return false;
+
+                        return true;
+                    }
+                },
+                cancellation);
+
+                using (var reader = new PayloadReader(result.Payload))
+                {
+                    var response = new ResponseCommand<T>
+                    {
+                        UseCallbackID = request.UseCallbackID
+                    };
+                    response.ReadFrom(reader);
+                    return response.Payload;
+                }
+            }
         }
 
-
-        public static async Task<TResponse> Send<TResponse>(this MessageChannel channel, HostMessage request, CancellationToken cancellation = default(CancellationToken)) where TResponse : IPayloadReadable, new()
+        public static Task<Payload> Send(this MessageChannel channel, IRequestCommand request)
         {
-            var response = await channel.Send(request, cancellation);
+            return channel.Send<Payload>(request, null, default(CancellationToken));
+        }
 
-            using (var reader = new PayloadReader(response.Payload))
-            {
-                return reader.ReadObject<TResponse>();
-            }
+        public static Task<Payload> Send(this MessageChannel channel, IRequestCommand request, CancellationToken cancellation)
+        {
+            return channel.Send<Payload>(request, null, cancellation);
+        }
+
+        public static Task<Payload> Send(this MessageChannel channel, IRequestCommand request, Func<Payload, bool> predicate)
+        {
+            return channel.Send<Payload>(request, predicate, default(CancellationToken));
+        }
+
+        public static Task<Payload> Send(this MessageChannel channel, IRequestCommand request, Func<Payload, bool> predicate, CancellationToken cancellation)
+        {
+            return channel.Send<Payload>(request, predicate, cancellation);
         }
     }
 }

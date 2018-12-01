@@ -3,6 +3,7 @@ using System.Linq;
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
+using ZWave4Net.Channel;
 
 namespace ZWave4Net
 {
@@ -11,9 +12,9 @@ namespace ZWave4Net
         private readonly Stream _stream;
         private readonly byte[] _buffer = new byte[256];
 
-        public PayloadReader(byte[] payload)
+        public PayloadReader(Payload payload)
         {
-            _stream = new MemoryStream(payload);
+            _stream = new MemoryStream(payload.ToArray());
         }
 
         private void FillBuffer(int length)

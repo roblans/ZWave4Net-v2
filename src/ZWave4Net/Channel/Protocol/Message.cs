@@ -8,18 +8,16 @@ namespace ZWave4Net.Channel.Protocol
 {
     public abstract class Message : IEquatable<Message>
     {
-        public readonly Function Function;
-        public readonly byte[] Payload;
+        public readonly Payload Payload;
 
-        protected Message(Function function, byte[] payload)
+        protected Message(Payload payload)
         {
-            Function = function;
             Payload = payload;
         }
 
         public override string ToString()
         {
-            return $"{Function} {BitConverter.ToString(Payload)}";
+            return $"{Payload}";
         }
 
         public override bool Equals(object obj)
@@ -32,15 +30,14 @@ namespace ZWave4Net.Channel.Protocol
             return other != null &&
                    base.Equals(other) &&
                    GetType() == other.GetType() &&
-                   Function == other.Function &&
-                   Payload.SequenceEqual(other.Payload);
+                   object.Equals(Payload, other.Payload);
         }
 
         public override int GetHashCode()
         {
             var hashCode = -988694756;
             hashCode = hashCode * -1521134295 + base.GetHashCode();
-            hashCode = hashCode * -1521134295 + Payload[0].GetHashCode();
+            hashCode = hashCode * -1521134295 + Payload.GetHashCode();
             return hashCode;
         }
 

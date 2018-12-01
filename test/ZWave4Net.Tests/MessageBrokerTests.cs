@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ZWave4Net.Channel;
 using ZWave4Net.Channel.Protocol;
 using ZWave4Net.Channel.Protocol.Frames;
 using ZWave4Net.Diagnostics;
@@ -34,7 +35,9 @@ namespace ZWave4Net.Tests
 
             broker.Run(cancellation.Token);
 
-            await broker.Send(new HostMessage(Function.ApplicationUpdate, new byte[] { 1, 2, 3 }), cancellation.Token);
+            var payload = new Payload(new byte[] { (byte)Function.ApplicationUpdate, 1, 2, 3 });
+
+            await broker.Send(new HostMessage(payload), cancellation.Token);
 
             cancellation.Cancel();
 
@@ -56,7 +59,8 @@ namespace ZWave4Net.Tests
             var broker = new MessageBroker(stream);
             broker.Run(cancellation.Token);
 
-            await broker.Send(new HostMessage(Function.ApplicationUpdate, new byte[] { 1, 2, 3 }), cancellation.Token);
+            var payload = new Payload(new byte[] { (byte)Function.ApplicationUpdate, 1, 2, 3 });
+            await broker.Send(new HostMessage(payload), cancellation.Token);
 
             cancellation.Cancel();
 
@@ -80,7 +84,8 @@ namespace ZWave4Net.Tests
 
             broker.Run(cancellation.Token);
 
-            await broker.Send(new HostMessage(Function.ApplicationUpdate, new byte[] { 1, 2, 3 }), cancellation.Token);
+            var payload = new Payload(new byte[] { (byte)Function.ApplicationUpdate, 1, 2, 3 });
+            await broker.Send(new HostMessage(payload), cancellation.Token);
 
             cancellation.Cancel();
 
@@ -104,7 +109,8 @@ namespace ZWave4Net.Tests
 
             broker.Run(cancellation.Token);
 
-            await broker.Send(new HostMessage(Function.ApplicationUpdate, new byte[] { 1, 2, 3 }), cancellation.Token);
+            var payload = new Payload(new byte[] { (byte)Function.ApplicationUpdate, 1, 2, 3 });
+            await broker.Send(new HostMessage(payload), cancellation.Token);
 
             cancellation.Cancel();
 
@@ -136,7 +142,8 @@ namespace ZWave4Net.Tests
 
             broker.Run(cancellation.Token);
 
-            await broker.Send(new HostMessage(Function.ApplicationUpdate, new byte[] { 1, 2, 3 }), cancellation.Token);
+            var payload = new Payload(new byte[] { (byte)Function.ApplicationUpdate, 1, 2, 3 });
+            await broker.Send(new HostMessage(payload), cancellation.Token);
 
             cancellation.Cancel();
 

@@ -11,9 +11,6 @@ namespace ZWave4Net.Channel
 {
     public class MessageChannel
     {
-        private static readonly object _lock = new object();
-        private static byte _callbackID = 0;
-
         private readonly ILogger _logger = Logging.Factory.CreatLogger("Channel");
         private readonly MessageBroker _broker;
         private readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
@@ -26,11 +23,6 @@ namespace ZWave4Net.Channel
             _broker = new MessageBroker(port);
         }
 
-        public static byte GetNextCallbackID()
-        {
-            lock (_lock) { return _callbackID = (byte)((_callbackID % 255) + 1); }
-        }
-
         private async Task SoftReset()
         {
             // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.1 Initializatio
@@ -40,7 +32,7 @@ namespace ZWave4Net.Channel
             // 4) Send SerialAPI command: FUNC_ID_SERIAL_API_SOFT_RESET
             // 5) Wait 1.5s
 
-            var message = new HostMessage(Function.SerialApiSoftReset);
+            var message = new HostMessage(new Payload((byte)Function.SerialApiSoftReset));
             var frame = MessageBroker.Encode(message);
 
             var writer = new FrameWriter(Port);

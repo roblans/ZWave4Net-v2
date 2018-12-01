@@ -55,7 +55,7 @@ namespace ZWave4Net.Channel.Protocol.Frames
             buffer[2] = (byte)frame.Type;
 
             // 3 Payload 
-            Array.Copy(frame.Payload, 0, buffer, 3, frame.Payload.Length);
+            Array.Copy(frame.Payload.ToArray(), 0, buffer, 3, frame.Payload.Length);
 
             // checksum
             buffer[buffer.Length - 1] = buffer.Skip(1).Take(buffer.Length - 2).CalculateChecksum();

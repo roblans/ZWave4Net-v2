@@ -3,6 +3,7 @@ using System.Linq;
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
+using ZWave4Net.Channel;
 
 namespace ZWave4Net
 {
@@ -26,9 +27,9 @@ namespace ZWave4Net
             get { return (int)_stream.Position; }
         }
 
-        public byte[] GetPayload()
+        public Payload GetPayload()
         {
-            return _stream.ToArray();
+            return new Payload(_stream.ToArray());
         }
 
         public void WriteByte(byte value)

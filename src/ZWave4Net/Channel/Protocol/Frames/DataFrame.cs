@@ -10,9 +10,9 @@ namespace ZWave4Net.Channel.Protocol.Frames
     public class DataFrame : Frame, IEquatable<DataFrame>
     {
         public readonly DataFrameType Type;
-        public readonly byte[] Payload;
+        public readonly Payload Payload;
 
-        public DataFrame(DataFrameType type, byte[] payload)
+        public DataFrame(DataFrameType type, Payload payload)
             : base(FrameHeader.SOF)
         {
             Type = type;
@@ -29,7 +29,7 @@ namespace ZWave4Net.Channel.Protocol.Frames
             return other != null &&
                    base.Equals(other) &&
                    Type == other.Type &&
-                   Payload.SequenceEqual(other.Payload);
+                   object.Equals(Payload, other.Payload);
         }
 
         public override int GetHashCode()
@@ -42,7 +42,7 @@ namespace ZWave4Net.Channel.Protocol.Frames
 
         public override string ToString()
         {
-            return $"{Header} {Type} {(Function)Payload[0]} {BitConverter.ToString(Payload.Skip(1).ToArray())}";
+            return $"{Header} {Type} {Payload}";
         }
 
         public static bool operator ==(DataFrame frame1, DataFrame frame2)

@@ -9,7 +9,7 @@ namespace ZWave4Net.Channel.Protocol
     /// </summary>
     public abstract class ControllerMessage : Message
     {
-        public ControllerMessage(Function function, byte[] payload) : base(function, payload)
+        public ControllerMessage(Payload payload) : base(payload)
         {
         }
     }

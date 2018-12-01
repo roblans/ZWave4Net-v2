@@ -29,21 +29,21 @@ namespace ZWave4Net
         {
             await Channel.Open();
 
-            var getVersion = await Channel.Send(new HostMessage(Function.GetVersion));
-            using (var reader = new PayloadReader(getVersion.Payload))
+            var getVersion = await Channel.Send(new RequestCommand(Function.GetVersion));
+            using (var reader = new PayloadReader(getVersion))
             {
                 Version = reader.ReadString();
             }
 
-            var memoryGetId = await Channel.Send(new HostMessage(Function.MemoryGetId));
-            using (var reader = new PayloadReader(memoryGetId.Payload))
+            var memoryGetId = await Channel.Send(new RequestCommand(Function.MemoryGetId));
+            using (var reader = new PayloadReader(memoryGetId))
             {
                 HomeID = reader.ReadUInt32();
                 NodeID = reader.ReadByte();
             }
 
-            var discoveryNodes = await Channel.Send(new HostMessage(Function.DiscoveryNodes));
-            using (var reader = new PayloadReader(discoveryNodes.Payload))
+            var discoveryNodes = await Channel.Send(new RequestCommand(Function.DiscoveryNodes));
+            using (var reader = new PayloadReader(discoveryNodes))
             {
                 var version = reader.ReadByte();
                 var capabilities = reader.ReadByte();

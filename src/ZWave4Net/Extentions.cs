@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using ZWave4Net.Channel;
 
 namespace ZWave4Net
 {
@@ -11,6 +12,11 @@ namespace ZWave4Net
             var instance = new T();
             instance.ReadFrom(reader);
             return instance;
+        }
+
+        public static void WriteObject<T>(this PayloadWriter writer, T value) where T : IPayloadWriteable
+        {
+            value.WriteTo(writer);
         }
     }
 }

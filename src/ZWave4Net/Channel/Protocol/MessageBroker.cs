@@ -35,12 +35,12 @@ namespace ZWave4Net.Channel.Protocol
                 // response on a request
                 case DataFrameType.RES:
                     // so create ResponseMessage
-                    return new ResponseMessage((Function)frame.Payload[0], frame.Payload.Skip(1).ToArray());
+                    return new ResponseMessage(frame.Payload);
 
                 // unsolicited event
                 case DataFrameType.REQ:
                     // so create EventMessage
-                    return new EventMessage((Function)frame.Payload[0], frame.Payload.Skip(1).ToArray());
+                    return new EventMessage(frame.Payload);
             }
 
             throw new ProtocolException("Invalid DataFrame type");
@@ -48,7 +48,7 @@ namespace ZWave4Net.Channel.Protocol
 
         public static DataFrame Encode(HostMessage message)
         {
-            return new DataFrame(DataFrameType.REQ, new byte[] { (byte)message.Function }.Concat(message.Payload).ToArray());
+            return new DataFrame(DataFrameType.REQ, message.Payload);
         }
 
         public TaskAwaiter GetAwaiter()
