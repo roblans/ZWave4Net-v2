@@ -12,7 +12,7 @@ namespace ZWave4Net
 {
     public class ZWaveController
     {
-        internal readonly MessageChannel Channel;
+        internal readonly Channel.ZWaveChannel Channel;
 
         public uint HomeID { get; private set; }
         public byte NodeID { get; private set; }
@@ -22,7 +22,7 @@ namespace ZWave4Net
 
         public ZWaveController(ISerialPort port)
         {
-            Channel = new MessageChannel(port);
+            Channel = new Channel.ZWaveChannel(port);
         }
 
         public async Task Open()

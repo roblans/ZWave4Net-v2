@@ -30,7 +30,7 @@ namespace ZWave4Net
             return $"{Node}.{EndpointID:D3}";
         }
 
-        protected MessageChannel Channel
+        protected ZWaveChannel Channel
         {
             get { return Controller.Channel; }
         }

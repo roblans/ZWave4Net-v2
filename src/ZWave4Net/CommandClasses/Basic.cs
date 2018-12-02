@@ -14,7 +14,7 @@ namespace ZWave4Net.CommandClasses
             Report = 0x03
         }
 
-        public Basic(MessageChannel Channel)
+        public Basic(Channel.ZWaveChannel Channel)
         {
         }
 

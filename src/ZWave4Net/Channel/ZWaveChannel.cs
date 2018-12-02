@@ -9,18 +9,26 @@ using ZWave4Net.Diagnostics;
 
 namespace ZWave4Net.Channel
 {
-    public class MessageChannel
+    public class ZWaveChannel
     {
+        private static readonly object _lock = new object();
+        private static byte _callbackID = 0;
+
         private readonly ILogger _logger = Logging.Factory.CreatLogger("Channel");
         private readonly MessageBroker _broker;
         private readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
         public readonly ISerialPort Port;
         
-        public MessageChannel(ISerialPort port)
+        public ZWaveChannel(ISerialPort port)
         {
             Port = port ?? throw new ArgumentNullException(nameof(port));
 
             _broker = new MessageBroker(port);
+        }
+
+        private static byte GetNextCallbackID()
+        {
+            lock (_lock) { return _callbackID = (byte)((_callbackID % 255) + 1); }
         }
 
         private async Task SoftReset()
@@ -121,13 +129,28 @@ namespace ZWave4Net.Channel
             }
         }
 
-        public async Task<T> Send<T>(Command command, Func<T, bool> predicate, CancellationToken cancellation) where T : IPayloadReadable, new()
+        public async Task<T> Send<T>(Command command, Func<T, bool> predicate, CancellationToken cancellation) where T : IPayload, new()
         {
             // create writer to serialize te request
             using (var writer = new PayloadWriter())
             {
-                // write the command
-                writer.WriteObject(command);
+                // write the function
+                writer.WriteByte((byte)command.Function);
+
+                // does the command has payload?
+                if (command.Payload != null)
+                {
+                    // yes, so write the payload
+                    writer.WriteObject(command.Payload);
+                }
+
+                //  if callback is required then generate a new callback 
+                var callbackID = command.UseCallbackID ? GetNextCallbackID() : default(byte?);
+                if (callbackID != null)
+                {
+                    // write the callback
+                    writer.WriteByte(callbackID.Value);
+                }
 
                 // create a hostmessage, use the serialized payload  
                 var hostMessage = new HostMessage(writer.GetPayload());
@@ -150,7 +173,7 @@ namespace ZWave4Net.Channel
                 var responseMessage = await Send(hostMessage, (controllerMessage) =>
                 {
                     // check if this response matches the request
-                    if (!TryParseMatchingResponse<T>(controllerMessage, command, out var payload))
+                    if (!TryParseMatchingResponse<T>(controllerMessage, command.Function, callbackID, out var payload))
                         return false;
 
                     // if we have a custom predicate the use it to verify the response
@@ -163,31 +186,25 @@ namespace ZWave4Net.Channel
                 cancellation);
 
 
-                return ParseMatchingResponse<T>(responseMessage, command);
+                return ParseMatchingResponse<T>(responseMessage, command.Function, callbackID);
             }
         }
 
-        private bool TryParseMatchingResponse<T>(ControllerMessage response, Command command, out T payload) where T : IPayloadReadable, new()
+        private bool TryParseMatchingResponse<T>(ControllerMessage response, Function function, byte? callbackID, out T payload) where T : IPayload, new()
         {
             payload = default(T);
 
             using (var reader = new PayloadReader(response.Payload))
             {
-                // read the function
-                var function = (Function)reader.ReadByte();
-
                 // check if expected function
-                if (!object.Equals(function, command.Function))
+                if (!object.Equals((Function)reader.ReadByte(), function))
                     return false;
 
                 // does the command has a callbackID?
-                if (command.UseCallbackID)
+                if (callbackID != null)
                 {
-                    // yes, so read callbackID
-                    var callbackID = reader.ReadByte();
-
                     // check if expected callback
-                    if (!object.Equals(callbackID, command.CallbackID))
+                    if (!object.Equals(reader.ReadByte(), callbackID))
                         return false;
                 }
 
@@ -199,25 +216,20 @@ namespace ZWave4Net.Channel
             }
         }
 
-        private T ParseMatchingResponse<T>(ControllerMessage message, Command command) where T : IPayloadReadable, new()
+        private T ParseMatchingResponse<T>(ControllerMessage message, Function function, byte? callbackID) where T : IPayload, new()
         {
             using (var reader = new PayloadReader(message.Payload))
             {
-                // read the function
-                var function = (Function)reader.ReadByte();
 
                 // check if expected function
-                if (!object.Equals(function, command.Function))
+                if (!object.Equals((Function)reader.ReadByte(), function))
                     throw new ReponseFormatException("Function mismatch");
 
                 // does the request has a callbackID?
-                if (command.UseCallbackID)
+                if (callbackID != null)
                 {
-                    // yes, so read callbackID
-                    var callbackID = reader.ReadByte();
-
                     // check if expected callback
-                    if (!object.Equals(callbackID, command.CallbackID))
+                    if (!object.Equals(reader.ReadByte(), callbackID.Value))
                         throw new ReponseFormatException("CallbackID mismatch");
                 }
 

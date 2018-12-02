@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ZWave4Net
 {
-    public class Payload : IPayloadReadable, IPayloadWriteable
+    public class Payload : IPayload
     {
         public static readonly Payload Empty = new Payload();
 
@@ -34,12 +34,12 @@ namespace ZWave4Net
             return _values;
         }
 
-        void IPayloadReadable.ReadFrom(PayloadReader reader)
+        void IPayload.Read(PayloadReader reader)
         {
             _values = reader.ReadBytes(reader.Length - reader.Position);
         }
 
-        void IPayloadWriteable.WriteTo(PayloadWriter writer)
+        void IPayload.Write(PayloadWriter writer)
         {
             writer.WriteBytes(_values);
         }

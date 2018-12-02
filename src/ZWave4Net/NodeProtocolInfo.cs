@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ZWave4Net
 {
-    public class NodeProtocolInfo : IPayloadReadable
+    public class NodeProtocolInfo : IPayload
     {
         public byte Capability { get; private set; }
         public byte Reserved { get; private set; }
@@ -13,7 +13,7 @@ namespace ZWave4Net
         public SpecificType SpecificType { get; private set; }
         public Security Security { get; private set; }
 
-        void IPayloadReadable.ReadFrom(PayloadReader reader)
+        void IPayload.Read(PayloadReader reader)
         {
             Capability = reader.ReadByte();
             Security = (Security)reader.ReadByte();
@@ -31,6 +31,11 @@ namespace ZWave4Net
                 SpecificType = (SpecificType)((int)GenericType << 16 | specificType);
             }
 
+        }
+
+        void IPayload.Write(PayloadWriter writer)
+        {
+            throw new NotImplementedException();
         }
 
         public bool Routing
