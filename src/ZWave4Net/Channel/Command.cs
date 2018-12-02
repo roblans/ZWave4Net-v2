@@ -7,14 +7,15 @@ namespace ZWave4Net.Channel
 {
     public class Command
     {
-        public TimeSpan? ResponseTimeout;
-        public int? MaxRetryAttempts;
+        public TimeSpan ResponseTimeout = TimeSpan.FromSeconds(5);
+        public int MaxRetryAttempts = 0;
+
         public bool UseCallbackID { get; set; }
 
         public Function Function { get; private set; }
-        public Payload Payload { get; private set; }
+        public IPayload Payload { get; private set; }
 
-        public Command(Function function, Payload payload = null)
+        public Command(Function function, IPayload payload = null)
         {
             Function = function;
             Payload = payload;

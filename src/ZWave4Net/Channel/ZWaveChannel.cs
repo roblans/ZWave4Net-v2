@@ -18,7 +18,7 @@ namespace ZWave4Net.Channel
         private readonly MessageBroker _broker;
         private readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
         public readonly ISerialPort Port;
-        
+
         public ZWaveChannel(ISerialPort port)
         {
             Port = port ?? throw new ArgumentNullException(nameof(port));
@@ -59,7 +59,64 @@ namespace ZWave4Net.Channel
             _broker.Run(_cancellationSource.Token);
         }
 
-        private async Task<ControllerMessage> Send(HostMessage request, Func<ControllerMessage, bool> predicate, CancellationToken cancellation = default(CancellationToken))
+        private async Task<ControllerMessage> Send(HostMessage request, Func<ControllerMessage, bool> predicate, TimeSpan timeout, CancellationToken cancellation = default(CancellationToken))
+        {
+            // create completion source, will be completed on an expected response
+            var completion = new TaskCompletionSource<ControllerMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            // callback, called on every message received
+            void onValidateResponse(ControllerMessage response)
+            {
+                // matching response?
+                if (predicate(response))
+                {
+                    // yes, so set complete
+                    completion.TrySetResult(response);
+                }
+            };
+
+            using (var timeoutCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellation))
+            {
+                // use timeout from request
+                timeoutCancellation.CancelAfter(timeout);
+                timeoutCancellation.Token.Register(() => completion.TrySetCanceled());
+
+                // start listening for received messages, call onVerifyResponse for every controllermessage
+                using (var subscription = _broker.Subscribe(onValidateResponse))
+                {
+                    _logger.LogDebug($"Sending: {request}");
+
+                    // send the request
+                    await _broker.Send(request, cancellation);
+
+                    _logger.LogDebug($"Wait for response or timeout");
+                    try
+                    {
+                        // wait for validated response
+                        var response = await completion.Task;
+
+                        _logger.LogDebug($"Received: {response}");
+
+                        // done, so return response
+                        return response;
+                    }
+                    catch (TaskCanceledException) when (cancellation.IsCancellationRequested)
+                    {
+                        // operation was externally canceled, so rethrow
+                        throw;
+                    }
+                    catch (TaskCanceledException) when (timeoutCancellation.IsCancellationRequested)
+                    {
+                        // operation timed-out
+                        _logger.LogWarning($"Timeout while waiting for a response");
+
+                        throw new TimeoutException("Timeout while waiting for a response");
+                    }
+                }
+            }
+        }
+
+        public async Task<T> Send<T>(Command command, Func<T, bool> predicate, CancellationToken cancellation) where T : IPayload, new()
         {
             // number of retransmissions
             var retransmissions = 0;
@@ -67,126 +124,59 @@ namespace ZWave4Net.Channel
             // return only on response or exception
             while (true)
             {
-                // create completion source, will be completed on an expected response
-                var completion = new TaskCompletionSource<ControllerMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-                // callback, called on every message received
-                void onValidateResponse(ControllerMessage response)
+                // create writer to serialize te request
+                using (var writer = new PayloadWriter())
                 {
-                    // matching response?
-                    if (predicate(response))
+                    // write the function
+                    writer.WriteByte((byte)command.Function);
+
+                    // does the command has payload?
+                    if (command.Payload != null)
                     {
-                        // yes, so set complete
-                        completion.TrySetResult(response);
+                        // yes, so write the payload
+                        writer.WriteObject(command.Payload);
                     }
-                };
 
-                using (var timeoutCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellation))
-                {
-                    // use timeout from request
-                    timeoutCancellation.CancelAfter(request.ResponseTimeout);
-                    timeoutCancellation.Token.Register(() => completion.TrySetCanceled());
-
-                    // start listening for received messages, call onVerifyResponse for every controllermessage
-                    using (var subscription = _broker.Subscribe(onValidateResponse))
+                    //  if callback is required then generate a new callback 
+                    var callbackID = command.UseCallbackID ? GetNextCallbackID() : default(byte?);
+                    if (callbackID != null)
                     {
-                        if (retransmissions == 0)
-                            _logger.LogDebug($"Sending: {request}");
-                        else
-                            _logger.LogWarning($"Resending: {request}, attempt: {retransmissions}");
+                        // write the callback
+                        writer.WriteByte(callbackID.Value);
+                    }
 
-                        // send the request
-                        await _broker.Send(request, cancellation);
+                    // create a hostmessage, use the serialized payload  
+                    var hostMessage = new HostMessage(writer.GetPayload());
 
-                        _logger.LogDebug($"Wait for response or timeout");
-                        try
+                    try
+                    {
+                        // send the result, the callback delegate will be called on every message received from the controller
+                        var responseMessage = await Send(hostMessage, (controllerMessage) =>
                         {
-                            // wait for validated response
-                            var response = await completion.Task;
+                            // check if this response matches the request
+                            if (!TryParseMatchingResponse<T>(controllerMessage, command.Function, callbackID, out var payload))
+                                return false;
 
-                            _logger.LogDebug($"Received: {response}");
+                            // if we have a custom predicate the use it to verify the response
+                            if (predicate != null && !predicate(payload))
+                                return false;
 
-                            // done, so return response
-                            return response;
-                        }
-                        catch (TaskCanceledException) when (cancellation.IsCancellationRequested)
-                        {
-                            // operation was externally canceled, so rethrow
-                            throw;
-                        }
-                        catch (TaskCanceledException) when (timeoutCancellation.IsCancellationRequested)
-                        {
-                            // operation timed-out
-                            _logger.LogWarning($"Timeout while waiting for a response");
+                            // OK, matching response, so return true
+                            return true;
 
-                            // check if maximum retries reached
-                            if (retransmissions >= request.MaxRetryAttempts)
-                                throw new TimeoutException("Timeout while waiting for a response");
-                        }
+                        }, command.ResponseTimeout, cancellation);
+
+                        return ParseMatchingResponse<T>(responseMessage, command.Function, callbackID);
+                    }
+                    catch (TimeoutException)
+                    {
+                        // check if maximum retries reached
+                        if (retransmissions >= command.MaxRetryAttempts)
+                            throw new TimeoutException("Timeout while waiting for a response");
                     }
                 }
+
                 retransmissions++;
-            }
-        }
-
-        public async Task<T> Send<T>(Command command, Func<T, bool> predicate, CancellationToken cancellation) where T : IPayload, new()
-        {
-            // create writer to serialize te request
-            using (var writer = new PayloadWriter())
-            {
-                // write the function
-                writer.WriteByte((byte)command.Function);
-
-                // does the command has payload?
-                if (command.Payload != null)
-                {
-                    // yes, so write the payload
-                    writer.WriteObject(command.Payload);
-                }
-
-                //  if callback is required then generate a new callback 
-                var callbackID = command.UseCallbackID ? GetNextCallbackID() : default(byte?);
-                if (callbackID != null)
-                {
-                    // write the callback
-                    writer.WriteByte(callbackID.Value);
-                }
-
-                // create a hostmessage, use the serialized payload  
-                var hostMessage = new HostMessage(writer.GetPayload());
-                
-                // custom timeout specified?
-                if (command.ResponseTimeout != null)
-                {
-                    // yes, so override default
-                    hostMessage.ResponseTimeout = command.ResponseTimeout.Value;
-                }
-
-                // custom retry specified?
-                if (command.MaxRetryAttempts != null)
-                {
-                    // yes, so override default
-                    hostMessage.MaxRetryAttempts = command.MaxRetryAttempts.Value;
-                }
-                
-                // send the result, the callback delegate will be called on every message received from the controller
-                var responseMessage = await Send(hostMessage, (controllerMessage) =>
-                {
-                    // check if this response matches the request
-                    if (!TryParseMatchingResponse<T>(controllerMessage, command.Function, callbackID, out var payload))
-                        return false;
-
-                    // if we have a custom predicate the use it to verify the response
-                    if (predicate != null && !predicate(payload))
-                        return false;
-
-                    // OK, matching response, so return true
-                    return true;
-                },
-                cancellation);
-
-
-                return ParseMatchingResponse<T>(responseMessage, command.Function, callbackID);
             }
         }
 
@@ -220,7 +210,6 @@ namespace ZWave4Net.Channel
         {
             using (var reader = new PayloadReader(message.Payload))
             {
-
                 // check if expected function
                 if (!object.Equals((Function)reader.ReadByte(), function))
                     throw new ReponseFormatException("Function mismatch");
