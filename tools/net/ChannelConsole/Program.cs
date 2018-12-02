@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using ZWave4Net;
 using ZWave4Net.Channel;
 using ZWave4Net.Channel.Protocol;
+using ZWave4Net.CommandClasses;
 using ZWave4Net.Diagnostics;
 
 namespace ChannelConsole
@@ -47,6 +48,12 @@ namespace ChannelConsole
                 {
                     Console.WriteLine($"RequestNeighborUpdate: {status}");
                 });
+
+                var basic = new Basic(powerSwitch);
+                await basic.SetValue(255);
+                var value = await basic.GetValue();
+                await Task.Delay(1000);
+                await basic.SetValue(0);
 
                 Console.ReadLine();
 

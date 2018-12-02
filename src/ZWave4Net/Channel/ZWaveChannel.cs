@@ -116,7 +116,7 @@ namespace ZWave4Net.Channel
             }
         }
 
-        public async Task<T> Send<T>(Command command, Func<T, bool> predicate, CancellationToken cancellation) where T : IPayload, new()
+        public async Task<T> Send<T>(ControllerCommand command, Func<T, bool> predicate, CancellationToken cancellation) where T : IPayload, new()
         {
             // number of retransmissions
             var retransmissions = 0;

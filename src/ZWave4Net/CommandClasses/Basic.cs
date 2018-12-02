@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using ZWave4Net.Channel;
 
 namespace ZWave4Net.CommandClasses
@@ -14,17 +15,21 @@ namespace ZWave4Net.CommandClasses
             Report = 0x03
         }
 
-        public Basic(Channel.ZWaveChannel Channel)
+        public Basic(Node node) : base(node)
         {
         }
 
-        public byte GetValue()
+        public async Task<byte> GetValue()
         {
-            return 0;
+            var command = new NodeCommand(0x20, 0x02);
+            var payload = await Send(command);
+            return 123;
         }
 
-        public void SetValue()
+        public Task SetValue(byte value)
         {
+            var command = new NodeCommand(0x20, 0x01, value);
+            return Send(command); 
         }
     }
 }

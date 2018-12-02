@@ -5,7 +5,7 @@ using ZWave4Net.Channel.Protocol;
 
 namespace ZWave4Net.Channel
 {
-    public class Command
+    public class ControllerCommand
     {
         public TimeSpan ResponseTimeout = TimeSpan.FromSeconds(5);
         public int MaxRetryAttempts = 0;
@@ -15,7 +15,7 @@ namespace ZWave4Net.Channel
         public Function Function { get; private set; }
         public IPayload Payload { get; private set; }
 
-        public Command(Function function, IPayload payload = null)
+        public ControllerCommand(Function function, IPayload payload = null)
         {
             Function = function;
             Payload = payload;

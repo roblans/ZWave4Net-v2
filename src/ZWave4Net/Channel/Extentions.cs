@@ -9,39 +9,61 @@ namespace ZWave4Net.Channel
 {
     public static partial class Extentions
     {
-        public static Task<T> Send<T>(this ZWaveChannel channel, Command command) where T : IPayload, new()
+        public static Task<T> Send<T>(this ZWaveChannel channel, ControllerCommand command) where T : IPayload, new()
         {
             return channel.Send<T>(command, null, default(CancellationToken));
         }
 
-        public static Task<T> Send<T>(this ZWaveChannel channel, Command command, CancellationToken cancellation) where T : IPayload, new()
+        public static Task<T> Send<T>(this ZWaveChannel channel, ControllerCommand command, CancellationToken cancellation) where T : IPayload, new()
         {
             return channel.Send<T>(command, null, cancellation);
         }
 
-        public static Task<T> Send<T>(this ZWaveChannel channel, Command command, Func<T, bool> predicate) where T : IPayload, new()
+        public static Task<T> Send<T>(this ZWaveChannel channel, ControllerCommand command, Func<T, bool> predicate) where T : IPayload, new()
         {
             return channel.Send<T>(command, predicate, default(CancellationToken));
         }
 
-        public static Task<Payload> Send(this ZWaveChannel channel, Command command)
+        public static Task<Payload> Send(this ZWaveChannel channel, ControllerCommand command)
         {
             return channel.Send<Payload>(command, null, default(CancellationToken));
         }
 
-        public static Task<Payload> Send(this ZWaveChannel channel, Command command, CancellationToken cancellation)
+        public static Task<Payload> Send(this ZWaveChannel channel, ControllerCommand command, CancellationToken cancellation)
         {
             return channel.Send<Payload>(command, null, cancellation);
         }
 
-        public static Task<Payload> Send(this ZWaveChannel channel, Command command, Func<Payload, bool> predicate)
+        public static Task<Payload> Send(this ZWaveChannel channel, ControllerCommand command, Func<Payload, bool> predicate)
         {
             return channel.Send<Payload>(command, predicate, default(CancellationToken));
         }
 
-        public static Task<Payload> Send(this ZWaveChannel channel, Command command, Func<Payload, bool> predicate, CancellationToken cancellation)
+        public static Task<Payload> Send(this ZWaveChannel channel, ControllerCommand command, Func<Payload, bool> predicate, CancellationToken cancellation)
         {
             return channel.Send<Payload>(command, predicate, cancellation);
+        }
+
+        public static Task<T> Send<T>(this ZWaveChannel channel, byte nodeID, NodeCommand command) where T : IPayload, new()
+        {
+            using (var writer = new PayloadWriter())
+            {
+                writer.WriteByte(nodeID);
+                writer.WriteObject(command);
+                writer.WriteByte((byte)(TransmitOptions.Ack | TransmitOptions.AutoRoute | TransmitOptions.Explore));
+
+                var controllerCommand = new ControllerCommand(Function.SendData, writer.GetPayload())
+                {
+                    UseCallbackID = true,
+                };
+
+                return channel.Send<T>(controllerCommand);
+            }
+        }
+
+        public static Task Send(this ZWaveChannel channel, byte nodeID, NodeCommand command)
+        {
+            return channel.Send<Payload>(nodeID, command);
         }
     }
 }
