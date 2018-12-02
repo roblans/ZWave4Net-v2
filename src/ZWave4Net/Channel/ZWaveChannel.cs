@@ -158,7 +158,7 @@ namespace ZWave4Net.Channel
                                 return false;
 
                             // if we have a custom predicate the use it to verify the response
-                            if (predicate != null && !predicate(payload))
+                            if ((controllerMessage is EventMessage) && predicate != null && !predicate(payload))
                                 return false;
 
                             // OK, matching response, so return true
@@ -225,6 +225,34 @@ namespace ZWave4Net.Channel
                 // OK, seems we have a matching response. Deserialize the payload
                 return reader.ReadObject<T>();
             }
+        }
+
+        public async Task<T> Send<T>(byte nodeID, NodeCommand command, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
+        {
+            using (var writer = new PayloadWriter())
+            {
+                writer.WriteByte(nodeID);
+                writer.WriteObject(command);
+                writer.WriteByte((byte)(TransmitOptions.Ack | TransmitOptions.AutoRoute | TransmitOptions.Explore));
+
+                var controllerCommand = new ControllerCommand(Function.SendData, writer.GetPayload())
+                {
+                    UseCallbackID = true,
+                };
+
+                var response = await Send<Payload>(controllerCommand, null, cancellation);
+
+                using (var reader = new PayloadReader(response))
+                {
+                    var state = (TransmissionState)reader.ReadByte();
+
+                    if (state == TransmissionState.CompleteOK)
+                        _logger.LogDebug($"TransmissionState: {state}");
+                    else
+                        _logger.LogError($"TransmissionState: {state}");
+                }
+            }
+            return default(T);
         }
 
         public async Task Close()

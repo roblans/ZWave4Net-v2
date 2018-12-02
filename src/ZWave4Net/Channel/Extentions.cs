@@ -44,23 +44,6 @@ namespace ZWave4Net.Channel
             return channel.Send<Payload>(command, predicate, cancellation);
         }
 
-        public static Task<T> Send<T>(this ZWaveChannel channel, byte nodeID, NodeCommand command) where T : IPayload, new()
-        {
-            using (var writer = new PayloadWriter())
-            {
-                writer.WriteByte(nodeID);
-                writer.WriteObject(command);
-                writer.WriteByte((byte)(TransmitOptions.Ack | TransmitOptions.AutoRoute | TransmitOptions.Explore));
-
-                var controllerCommand = new ControllerCommand(Function.SendData, writer.GetPayload())
-                {
-                    UseCallbackID = true,
-                };
-
-                return channel.Send<T>(controllerCommand);
-            }
-        }
-
         public static Task Send(this ZWaveChannel channel, byte nodeID, NodeCommand command)
         {
             return channel.Send<Payload>(nodeID, command);

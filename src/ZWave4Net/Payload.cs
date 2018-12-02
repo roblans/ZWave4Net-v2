@@ -34,6 +34,11 @@ namespace ZWave4Net
             return _values;
         }
 
+        public override string ToString()
+        {
+            return BitConverter.ToString(_values);
+        }
+
         void IPayload.Read(PayloadReader reader)
         {
             _values = reader.ReadBytes(reader.Length - reader.Position);

@@ -17,7 +17,7 @@ namespace ChannelConsole
     {
         public static async Task Main(string[] args)
         {
-            //Logging.Factory.Subscribe((message) => WriteConsole(message));
+            Logging.Factory.Subscribe((message) => WriteConsole(message));
 
             var port = new SerialPort(SerialPort.GetPortNames().Where(element => element != "COM1").First());
             var controller = new ZWaveController(port);
@@ -44,16 +44,16 @@ namespace ChannelConsole
                 }
 
                 var powerSwitch = controller.Nodes[24];
-                await powerSwitch.RequestNeighborUpdate((status) =>
+                await powerSwitch.RequestNeighborUpdate(new Progress<NeighborUpdateStatus>(status =>
                 {
                     Console.WriteLine($"RequestNeighborUpdate: {status}");
-                });
+                }));
 
                 var basic = new Basic(powerSwitch);
-                await basic.SetValue(255);
+                //await basic.SetValue(255);
                 var value = await basic.GetValue();
                 await Task.Delay(1000);
-                await basic.SetValue(0);
+                //await basic.SetValue(0);
 
                 Console.ReadLine();
 
