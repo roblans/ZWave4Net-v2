@@ -44,16 +44,16 @@ namespace ChannelConsole
                 }
 
                 var powerSwitch = controller.Nodes[24];
-                await powerSwitch.RequestNeighborUpdate(new Progress<NeighborUpdateStatus>(status =>
-                {
-                    Console.WriteLine($"RequestNeighborUpdate: {status}");
-                }));
+                //await powerSwitch.RequestNeighborUpdate(new Progress<NeighborUpdateStatus>(status =>
+                //{
+                //    Console.WriteLine($"RequestNeighborUpdate: {status}");
+                //}));
 
-                var basic = new Basic(powerSwitch);
-                //await basic.SetValue(255);
-                var value = await basic.GetValue();
-                await Task.Delay(1000);
-                //await basic.SetValue(0);
+                //var basic = new Basic(powerSwitch);
+                ////await basic.SetValue(255);
+                //var value = await basic.GetValue();
+                //await Task.Delay(1000);
+                ////await basic.SetValue(0);
 
                 Console.ReadLine();
 

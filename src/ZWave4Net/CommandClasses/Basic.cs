@@ -22,14 +22,15 @@ namespace ZWave4Net.CommandClasses
         public async Task<byte> GetValue()
         {
             var command = new NodeCommand(0x20, 0x02);
-            var payload = await Send(command);
+            //var payload = await Send(command);
             return 123;
         }
 
         public Task SetValue(byte value)
         {
             var command = new NodeCommand(0x20, 0x01, value);
-            return Send(command); 
+            //return Send(command); 
+            return Task.CompletedTask;
         }
     }
 }

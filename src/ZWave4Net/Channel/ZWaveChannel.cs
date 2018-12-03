@@ -116,7 +116,51 @@ namespace ZWave4Net.Channel
             }
         }
 
-        public async Task<T> Send<T>(ControllerCommand command, Func<T, bool> predicate, CancellationToken cancellation) where T : IPayload, new()
+        private HostMessage Encode(ControllerCommand command, byte? callbackID)
+        {
+            // create writer to serialize te request
+            using (var writer = new PayloadWriter())
+            {
+                // write the function
+                writer.WriteByte((byte)command.Function);
+
+                // does the command has payload?
+                if (command.Payload != null)
+                {
+                    // yes, so write the payload
+                    writer.WriteObject(command.Payload);
+                }
+
+                if (callbackID != null)
+                {
+                    // write the callback
+                    writer.WriteByte(callbackID.Value);
+                }
+
+                // create a hostmessage, use the serialized payload  
+                return new HostMessage(writer.GetPayload());
+            }
+        }
+
+        private ControllerResponse<T> Decode<T>(ControllerMessage message, bool hasCallbackID) where T : IPayload, new()
+        {
+            // create reader to deserialize the request
+            using (var reader = new PayloadReader(message.Payload))
+            {
+                // read the function
+                var function = (Function)reader.ReadByte();
+
+                // read the (optional callback
+                var callbackID = hasCallbackID ? reader.ReadByte() : default(byte?);
+
+                // read the payload
+                var payload = reader.ReadObject<T>();
+
+                return new ControllerResponse<T>(function, callbackID, payload);
+            }
+        }
+
+        public async Task<T> Send<T>(ControllerCommand command, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
         {
             // number of retransmissions
             var retransmissions = 0;
@@ -124,136 +168,195 @@ namespace ZWave4Net.Channel
             // return only on response or exception
             while (true)
             {
-                // create writer to serialize te request
-                using (var writer = new PayloadWriter())
+                var callbackID = command.UseCallbackID ? GetNextCallbackID() : default(byte?);
+                var request = Encode(command, callbackID);
+                var completion = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+                using (var receiver = new MessageReceiver(_broker))
                 {
-                    // write the function
-                    writer.WriteByte((byte)command.Function);
+                    // send the request
+                    await _broker.Send(request, cancellation);
 
-                    // does the command has payload?
-                    if (command.Payload != null)
+                    using (var timeoutCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellation))
                     {
-                        // yes, so write the payload
-                        writer.WriteObject(command.Payload);
-                    }
+                        // use timeout from request
+                        timeoutCancellation.CancelAfter(command.ResponseTimeout);
+                        timeoutCancellation.Token.Register(() => completion.TrySetCanceled());
 
-                    //  if callback is required then generate a new callback 
-                    var callbackID = command.UseCallbackID ? GetNextCallbackID() : default(byte?);
-                    if (callbackID != null)
-                    {
-                        // write the callback
-                        writer.WriteByte(callbackID.Value);
-                    }
+                        try
+                        { 
+                            await receiver.Until((message) =>
+                            {
+                                var response = Decode<T>(message, callbackID != null);
 
-                    // create a hostmessage, use the serialized payload  
-                    var hostMessage = new HostMessage(writer.GetPayload());
+                                if (Equals(command.Function, response.Function) && Equals(callbackID, response.CallbackID))
+                                {
+                                    completion.TrySetResult(response.Payload);
+                                    return true;
+                                }
+                                return false;
 
-                    try
-                    {
-                        // send the result, the callback delegate will be called on every message received from the controller
-                        var responseMessage = await Send(hostMessage, (controllerMessage) =>
+                            }, timeoutCancellation.Token);
+
+                            return await completion.Task;
+                        }
+                        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
                         {
-                            // check if this response matches the request
-                            if (!TryParseMatchingResponse<T>(controllerMessage, command.Function, callbackID, out var payload))
-                                return false;
+                            // operation was externally canceled, so rethrow
+                            throw;
+                        }
+                        catch (OperationCanceledException) when (timeoutCancellation.IsCancellationRequested)
+                        {
+                            // operation timed-out
+                            _logger.LogWarning($"Timeout while waiting for a response");
 
-                            // if we have a custom predicate the use it to verify the response
-                            if ((controllerMessage is EventMessage) && predicate != null && !predicate(payload))
-                                return false;
-
-                            // OK, matching response, so return true
-                            return true;
-
-                        }, command.ResponseTimeout, cancellation);
-
-                        return ParseMatchingResponse<T>(responseMessage, command.Function, callbackID);
-                    }
-                    catch (TimeoutException)
-                    {
-                        // check if maximum retries reached
-                        if (retransmissions >= command.MaxRetryAttempts)
-                            throw new TimeoutException("Timeout while waiting for a response");
+                            if (retransmissions >= command.MaxRetryAttempts)
+                                throw new TimeoutException("Timeout while waiting for a response");
+                        }
                     }
                 }
-
                 retransmissions++;
             }
         }
 
-        private bool TryParseMatchingResponse<T>(ControllerMessage response, Function function, byte? callbackID, out T payload) where T : IPayload, new()
-        {
-            payload = default(T);
+        //public async Task<T> Send<T>(ControllerCommand command, Func<T, bool> predicate, CancellationToken cancellation) where T : IPayload, new()
+        //{
+        //    // number of retransmissions
+        //    var retransmissions = 0;
 
-            using (var reader = new PayloadReader(response.Payload))
-            {
-                // check if expected function
-                if (!object.Equals((Function)reader.ReadByte(), function))
-                    return false;
+        //    // return only on response or exception
+        //    while (true)
+        //    {
+        //        // create writer to serialize te request
+        //        using (var writer = new PayloadWriter())
+        //        {
+        //            // write the function
+        //            writer.WriteByte((byte)command.Function);
 
-                // does the command has a callbackID?
-                if (callbackID != null)
-                {
-                    // check if expected callback
-                    if (!object.Equals(reader.ReadByte(), callbackID))
-                        return false;
-                }
+        //            // does the command has payload?
+        //            if (command.Payload != null)
+        //            {
+        //                // yes, so write the payload
+        //                writer.WriteObject(command.Payload);
+        //            }
 
-                // OK, seems we have a matching response. Deserialize the payload
-                payload = reader.ReadObject<T>();
+        //            //  if callback is required then generate a new callback 
+        //            var callbackID = command.UseCallbackID ? GetNextCallbackID() : default(byte?);
+        //            if (callbackID != null)
+        //            {
+        //                // write the callback
+        //                writer.WriteByte(callbackID.Value);
+        //            }
 
-                // we're done
-                return true;
-            }
-        }
+        //            // create a hostmessage, use the serialized payload  
+        //            var hostMessage = new HostMessage(writer.GetPayload());
 
-        private T ParseMatchingResponse<T>(ControllerMessage message, Function function, byte? callbackID) where T : IPayload, new()
-        {
-            using (var reader = new PayloadReader(message.Payload))
-            {
-                // check if expected function
-                if (!object.Equals((Function)reader.ReadByte(), function))
-                    throw new ReponseFormatException("Function mismatch");
+        //            try
+        //            {
+        //                // send the result, the callback delegate will be called on every message received from the controller
+        //                var responseMessage = await Send(hostMessage, (controllerMessage) =>
+        //                {
+        //                    // check if this response matches the request
+        //                    if (!TryParseMatchingResponse<T>(controllerMessage, command.Function, callbackID, out var payload))
+        //                        return false;
 
-                // does the request has a callbackID?
-                if (callbackID != null)
-                {
-                    // check if expected callback
-                    if (!object.Equals(reader.ReadByte(), callbackID.Value))
-                        throw new ReponseFormatException("CallbackID mismatch");
-                }
+        //                    // if we have a custom predicate the use it to verify the response
+        //                    if ((controllerMessage is EventMessage) && predicate != null && !predicate(payload))
+        //                        return false;
 
-                // OK, seems we have a matching response. Deserialize the payload
-                return reader.ReadObject<T>();
-            }
-        }
+        //                    // OK, matching response, so return true
+        //                    return true;
 
-        public async Task<T> Send<T>(byte nodeID, NodeCommand command, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
-        {
-            using (var writer = new PayloadWriter())
-            {
-                writer.WriteByte(nodeID);
-                writer.WriteObject(command);
-                writer.WriteByte((byte)(TransmitOptions.Ack | TransmitOptions.AutoRoute | TransmitOptions.Explore));
+        //                }, command.ResponseTimeout, cancellation);
 
-                var controllerCommand = new ControllerCommand(Function.SendData, writer.GetPayload())
-                {
-                    UseCallbackID = true,
-                };
+        //                return ParseMatchingResponse<T>(responseMessage, command.Function, callbackID);
+        //            }
+        //            catch (TimeoutException)
+        //            {
+        //                // check if maximum retries reached
+        //                if (retransmissions >= command.MaxRetryAttempts)
+        //                    throw new TimeoutException("Timeout while waiting for a response");
+        //            }
+        //        }
 
-                var response = await Send<Payload>(controllerCommand, null, cancellation);
+        //        retransmissions++;
+        //    }
+        //}
 
-                using (var reader = new PayloadReader(response))
-                {
-                    var state = (TransmissionState)reader.ReadByte();
+        //private bool TryParseMatchingResponse<T>(ControllerMessage response, Function function, byte? callbackID, out T payload) where T : IPayload, new()
+        //{
+        //    payload = default(T);
 
-                    if (state == TransmissionState.CompleteOK)
-                        _logger.LogDebug($"TransmissionState: {state}");
-                    else
-                        _logger.LogError($"TransmissionState: {state}");
-                }
-            }
-            return default(T);
-        }
+        //    using (var reader = new PayloadReader(response.Payload))
+        //    {
+        //        // check if expected function
+        //        if (!object.Equals((Function)reader.ReadByte(), function))
+        //            return false;
+
+        //        // does the command has a callbackID?
+        //        if (callbackID != null)
+        //        {
+        //            // check if expected callback
+        //            if (!object.Equals(reader.ReadByte(), callbackID))
+        //                return false;
+        //        }
+
+        //        // OK, seems we have a matching response. Deserialize the payload
+        //        payload = reader.ReadObject<T>();
+
+        //        // we're done
+        //        return true;
+        //    }
+        //}
+
+        //private T ParseMatchingResponse<T>(ControllerMessage message, Function function, byte? callbackID) where T : IPayload, new()
+        //{
+        //    using (var reader = new PayloadReader(message.Payload))
+        //    {
+        //        // check if expected function
+        //        if (!object.Equals((Function)reader.ReadByte(), function))
+        //            throw new ReponseFormatException("Function mismatch");
+
+        //        // does the request has a callbackID?
+        //        if (callbackID != null)
+        //        {
+        //            // check if expected callback
+        //            if (!object.Equals(reader.ReadByte(), callbackID.Value))
+        //                throw new ReponseFormatException("CallbackID mismatch");
+        //        }
+
+        //        // OK, seems we have a matching response. Deserialize the payload
+        //        return reader.ReadObject<T>();
+        //    }
+        //}
+
+        //public async Task<T> Send<T>(byte nodeID, NodeCommand command, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
+        //{
+        //    using (var writer = new PayloadWriter())
+        //    {
+        //        writer.WriteByte(nodeID);
+        //        writer.WriteObject(command);
+        //        writer.WriteByte((byte)(TransmitOptions.Ack | TransmitOptions.AutoRoute | TransmitOptions.Explore));
+
+        //        var controllerCommand = new ControllerCommand(Function.SendData, writer.GetPayload())
+        //        {
+        //            UseCallbackID = true,
+        //        };
+
+        //        var response = await Send<Payload>(controllerCommand, null, cancellation);
+
+        //        using (var reader = new PayloadReader(response))
+        //        {
+        //            var state = (TransmissionState)reader.ReadByte();
+
+        //            if (state == TransmissionState.CompleteOK)
+        //                _logger.LogDebug($"TransmissionState: {state}");
+        //            else
+        //                _logger.LogError($"TransmissionState: {state}");
+        //        }
+        //    }
+        //    return default(T);
+        //}
 
         public async Task Close()
         {

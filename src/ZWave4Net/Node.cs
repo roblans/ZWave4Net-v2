@@ -47,27 +47,27 @@ namespace ZWave4Net
         }
 
 
-        public async Task<NeighborUpdateStatus> RequestNeighborUpdate(IProgress<NeighborUpdateStatus> progress = null, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            var command = new ControllerCommand(Function.RequestNodeNeighborUpdate, new Payload(NodeID))
-            {
-                UseCallbackID = true,
-            };
+        //public async Task<NeighborUpdateStatus> RequestNeighborUpdate(IProgress<NeighborUpdateStatus> progress = null, CancellationToken cancellationToken = default(CancellationToken))
+        //{
+        //    var command = new ControllerCommand(Function.RequestNodeNeighborUpdate, new Payload(NodeID))
+        //    {
+        //        UseCallbackID = true,
+        //    };
 
-            var requestNodeNeighborUpdate = await Channel.Send<Payload>(command, (payload) =>
-            {
-                var status = (NeighborUpdateStatus)payload[0];
+        //    var requestNodeNeighborUpdate = await Channel.Send<Payload>(command, (payload) =>
+        //    {
+        //        var status = (NeighborUpdateStatus)payload[0];
 
-                progress?.Report(status);
+        //        progress?.Report(status);
 
-                return status == NeighborUpdateStatus.Done || status == NeighborUpdateStatus.Failed;
+        //        return status == NeighborUpdateStatus.Done || status == NeighborUpdateStatus.Failed;
 
-            },
-            cancellationToken);
+        //    },
+        //    cancellationToken);
 
-            // return the status of the final response
-            return (NeighborUpdateStatus)requestNodeNeighborUpdate[0];
-        }
+        //    // return the status of the final response
+        //    return (NeighborUpdateStatus)requestNodeNeighborUpdate[0];
+        //}
 
         public override bool Equals(object obj)
         {
