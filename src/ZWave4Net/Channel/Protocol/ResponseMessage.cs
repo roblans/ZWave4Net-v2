@@ -13,9 +13,14 @@ namespace ZWave4Net.Channel.Protocol
         {
         }
 
+        public ResponseMessage() : this(Payload.Empty)
+        {
+        }
+
         public override string ToString()
         {
             return $"Response {base.ToString()}";
         }
     }
 }
+

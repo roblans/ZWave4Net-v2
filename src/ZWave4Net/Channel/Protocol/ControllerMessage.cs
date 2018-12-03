@@ -5,11 +5,15 @@ using System.Text;
 namespace ZWave4Net.Channel.Protocol
 {
     /// <summary>
-    /// Message from controller to host
+    /// Response from controller to host
     /// </summary>
     public abstract class ControllerMessage : Message
     {
         public ControllerMessage(Payload payload) : base(payload)
+        {
+        }
+
+        public ControllerMessage() : this(Payload.Empty)
         {
         }
     }

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ZWave4Net.Channel.Protocol;
@@ -59,64 +59,7 @@ namespace ZWave4Net.Channel
             _broker.Run(_cancellationSource.Token);
         }
 
-        private async Task<ControllerMessage> Send(HostMessage request, Func<ControllerMessage, bool> predicate, TimeSpan timeout, CancellationToken cancellation = default(CancellationToken))
-        {
-            // create completion source, will be completed on an expected response
-            var completion = new TaskCompletionSource<ControllerMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-            // callback, called on every message received
-            void onValidateResponse(ControllerMessage response)
-            {
-                // matching response?
-                if (predicate(response))
-                {
-                    // yes, so set complete
-                    completion.TrySetResult(response);
-                }
-            };
-
-            using (var timeoutCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellation))
-            {
-                // use timeout from request
-                timeoutCancellation.CancelAfter(timeout);
-                timeoutCancellation.Token.Register(() => completion.TrySetCanceled());
-
-                // start listening for received messages, call onVerifyResponse for every controllermessage
-                using (var subscription = _broker.Subscribe(onValidateResponse))
-                {
-                    _logger.LogDebug($"Sending: {request}");
-
-                    // send the request
-                    await _broker.Send(request, cancellation);
-
-                    _logger.LogDebug($"Wait for response or timeout");
-                    try
-                    {
-                        // wait for validated response
-                        var response = await completion.Task;
-
-                        _logger.LogDebug($"Received: {response}");
-
-                        // done, so return response
-                        return response;
-                    }
-                    catch (TaskCanceledException) when (cancellation.IsCancellationRequested)
-                    {
-                        // operation was externally canceled, so rethrow
-                        throw;
-                    }
-                    catch (TaskCanceledException) when (timeoutCancellation.IsCancellationRequested)
-                    {
-                        // operation timed-out
-                        _logger.LogWarning($"Timeout while waiting for a response");
-
-                        throw new TimeoutException("Timeout while waiting for a response");
-                    }
-                }
-            }
-        }
-
-        private HostMessage Encode(ControllerCommand command, byte? callbackID)
+        private HostMessage Encode(ControllerNotification command, byte? callbackID)
         {
             // create writer to serialize te request
             using (var writer = new PayloadWriter())
@@ -142,7 +85,7 @@ namespace ZWave4Net.Channel
             }
         }
 
-        private ControllerResponse<T> Decode<T>(ControllerMessage message, bool hasCallbackID) where T : IPayload, new()
+        private ControllerNotification<T> Decode<T>(ControllerMessage message, bool hasCallbackID) where T : IPayload, new()
         {
             // create reader to deserialize the request
             using (var reader = new PayloadReader(message.Payload))
@@ -156,11 +99,20 @@ namespace ZWave4Net.Channel
                 // read the payload
                 var payload = reader.ReadObject<T>();
 
-                return new ControllerResponse<T>(function, callbackID, payload);
+                if (message is ResponseMessage)
+                {
+                    return new ControllerResponse<T>(function, callbackID, payload);
+                }
+                if (message is EventMessage)
+                {
+                    return new ControllerEvent<T>(function, callbackID, payload);
+                }
+
+                throw new InvalidOperationException("Unknown message type");
             }
         }
 
-        public async Task<T> Send<T>(ControllerCommand command, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
+        private async Task<T> Send<T>(ControllerNotification command, IEnumerable<Func<ControllerNotification<T>, bool>> predicates, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
         {
             // number of retransmissions
             var retransmissions = 0;
@@ -170,7 +122,6 @@ namespace ZWave4Net.Channel
             {
                 var callbackID = command.UseCallbackID ? GetNextCallbackID() : default(byte?);
                 var request = Encode(command, callbackID);
-                var completion = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
 
                 using (var receiver = new MessageReceiver(_broker))
                 {
@@ -181,24 +132,42 @@ namespace ZWave4Net.Channel
                     {
                         // use timeout from request
                         timeoutCancellation.CancelAfter(command.ResponseTimeout);
-                        timeoutCancellation.Token.Register(() => completion.TrySetCanceled());
 
                         try
-                        { 
-                            await receiver.Until((message) =>
+                        {
+                            var responses = new List<T>();
+
+                            foreach (var predicate in predicates)
                             {
-                                var response = Decode<T>(message, callbackID != null);
+                                var completion = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+                                timeoutCancellation.Token.Register(() => completion.TrySetCanceled());
 
-                                if (Equals(command.Function, response.Function) && Equals(callbackID, response.CallbackID))
+                                await receiver.Until((message) =>
                                 {
-                                    completion.TrySetResult(response.Payload);
-                                    return true;
-                                }
-                                return false;
+                                    var response = Decode<T>(message, callbackID != null);
 
-                            }, timeoutCancellation.Token);
+                                    if (response.Function == Function.RequestNodeNeighborUpdate)
+                                    {
+                                        _logger.LogError(response);
+                                    }
 
-                            return await completion.Task;
+                                    if (!Equals(callbackID, response.CallbackID))
+                                        return false;
+
+                                    if (predicate(response))
+                                    {
+                                        completion.TrySetResult(response.Payload);
+                                        return true;
+                                    }
+
+                                    return false;
+
+                                }, timeoutCancellation.Token);
+
+                                responses.Add(await completion.Task);
+                            }
+
+                            return responses.Last();
                         }
                         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
                         {
@@ -219,116 +188,31 @@ namespace ZWave4Net.Channel
             }
         }
 
-        //public async Task<T> Send<T>(ControllerCommand command, Func<T, bool> predicate, CancellationToken cancellation) where T : IPayload, new()
-        //{
-        //    // number of retransmissions
-        //    var retransmissions = 0;
+        // Request followed by one response
+        public async Task<T> Send<T>(ControllerNotification command, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
+        {
+            var predicates = new Func<ControllerNotification<T>, bool>[]
+            {
+                // check is notification is a Response and the Function matches the request
+                (ControllerNotification<T> response) => response is ControllerResponse<T> && Equals(command.Function, response.Function),
+            };
 
-        //    // return only on response or exception
-        //    while (true)
-        //    {
-        //        // create writer to serialize te request
-        //        using (var writer = new PayloadWriter())
-        //        {
-        //            // write the function
-        //            writer.WriteByte((byte)command.Function);
+            return await Send<T>(command, predicates, cancellation);
+        }
 
-        //            // does the command has payload?
-        //            if (command.Payload != null)
-        //            {
-        //                // yes, so write the payload
-        //                writer.WriteObject(command.Payload);
-        //            }
+        // Request followed by one or more events. The passed predicate is called on every event (progress)
+        // When the caller returns true on the predicate then the command is considered complete
+        // The result of the completed task is the payload of the last event received
+        public async Task<T> Send<T>(ControllerNotification command, Func<T, bool> predicate, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
+        {
+            var predicates = new Func<ControllerNotification<T>, bool>[]
+            {
+                // check is notification is an Event, the Function matches the request and the predicate returns true
+                (ControllerNotification<T> response) => response is ControllerEvent<T> && Equals(command.Function, response.Function) && predicate(response.Payload),
+            };
 
-        //            //  if callback is required then generate a new callback 
-        //            var callbackID = command.UseCallbackID ? GetNextCallbackID() : default(byte?);
-        //            if (callbackID != null)
-        //            {
-        //                // write the callback
-        //                writer.WriteByte(callbackID.Value);
-        //            }
-
-        //            // create a hostmessage, use the serialized payload  
-        //            var hostMessage = new HostMessage(writer.GetPayload());
-
-        //            try
-        //            {
-        //                // send the result, the callback delegate will be called on every message received from the controller
-        //                var responseMessage = await Send(hostMessage, (controllerMessage) =>
-        //                {
-        //                    // check if this response matches the request
-        //                    if (!TryParseMatchingResponse<T>(controllerMessage, command.Function, callbackID, out var payload))
-        //                        return false;
-
-        //                    // if we have a custom predicate the use it to verify the response
-        //                    if ((controllerMessage is EventMessage) && predicate != null && !predicate(payload))
-        //                        return false;
-
-        //                    // OK, matching response, so return true
-        //                    return true;
-
-        //                }, command.ResponseTimeout, cancellation);
-
-        //                return ParseMatchingResponse<T>(responseMessage, command.Function, callbackID);
-        //            }
-        //            catch (TimeoutException)
-        //            {
-        //                // check if maximum retries reached
-        //                if (retransmissions >= command.MaxRetryAttempts)
-        //                    throw new TimeoutException("Timeout while waiting for a response");
-        //            }
-        //        }
-
-        //        retransmissions++;
-        //    }
-        //}
-
-        //private bool TryParseMatchingResponse<T>(ControllerMessage response, Function function, byte? callbackID, out T payload) where T : IPayload, new()
-        //{
-        //    payload = default(T);
-
-        //    using (var reader = new PayloadReader(response.Payload))
-        //    {
-        //        // check if expected function
-        //        if (!object.Equals((Function)reader.ReadByte(), function))
-        //            return false;
-
-        //        // does the command has a callbackID?
-        //        if (callbackID != null)
-        //        {
-        //            // check if expected callback
-        //            if (!object.Equals(reader.ReadByte(), callbackID))
-        //                return false;
-        //        }
-
-        //        // OK, seems we have a matching response. Deserialize the payload
-        //        payload = reader.ReadObject<T>();
-
-        //        // we're done
-        //        return true;
-        //    }
-        //}
-
-        //private T ParseMatchingResponse<T>(ControllerMessage message, Function function, byte? callbackID) where T : IPayload, new()
-        //{
-        //    using (var reader = new PayloadReader(message.Payload))
-        //    {
-        //        // check if expected function
-        //        if (!object.Equals((Function)reader.ReadByte(), function))
-        //            throw new ReponseFormatException("Function mismatch");
-
-        //        // does the request has a callbackID?
-        //        if (callbackID != null)
-        //        {
-        //            // check if expected callback
-        //            if (!object.Equals(reader.ReadByte(), callbackID.Value))
-        //                throw new ReponseFormatException("CallbackID mismatch");
-        //        }
-
-        //        // OK, seems we have a matching response. Deserialize the payload
-        //        return reader.ReadObject<T>();
-        //    }
-        //}
+            return await Send<T>(command, predicates, cancellation);
+        }
 
         //public async Task<T> Send<T>(byte nodeID, NodeCommand command, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
         //{

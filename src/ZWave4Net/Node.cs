@@ -22,7 +22,7 @@ namespace ZWave4Net
 
         public async Task<NodeProtocolInfo> GetProtocolInfo(CancellationToken cancellationToken = default(CancellationToken))
         {
-            var command = new ControllerCommand(Function.GetNodeProtocolInfo, new Payload(NodeID));
+            var command = new ControllerNotification(Function.GetNodeProtocolInfo, new Payload(NodeID));
             return await Channel.Send<NodeProtocolInfo>(command, cancellationToken);
         }
 
@@ -30,7 +30,7 @@ namespace ZWave4Net
         {
             var results = new List<Node>();
 
-            var command = new ControllerCommand(Function.GetRoutingTableLine, new Payload(NodeID));
+            var command = new ControllerNotification(Function.GetRoutingTableLine, new Payload(NodeID));
 
             // send request
             var response = await Channel.Send<Payload>(command, cancellationToken);
@@ -47,27 +47,27 @@ namespace ZWave4Net
         }
 
 
-        //public async Task<NeighborUpdateStatus> RequestNeighborUpdate(IProgress<NeighborUpdateStatus> progress = null, CancellationToken cancellationToken = default(CancellationToken))
-        //{
-        //    var command = new ControllerCommand(Function.RequestNodeNeighborUpdate, new Payload(NodeID))
-        //    {
-        //        UseCallbackID = true,
-        //    };
+        public async Task<NeighborUpdateStatus> RequestNeighborUpdate(IProgress<NeighborUpdateStatus> progress = null, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var command = new ControllerNotification(Function.RequestNodeNeighborUpdate, new Payload(NodeID))
+            {
+                UseCallbackID = true,
+            };
 
-        //    var requestNodeNeighborUpdate = await Channel.Send<Payload>(command, (payload) =>
-        //    {
-        //        var status = (NeighborUpdateStatus)payload[0];
+            var requestNodeNeighborUpdate = await Channel.Send<Payload>(command, (payload) =>
+            {
+                var status = (NeighborUpdateStatus)payload[0];
 
-        //        progress?.Report(status);
+                progress?.Report(status);
 
-        //        return status == NeighborUpdateStatus.Done || status == NeighborUpdateStatus.Failed;
+                return status == NeighborUpdateStatus.Done || status == NeighborUpdateStatus.Failed;
 
-        //    },
-        //    cancellationToken);
+            },
+            cancellationToken);
 
-        //    // return the status of the final response
-        //    return (NeighborUpdateStatus)requestNodeNeighborUpdate[0];
-        //}
+            // return the status of the final response
+            return (NeighborUpdateStatus)requestNodeNeighborUpdate[0];
+        }
 
         public override bool Equals(object obj)
         {

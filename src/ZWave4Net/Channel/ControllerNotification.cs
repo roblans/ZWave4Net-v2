@@ -5,30 +5,31 @@ using ZWave4Net.Channel.Protocol;
 
 namespace ZWave4Net.Channel
 {
-    public class ControllerCommand
+
+    public class ControllerNotification
     {
         public TimeSpan ResponseTimeout = TimeSpan.FromSeconds(5);
         public int MaxRetryAttempts = 3;
 
         public bool UseCallbackID { get; set; }
 
-        public Function Function { get; private set; }
-        public IPayload Payload { get; private set; }
+        public readonly Function Function;
+        public readonly IPayload Payload;
 
-        public ControllerCommand(Function function, IPayload payload = null)
+        public ControllerNotification(Function function, IPayload payload = null)
         {
             Function = function;
             Payload = payload;
         }
     }
 
-    public class ControllerResponse<T> where T : IPayload, new()
+    public abstract class ControllerNotification<T> where T : IPayload, new()
     {
-        public Function Function { get; private set; }
-        public byte? CallbackID { get; private set; }
-        public T Payload { get; private set; }
+        public readonly Function Function;
+        public readonly byte? CallbackID;
+        public readonly T Payload;
 
-        public ControllerResponse(Function function, byte? callbackID, T payload)
+        public ControllerNotification(Function function, byte? callbackID, T payload)
         {
             Function = function;
             CallbackID = callbackID;
