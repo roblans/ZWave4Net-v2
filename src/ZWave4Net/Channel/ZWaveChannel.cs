@@ -59,7 +59,7 @@ namespace ZWave4Net.Channel
             _broker.Run(_cancellationSource.Token);
         }
 
-        private HostMessage Encode(ControllerNotification command, byte? callbackID)
+        private HostMessage Encode(ControllerCommand command, byte? callbackID)
         {
             // create writer to serialize te request
             using (var writer = new PayloadWriter())
@@ -112,7 +112,7 @@ namespace ZWave4Net.Channel
             }
         }
 
-        private async Task<T> Send<T>(ControllerNotification command, IEnumerable<Func<ControllerNotification<T>, bool>> predicates, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
+        private async Task<T> Send<T>(ControllerCommand command, IEnumerable<Func<ControllerNotification<T>, bool>> predicates, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
         {
             // number of retransmissions
             var retransmissions = 0;
@@ -189,7 +189,7 @@ namespace ZWave4Net.Channel
         }
 
         // Request followed by one response
-        public async Task<T> Send<T>(ControllerNotification command, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
+        public async Task<T> Send<T>(ControllerCommand command, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
         {
             var predicates = new Func<ControllerNotification<T>, bool>[]
             {
@@ -203,7 +203,7 @@ namespace ZWave4Net.Channel
         // Request followed by one or more events. The passed predicate is called on every event (progress)
         // When the caller returns true on the predicate then the command is considered complete
         // The result of the completed task is the payload of the last event received
-        public async Task<T> Send<T>(ControllerNotification command, Func<T, bool> predicate, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
+        public async Task<T> Send<T>(ControllerCommand command, Func<T, bool> predicate, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
         {
             var predicates = new Func<ControllerNotification<T>, bool>[]
             {
@@ -212,6 +212,29 @@ namespace ZWave4Net.Channel
             };
 
             return await Send<T>(command, predicates, cancellation);
+        }
+
+        public async Task<T> Send<T>(byte nodeID, NodeCommand nodeCommand, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
+        {
+            using (var writer = new PayloadWriter())
+            {
+                writer.WriteByte(nodeID);
+                writer.WriteObject(nodeCommand);
+                writer.WriteByte((byte)(TransmitOptions.Ack | TransmitOptions.AutoRoute | TransmitOptions.Explore));
+
+                var command = new ControllerCommand(Function.SendData, writer.GetPayload())
+                {
+                    UseCallbackID = true,
+                };
+
+                var predicates = new Func<ControllerNotification<T>, bool>[]
+                {
+                    // check is notification is a Response and the Function matches the request
+                    (ControllerNotification<T> response) => response is ControllerResponse<T> && Equals(command.Function, response.Function),
+                };
+
+                return await Send<T>(command, predicates, cancellation);
+            }
         }
 
         //public async Task<T> Send<T>(byte nodeID, NodeCommand command, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()

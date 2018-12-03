@@ -16,14 +16,14 @@ namespace ZWave4Net.CommandClasses
             Node = node;
         }
 
-        //protected Task<Payload> Send(NodeCommand command)
-        //{
-        //    return Send<Payload>(command);
-        //}
+        protected Task Send(NodeCommand command)
+        {
+            return Send<Payload>(command);
+        }
 
-        //protected Task<T> Send<T>(NodeCommand command) where T : IPayload, new()
-        //{
-        //    return Node.Controller.Channel.Send<T>(Node.NodeID, command);
-        //}
+        protected Task<T> Send<T>(NodeCommand command) where T : IPayload, new()
+        {
+            return Node.Controller.Channel.Send<T>(Node.NodeID, command);
+        }
     }
 }

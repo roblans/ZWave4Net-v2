@@ -25,10 +25,10 @@ namespace ZWave4Net.Channel
 
         void IPayload.Write(PayloadWriter writer)
         {
-            var bytes = new List<byte> {0, ClassID,  CommandID };
-            bytes.AddRange(Payload);
-            bytes[0] = (byte)(bytes.Count - 1);
-            writer.WriteBytes(bytes.ToArray());
+            writer.WriteByte((byte)(2 + Payload.Length));
+            writer.WriteByte(ClassID);
+            writer.WriteByte(CommandID);
+            writer.WriteBytes(Payload);
         }
     }
 }

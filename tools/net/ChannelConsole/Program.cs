@@ -26,34 +26,36 @@ namespace ChannelConsole
             {
                 await controller.Open();
 
-                Console.WriteLine($"Controller Version: {controller.Version}");
-                Console.WriteLine($"Controller ChipType: {controller.ChipType}");
-                Console.WriteLine($"Controller HomeID: {controller.HomeID:X}");
-                Console.WriteLine($"Controller NodeID: {controller.NodeID}");
-                Console.WriteLine();
+                //Console.WriteLine($"Controller Version: {controller.Version}");
+                //Console.WriteLine($"Controller ChipType: {controller.ChipType}");
+                //Console.WriteLine($"Controller HomeID: {controller.HomeID:X}");
+                //Console.WriteLine($"Controller NodeID: {controller.NodeID}");
+                //Console.WriteLine();
 
-                foreach (var node in controller.Nodes)
-                {
-                    var protocolInfo = await node.GetProtocolInfo();
-                    Console.WriteLine($"Node: {node}, Specific = {protocolInfo.SpecificType}, Generic = {protocolInfo.GenericType}, Basic = {protocolInfo.BasicType}, Listening = {protocolInfo.IsListening} ");
+                //foreach (var node in controller.Nodes)
+                //{
+                //    var protocolInfo = await node.GetProtocolInfo();
+                //    Console.WriteLine($"Node: {node}, Specific = {protocolInfo.SpecificType}, Generic = {protocolInfo.GenericType}, Basic = {protocolInfo.BasicType}, Listening = {protocolInfo.IsListening} ");
 
-                    var neighbours = await node.GetNeighbours();
-                    Console.WriteLine($"Node: {node}, Neighbours = {string.Join(", ", neighbours.Cast<object>().ToArray())}");
+                //    var neighbours = await node.GetNeighbours();
+                //    Console.WriteLine($"Node: {node}, Neighbours = {string.Join(", ", neighbours.Cast<object>().ToArray())}");
 
-                    Console.WriteLine();
-                }
+                //    Console.WriteLine();
+                //}
 
+                //var powerSwitch = controller.Nodes[24];
+                //await powerSwitch.RequestNeighborUpdate(new Progress<NeighborUpdateStatus>(status =>
+                //{
+                //    Console.WriteLine($"RequestNeighborUpdate: {status}");
+                //}));
+
+                Console.Clear();
                 var powerSwitch = controller.Nodes[24];
-                await powerSwitch.RequestNeighborUpdate(new Progress<NeighborUpdateStatus>(status =>
-                {
-                    Console.WriteLine($"RequestNeighborUpdate: {status}");
-                }));
-
-                //var basic = new Basic(powerSwitch);
-                ////await basic.SetValue(255);
+                var basic = new Basic(powerSwitch);
+                //await basic.SetValue(255);
                 //var value = await basic.GetValue();
                 //await Task.Delay(1000);
-                ////await basic.SetValue(0);
+                await basic.SetValue(0);
 
                 Console.ReadLine();
 
