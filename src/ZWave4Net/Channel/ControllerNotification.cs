@@ -6,13 +6,13 @@ using ZWave4Net.Channel.Protocol;
 namespace ZWave4Net.Channel
 {
 
-    public abstract class ControllerNotification<T> where T : IPayload, new()
+    public abstract class ControllerNotification
     {
         public readonly Function Function;
         public readonly byte? CallbackID;
-        public readonly T Payload;
+        public readonly Payload Payload;
 
-        public ControllerNotification(Function function, byte? callbackID, T payload)
+        public ControllerNotification(Function function, byte? callbackID, Payload payload)
         {
             Function = function;
             CallbackID = callbackID;

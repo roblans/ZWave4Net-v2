@@ -37,7 +37,7 @@ namespace ZWave4Net.Tests
 
             var payload = new Payload(new byte[] { (byte)Function.ApplicationUpdate, 1, 2, 3 });
 
-            await broker.Send(new HostMessage(payload), cancellation.Token);
+            await broker.Send(new RequestMessage(payload), cancellation.Token);
 
             cancellation.Cancel();
 
@@ -60,7 +60,7 @@ namespace ZWave4Net.Tests
             broker.Run(cancellation.Token);
 
             var payload = new Payload(new byte[] { (byte)Function.ApplicationUpdate, 1, 2, 3 });
-            await broker.Send(new HostMessage(payload), cancellation.Token);
+            await broker.Send(new RequestMessage(payload), cancellation.Token);
 
             cancellation.Cancel();
 
@@ -85,7 +85,7 @@ namespace ZWave4Net.Tests
             broker.Run(cancellation.Token);
 
             var payload = new Payload(new byte[] { (byte)Function.ApplicationUpdate, 1, 2, 3 });
-            await broker.Send(new HostMessage(payload), cancellation.Token);
+            await broker.Send(new RequestMessage(payload), cancellation.Token);
 
             cancellation.Cancel();
 
@@ -110,7 +110,7 @@ namespace ZWave4Net.Tests
             broker.Run(cancellation.Token);
 
             var payload = new Payload(new byte[] { (byte)Function.ApplicationUpdate, 1, 2, 3 });
-            await broker.Send(new HostMessage(payload), cancellation.Token);
+            await broker.Send(new RequestMessage(payload), cancellation.Token);
 
             cancellation.Cancel();
 
@@ -143,7 +143,7 @@ namespace ZWave4Net.Tests
             broker.Run(cancellation.Token);
 
             var payload = new Payload(new byte[] { (byte)Function.ApplicationUpdate, 1, 2, 3 });
-            await broker.Send(new HostMessage(payload), cancellation.Token);
+            await broker.Send(new RequestMessage(payload), cancellation.Token);
 
             cancellation.Cancel();
 

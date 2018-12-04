@@ -6,7 +6,7 @@ using ZWave4Net.Channel;
 
 namespace ZWave4Net.CommandClasses
 {
-    public class Basic : CommandClass, IBasic
+    public class Basic : CommandClassBase, IBasic
     {
         enum Command : byte
         {
@@ -15,20 +15,20 @@ namespace ZWave4Net.CommandClasses
             Report = 0x03
         }
 
-        public Basic(Node node) : base(node)
+        public Basic(Node node) : base(node, CommandClass.Basic)
         {
         }
 
         public async Task<byte> GetValue()
         {
-            var command = new NodeCommand(0x20, 0x02);
-            var payload = await Send<Payload>(command);
-            return 123;
+            var command = new NodeCommand(Class, Command.Get);
+            var response = await Send(command, Command.Report);
+            return response[0];
         }
 
         public Task SetValue(byte value)
         {
-            var command = new NodeCommand(0x20, 0x01, value);
+            var command = new NodeCommand(Class, Command.Set, value);
             return Send(command); 
         }
     }

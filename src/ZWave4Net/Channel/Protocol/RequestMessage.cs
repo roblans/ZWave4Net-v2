@@ -7,13 +7,13 @@ namespace ZWave4Net.Channel.Protocol
     /// <summary>
     /// Message from host to controller
     /// </summary>
-    public class HostMessage : Message
+    public class RequestMessage : Message
     {
-        public HostMessage(Payload payload) : base(payload)
+        public RequestMessage(Payload payload) : base(payload)
         {
         }
 
-        public HostMessage() : this(Payload.Empty)
+        public RequestMessage() : this(Payload.Empty)
         {
         }
 

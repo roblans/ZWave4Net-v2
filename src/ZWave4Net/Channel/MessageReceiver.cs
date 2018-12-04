@@ -33,6 +33,8 @@ namespace ZWave4Net.Channel
                     {
                         if (predicate(message))
                         {
+                            _queue.CompleteAdding();
+                            _subscription.Dispose();
                             break;
                         }
                     }

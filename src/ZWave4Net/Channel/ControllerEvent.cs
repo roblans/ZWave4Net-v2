@@ -5,9 +5,9 @@ using ZWave4Net.Channel.Protocol;
 
 namespace ZWave4Net.Channel
 {
-    public class ControllerEvent<T> : ControllerNotification<T> where T : IPayload, new()
+    public class ControllerEvent : ControllerNotification
     {
-        public ControllerEvent(Function function, byte? callbackID, T payload)
+        public ControllerEvent(Function function, byte? callbackID, Payload payload)
             : base(function, callbackID, payload)
         {
         }
