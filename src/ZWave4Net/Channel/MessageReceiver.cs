@@ -11,19 +11,19 @@ namespace ZWave4Net.Channel
     public class MessageReceiver : IDisposable
     {
         private IDisposable _subscription;
-        private BlockingCollection<ControllerMessage> _queue = new BlockingCollection<ControllerMessage>();
+        private BlockingCollection<Message> _queue = new BlockingCollection<Message>();
 
         public MessageReceiver(MessageBroker broker)
         {
-            _subscription = broker.Subscribe(OnMessage);
+            //_subscription = broker.Subscribe(OnMessage);
         }
 
-        private void OnMessage(ControllerMessage message)
+        private void OnMessage(Message message)
         {
             _queue.Add(message);
         }
 
-        public Task Until(Predicate<ControllerMessage> predicate, CancellationToken cancellation)
+        public Task Until(Predicate<Message> predicate, CancellationToken cancellation)
         {
             return Task.Run(() =>
             {

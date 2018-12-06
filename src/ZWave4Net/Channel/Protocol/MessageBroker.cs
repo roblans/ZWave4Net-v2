@@ -10,15 +10,20 @@ using System.Runtime.CompilerServices;
 using ZWave4Net.Channel.Protocol.Frames;
 using ZWave4Net.Diagnostics;
 using ZWave4Net.Utilities;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 
 namespace ZWave4Net.Channel.Protocol
 {
-    public class MessageBroker
+    public class MessageBroker : IObservable<Message>
     {
         private readonly ILogger _logger = Logging.Factory.CreatLogger("Broker");
         private readonly FrameReader _reader;
         private readonly FrameWriter _writer;
-        private readonly Publisher _publisher = new Publisher();
+
+        private IConnectableObservable<Frame> _frameObservable;
+        private Subject<Message> _messageSubject = new Subject<Message>();
+
         private readonly SemaphoreSlim _sendLock = new SemaphoreSlim(1, 1);
         private Task _task;
 
@@ -28,40 +33,18 @@ namespace ZWave4Net.Channel.Protocol
             _writer = new FrameWriter(stream);
         }
 
-        public static Message Decode(DataFrame frame)
-        {
-            switch (frame.Type)
-            {
-                // response on a request
-                case DataFrameType.RES:
-                    // so create ResponseMessage
-                    return new ResponseMessage(frame.Payload);
-
-                // unsolicited event
-                case DataFrameType.REQ:
-                    // so create EventMessage
-                    return new EventMessage(frame.Payload);
-            }
-
-            throw new ProtocolException("Invalid DataFrame type");
-        }
-
-        public static DataFrame Encode(RequestMessage message)
-        {
-            return new DataFrame(DataFrameType.REQ, message.Payload);
-        }
-
-        public TaskAwaiter GetAwaiter()
-        {
-            return _task?.GetAwaiter() ?? default(TaskAwaiter);
-        }
-
         public void Run(CancellationToken cancellation)
         {
-            if (_task != null)
-                throw new InvalidOperationException("Broker already running");
+            // create the Observable, use Publish so frame are all published to all subcribers 
+            _frameObservable = Observable.Create<Frame>(observer => Execute(observer, cancellation)).Publish();
 
-            _task = Task.Run(async () =>
+            // connect the observer so it starts immediately (normally the Observable will only start after the first subscription)
+            _frameObservable.Connect();
+        }
+
+        private Task Execute(IObserver<Frame> observer, CancellationToken cancellation)
+        {
+            return _task = Task.Run(async () =>
             {
                 // execute until externally cancelled
                 while (!cancellation.IsCancellationRequested)
@@ -76,10 +59,15 @@ namespace ZWave4Net.Channel.Protocol
                     {
                         // most likely removal of ZStick from host
                         _logger.LogDebug(ex.Message);
-                        throw; 
+
+                        observer.OnError(ex);
+
+                        return;
                     }
                     catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
                     {
+                        observer.OnCompleted();
+
                         // the read was cancelled by the passed cancellationtoken so end gracefully 
                         break;
                     }
@@ -106,7 +94,7 @@ namespace ZWave4Net.Channel.Protocol
                             _logger.LogWarning($"Received: {frame}");
 
                         // publish the frame
-                        _publisher.Publish(frame);
+                        observer.OnNext(frame);
 
                         // wait for next frame
                         continue;
@@ -120,24 +108,52 @@ namespace ZWave4Net.Channel.Protocol
                         _logger.LogDebug($"Writing: {Frame.ACK}");
                         await _writer.Write(Frame.ACK, cancellation);
 
-                        // decode the dataframe
+                        // convert to message
                         var message = Decode(dataFrame);
 
-                        // and publish the message
-                        _publisher.Publish(message);
+                        // publish the message
+                        _messageSubject.OnNext(message);
 
                         // wait for next frame
                         continue;
                     }
-
                 }
             }, cancellation);
         }
 
-        public IDisposable Subscribe(Action<ControllerMessage> callback)
+        public static Message Decode(DataFrame frame)
         {
-            return _publisher.Subcribe(callback);
+            switch (frame.Type)
+            {
+                // response on a request
+                case DataFrameType.RES:
+                    // so create ResponseMessage
+                    return new ResponseMessage(frame.Payload);
+
+                // unsolicited event
+                case DataFrameType.REQ:
+                    // so create EventMessage
+                    return new EventMessage(frame.Payload);
+            }
+
+            throw new ProtocolException("Invalid DataFrame type");
         }
+
+        public TaskAwaiter GetAwaiter()
+        {
+            return _task?.GetAwaiter() ?? default(TaskAwaiter);
+        }
+
+        public static DataFrame Encode(RequestMessage message)
+        {
+            return new DataFrame(DataFrameType.REQ, message.Payload);
+        }
+
+        IDisposable IObservable<Message>.Subscribe(IObserver<Message> observer)
+        {
+            return ((IObservable<Message>)_messageSubject).Subscribe(observer);
+        }
+
 
         public async Task Send(RequestMessage message, CancellationToken cancellation)
         {
@@ -167,7 +183,6 @@ namespace ZWave4Net.Channel.Protocol
                             completion.TrySetResult(frame);
                         }
                     };
-
                     using (var timeoutCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellation))
                     {
                         // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 5.1 ACK frame
@@ -176,7 +191,7 @@ namespace ZWave4Net.Channel.Protocol
                         using (timeoutCancellation.Token.Register(() => completion.TrySetCanceled()))
                         {
                             // start listening for received frames, call onVerifyResponse for every received frame 
-                            using (var subscription = _publisher.Subcribe<Frame>(onValidateResponse))
+                            using (var subscription = _frameObservable.Subscribe(onValidateResponse))
                             {
                                 // encode the message to a dataframe
                                 var frame = Encode(message);

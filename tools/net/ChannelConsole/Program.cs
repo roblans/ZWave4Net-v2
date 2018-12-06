@@ -10,11 +10,67 @@ using ZWave4Net.Channel;
 using ZWave4Net.Channel.Protocol;
 using ZWave4Net.CommandClasses;
 using ZWave4Net.Diagnostics;
+using System.Reactive.Linq;
+using ZWave4Net.Channel.Protocol.Frames;
 
 namespace ChannelConsole
 {
     class Program
     {
+        public static async Task Main2(string[] args)
+        {
+            Logging.Factory.Subscribe((message) => WriteConsole(message));
+
+            var cancellation = new CancellationTokenSource();
+
+            var port = new SerialPort(SerialPort.GetPortNames().Where(element => element != "COM1").First());
+            await port.Open();
+
+            Console.WriteLine($"{Thread.CurrentThread.ManagedThreadId} Starting");
+
+            var broker = new MessageBroker(port);
+
+            //var subsciption1 = broker.Subscribe((frame) =>
+            //{
+            //    Console.ForegroundColor = ConsoleColor.Yellow;
+            //    Console.WriteLine($"Next {frame}");
+            //},
+            //() =>
+            //{
+            //    Console.ForegroundColor = ConsoleColor.Yellow;
+            //    Console.WriteLine($"Complete");
+            //});
+
+            //var subsciption2 = broker.OfType<DataFrame>().Subscribe((frame) =>
+            //{
+            //    Console.ForegroundColor = ConsoleColor.Red;
+            //    Console.WriteLine($"Next {frame}");
+            //},
+            //() =>
+            //{
+            //    Console.ForegroundColor = ConsoleColor.Red;
+            //    Console.WriteLine($"Complete");
+            //});
+
+            //broker.Run(cancellation.Token);
+
+
+            Console.ReadLine();
+
+            //subsciption1.Dispose();
+            //subsciption2.Dispose();
+
+            await broker;
+
+            Console.ReadLine();
+
+            cancellation.Cancel();
+
+            //await broker;
+
+            await port.Close();
+        }
+
         public static async Task Main(string[] args)
         {
             Logging.Factory.Subscribe((message) => WriteConsole(message));
@@ -26,10 +82,10 @@ namespace ChannelConsole
             {
                 await controller.Open();
 
-                //Console.WriteLine($"Controller Version: {controller.Version}");
-                //Console.WriteLine($"Controller ChipType: {controller.ChipType}");
-                //Console.WriteLine($"Controller HomeID: {controller.HomeID:X}");
-                //Console.WriteLine($"Controller NodeID: {controller.NodeID}");
+                Console.WriteLine($"Controller Version: {controller.Version}");
+                Console.WriteLine($"Controller ChipType: {controller.ChipType}");
+                Console.WriteLine($"Controller HomeID: {controller.HomeID:X}");
+                Console.WriteLine($"Controller NodeID: {controller.NodeID}");
                 //Console.WriteLine();
 
                 //foreach (var node in controller.Nodes)
@@ -43,27 +99,27 @@ namespace ChannelConsole
                 //    Console.WriteLine();
                 //}
 
-                var powerSwitch = controller.Nodes[24];
+                //var powerSwitch = controller.Nodes[24];
                 //await powerSwitch.RequestNeighborUpdate(new Progress<NeighborUpdateStatus>(status =>
                 //{
                 //    Console.WriteLine($"RequestNeighborUpdate: {status}");
                 //}));
 
-                var basic = new Basic(powerSwitch);
-                var value1 = await basic.GetValue();
-                var value2 = await basic.GetValue();
-                var value3 = await basic.GetValue();
-                var value4 = await basic.GetValue();
-                var value5 = await basic.GetValue();
+                //var basic = new Basic(powerSwitch);
+                //var value1 = await basic.GetValue();
+                //var value2 = await basic.GetValue();
+                //var value3 = await basic.GetValue();
+                //var value4 = await basic.GetValue();
+                //var value5 = await basic.GetValue();
 
-                await basic.SetValue(0);
-                await Task.Delay(1000);
-                await basic.SetValue(255);
-                await Task.Delay(1000);
-                await basic.SetValue(0);
-                await Task.Delay(1000);
-                await basic.SetValue(255);
-                await Task.Delay(1000);
+                //await basic.SetValue(0);
+                //await Task.Delay(1000);
+                //await basic.SetValue(255);
+                //await Task.Delay(1000);
+                //await basic.SetValue(0);
+                //await Task.Delay(1000);
+                //await basic.SetValue(255);
+                //await Task.Delay(1000);
 
                 //var value1 = await basic.GetValue();
                 //var value2 = await basic.GetValue();
@@ -72,16 +128,16 @@ namespace ChannelConsole
                 //var value5 = await basic.GetValue();
                 //Console.WriteLine(await basic.GetValue());
 
-                await Task.Delay(1000);
+                //await Task.Delay(1000);
 
-                await basic.SetValue(255);
-                value1 = await basic.GetValue();
-                value2 = await basic.GetValue();
-                value3 = await basic.GetValue();
-                value4 = await basic.GetValue();
-                value5 = await basic.GetValue();
+                //await basic.SetValue(255);
+                //value1 = await basic.GetValue();
+                //value2 = await basic.GetValue();
+                //value3 = await basic.GetValue();
+                //value4 = await basic.GetValue();
+                //value5 = await basic.GetValue();
 
-                Console.WriteLine(await basic.GetValue());
+                //Console.WriteLine(await basic.GetValue());
 
                 Console.ReadLine();
 
