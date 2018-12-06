@@ -125,59 +125,55 @@ namespace ZWave4Net.Channel
 
             var callbackID = command.UseCallbackID ? GetNextCallbackID() : default(byte?);
 
-            var request = Encode(command, callbackID);
-
-            var predicate = _broker
+            var chain = _broker.GetObservable()
                 .Select(element => Decode(element, callbackID.HasValue))
                 .OfType<ControllerResponse>()
                 .Where(element => Equals(element.Function, command.Function))
-                .Where(element => Equals(element.CallbackID, callbackID));
+                .Where(element => Equals(element.CallbackID, callbackID))
+                .Timeout(command.ResponseTimeout)
+                .Select(element => element.Payload);
 
-
-            using (predicate.Subscribe((element) => completion.SetResult(element.Payload)))
+            using (chain.Subscribe((element) => completion.TrySetResult(element)))
             {
-                _logger.LogError("Before send");
                 // send the request
+                await _broker.Send(Encode(command, callbackID), cancellation);
 
-                await _broker.Send(request, cancellation);
-                _logger.LogError("After send");
-
+                // wait for response
                 var payload = await completion.Task;
 
-                using (var reader = new PayloadReader(payload))
-                {
-                    return reader.ReadObject<T>();
-                }
+                // return the deserialized payload
+                return payload.Deserialize<T>();
             }
         }
 
         // ControllerCommand: Request followed by one or more events. The passed predicate is called on every event (progress)
         // When the caller returns true on the predicate then the command is considered complete
         // The result of the completed task is the payload of the last event received
-        //public async Task<T> Send<T>(ControllerCommand command, Func<T, bool> predicate, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
-        //{
-            //var predicates = new Func<ControllerNotification, bool>[]
-            //{
-            //    // check is notification is an Event, the Function matches the request and the predicate returns true
-            //    (ControllerNotification response) =>
-            //    {
-            //        if (response is ControllerEvent && Equals(command.Function, response.Function))
-            //        {
-            //            using (var reader = new PayloadReader(response.Payload))
-            //            {
-            //                return predicate(reader.ReadObject<T>());
-            //            }
-            //        }
-            //        return false;
-            //    }
-            //};
+        public async Task<T> Send<T>(ControllerCommand command, Func<T, bool> predicate, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
+        {
+            var completion = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            //var payload = await Send(command, predicates, cancellation);
-            //using (var reader = new PayloadReader(payload))
-            //{
-            //    return reader.ReadObject<T>();
-            //}
-       // }
+            var callbackID = command.UseCallbackID ? GetNextCallbackID() : default(byte?);
+
+            var chain = _broker.GetObservable()
+                .Select(element => Decode(element, callbackID.HasValue))
+                .OfType<ControllerEvent>()
+                .Where(element => Equals(element.Function, command.Function))
+                .Where(element => Equals(element.CallbackID, callbackID))
+                .Timeout(command.ResponseTimeout)
+                .Select(element => element.Payload)
+                .Select(element => element.Deserialize<T>())
+                .Where(predicate);
+
+            using (chain.Subscribe((element) => completion.TrySetResult(element)))
+            {
+                // send the request
+                await _broker.Send(Encode(command, callbackID), cancellation);
+
+                // wait for response
+                return await completion.Task;
+            }
+        }
 
 
         // NodeCommand, no return value. Request followed by:
@@ -185,39 +181,39 @@ namespace ZWave4Net.Channel
         // 2) a event from the node (command deliverd at node)  
         //public async Task Send(byte nodeID, NodeCommand nodeCommand, CancellationToken cancellation = default(CancellationToken))
         //{
-            //using (var writer = new PayloadWriter())
-            //{
-            //    writer.WriteByte(nodeID);
-            //    writer.WriteObject(nodeCommand);
-            //    writer.WriteByte((byte)(TransmitOptions.Ack | TransmitOptions.AutoRoute | TransmitOptions.Explore));
+        //using (var writer = new PayloadWriter())
+        //{
+        //    writer.WriteByte(nodeID);
+        //    writer.WriteObject(nodeCommand);
+        //    writer.WriteByte((byte)(TransmitOptions.Ack | TransmitOptions.AutoRoute | TransmitOptions.Explore));
 
-            //    var command = new ControllerCommand(Function.SendData, writer.GetPayload())
-            //    {
-            //        UseCallbackID = true,
-            //    };
+        //    var command = new ControllerCommand(Function.SendData, writer.GetPayload())
+        //    {
+        //        UseCallbackID = true,
+        //    };
 
-            //    var predicates = new Func<ControllerNotification, bool>[]
-            //    {
-            //        // phase 1: Response from controller 
-            //        (ControllerNotification response) => response is ControllerResponse && Equals(command.Function, response.Function),
+        //    var predicates = new Func<ControllerNotification, bool>[]
+        //    {
+        //        // phase 1: Response from controller 
+        //        (ControllerNotification response) => response is ControllerResponse && Equals(command.Function, response.Function),
 
-            //        // phase 2: Event received, command delivered at Node
-            //        (ControllerNotification response) =>
-            //        {
-            //            if (response is ControllerEvent && Equals(command.Function, response.Function))
-            //            {
-            //                var transmissionState = (TransmissionState)response.Payload[0];
-            //                if (transmissionState == TransmissionState.CompleteOK)
-            //                    return true;
+        //        // phase 2: Event received, command delivered at Node
+        //        (ControllerNotification response) =>
+        //        {
+        //            if (response is ControllerEvent && Equals(command.Function, response.Function))
+        //            {
+        //                var transmissionState = (TransmissionState)response.Payload[0];
+        //                if (transmissionState == TransmissionState.CompleteOK)
+        //                    return true;
 
-            //                _logger.LogError($"Transmission failure: {transmissionState}");
-            //            }
-            //            return false;
-            //         }
-            //    };
+        //                _logger.LogError($"Transmission failure: {transmissionState}");
+        //            }
+        //            return false;
+        //         }
+        //    };
 
-            //    await Send(command, predicates, cancellation);
-            //}
+        //    await Send(command, predicates, cancellation);
+        //}
         //}
 
         // NodeCommand, with return value. Request followed by:
@@ -225,91 +221,91 @@ namespace ZWave4Net.Channel
         // 2) a event from the node (command deliverd at node)  
         //public async Task<Payload> Send(byte nodeID, NodeCommand nodeCommand, byte responseCommandID, CancellationToken cancellation = default(CancellationToken))
         //{
-            //using (var writer = new PayloadWriter())
-            //{
-            //    writer.WriteByte(nodeID);
-            //    writer.WriteObject(nodeCommand);
-            //    writer.WriteByte((byte)(TransmitOptions.Ack | TransmitOptions.AutoRoute | TransmitOptions.Explore));
+        //using (var writer = new PayloadWriter())
+        //{
+        //    writer.WriteByte(nodeID);
+        //    writer.WriteObject(nodeCommand);
+        //    writer.WriteByte((byte)(TransmitOptions.Ack | TransmitOptions.AutoRoute | TransmitOptions.Explore));
 
-            //    var command = new ControllerCommand(Function.SendData, writer.GetPayload())
-            //    {
-            //        UseCallbackID = true,
-            //    };
+        //    var command = new ControllerCommand(Function.SendData, writer.GetPayload())
+        //    {
+        //        UseCallbackID = true,
+        //    };
 
-            //    var predicates = new Func<ControllerNotification, bool>[]
-            //    {
-            //        // phase 1: Response from controller 
-            //        (ControllerNotification response) => response is ControllerResponse && Equals(command.Function, response.Function),
+        //    var predicates = new Func<ControllerNotification, bool>[]
+        //    {
+        //        // phase 1: Response from controller 
+        //        (ControllerNotification response) => response is ControllerResponse && Equals(command.Function, response.Function),
 
-            //        // phase 2: Event received, command delivered at Node
-            //        (ControllerNotification response) =>
-            //        {
-            //            if (response is ControllerEvent && Equals(command.Function, response.Function))
-            //            {
-            //                var transmissionState = (TransmissionState)response.Payload[0];
-            //                if (transmissionState == TransmissionState.CompleteOK)
-            //                    return true;
+        //        // phase 2: Event received, command delivered at Node
+        //        (ControllerNotification response) =>
+        //        {
+        //            if (response is ControllerEvent && Equals(command.Function, response.Function))
+        //            {
+        //                var transmissionState = (TransmissionState)response.Payload[0];
+        //                if (transmissionState == TransmissionState.CompleteOK)
+        //                    return true;
 
-            //                _logger.LogError($"Transmission failure: {transmissionState}");
-            //            }
-            //            return false;
-            //        },
-            //        // phase 3: Event received, return value from node
-            //        (ControllerNotification response) =>
-            //        {
-            //            if (response is ControllerEvent && Equals(Function.ApplicationCommandHandler, response.Function))
-            //            {
-            //                using(var reader = new PayloadReader(response.Payload))
-            //                {
-            //                    var status = reader.ReadByte();
+        //                _logger.LogError($"Transmission failure: {transmissionState}");
+        //            }
+        //            return false;
+        //        },
+        //        // phase 3: Event received, return value from node
+        //        (ControllerNotification response) =>
+        //        {
+        //            if (response is ControllerEvent && Equals(Function.ApplicationCommandHandler, response.Function))
+        //            {
+        //                using(var reader = new PayloadReader(response.Payload))
+        //                {
+        //                    var status = reader.ReadByte();
 
-            //                    var receiveStatus = ReceiveStatus.None;
+        //                    var receiveStatus = ReceiveStatus.None;
 
-            //                    if ((status & 0x01) > 0)
-            //                        receiveStatus |= ReceiveStatus.RoutedBusy;
-            //                    if ((status & 0x02) > 0)
-            //                        receiveStatus |= ReceiveStatus.LowPower;
-            //                    if ((status & 0x0C) == 0x00)
-            //                        receiveStatus |= ReceiveStatus.TypeSingle;
-            //                    if ((status & 0x0C) == 0x01)
-            //                        receiveStatus |= ReceiveStatus.TypeBroad;
-            //                    if ((status & 0x0C) == 0x10)
-            //                        receiveStatus |= ReceiveStatus.TypeMulti;
-            //                    if ((status & 0x10) > 0)
-            //                        receiveStatus |= ReceiveStatus.TypeExplore;
-            //                    if ((status & 0x40) > 0)
-            //                        receiveStatus |= ReceiveStatus.ForeignFrame;
+        //                    if ((status & 0x01) > 0)
+        //                        receiveStatus |= ReceiveStatus.RoutedBusy;
+        //                    if ((status & 0x02) > 0)
+        //                        receiveStatus |= ReceiveStatus.LowPower;
+        //                    if ((status & 0x0C) == 0x00)
+        //                        receiveStatus |= ReceiveStatus.TypeSingle;
+        //                    if ((status & 0x0C) == 0x01)
+        //                        receiveStatus |= ReceiveStatus.TypeBroad;
+        //                    if ((status & 0x0C) == 0x10)
+        //                        receiveStatus |= ReceiveStatus.TypeMulti;
+        //                    if ((status & 0x10) > 0)
+        //                        receiveStatus |= ReceiveStatus.TypeExplore;
+        //                    if ((status & 0x40) > 0)
+        //                        receiveStatus |= ReceiveStatus.ForeignFrame;
 
-            //                    var responseNodeID = reader.ReadByte();
-            //                    if (responseNodeID != nodeID)
-            //                        return false;
+        //                    var responseNodeID = reader.ReadByte();
+        //                    if (responseNodeID != nodeID)
+        //                        return false;
 
-            //                    var nodeResponse = reader.ReadObject<NodeResponse>();
-            //                    if (nodeResponse.ClassID != (byte)nodeCommand.Class)
-            //                        return false;
-            //                    if (nodeResponse.CommandID != responseCommandID)
-            //                        return false;
+        //                    var nodeResponse = reader.ReadObject<NodeResponse>();
+        //                    if (nodeResponse.ClassID != (byte)nodeCommand.Class)
+        //                        return false;
+        //                    if (nodeResponse.CommandID != responseCommandID)
+        //                        return false;
 
-            //                    return true;
-            //                }
-            //            }
-            //            return false;
-            //        },
-            //    };
+        //                    return true;
+        //                }
+        //            }
+        //            return false;
+        //        },
+        //    };
 
-            //    var payload = await Send(command, predicates, cancellation);
-            //    using (var reader = new PayloadReader(payload))
-            //    {
-            //        // skip receivestatus and responseNodeID
-            //        reader.SkipBytes(2);
+        //    var payload = await Send(command, predicates, cancellation);
+        //    using (var reader = new PayloadReader(payload))
+        //    {
+        //        // skip receivestatus and responseNodeID
+        //        reader.SkipBytes(2);
 
-            //        // read the response
-            //        var nodeResponse = reader.ReadObject<NodeResponse>();
+        //        // read the response
+        //        var nodeResponse = reader.ReadObject<NodeResponse>();
 
-            //        // but only return the payload
-            //        return nodeResponse.Payload;
-            //    }
-            //}
+        //        // but only return the payload
+        //        return nodeResponse.Payload;
+        //    }
+        //}
         //}
 
         public async Task Close()

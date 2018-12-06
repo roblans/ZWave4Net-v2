@@ -15,14 +15,13 @@ using System.Reactive.Subjects;
 
 namespace ZWave4Net.Channel.Protocol
 {
-    public class MessageBroker : IObservable<Message>
+    public class MessageBroker
     {
         private readonly ILogger _logger = Logging.Factory.CreatLogger("Broker");
         private readonly FrameReader _reader;
         private readonly FrameWriter _writer;
 
-        private IConnectableObservable<Frame> _frameObservable;
-        private Subject<Message> _messageSubject = new Subject<Message>();
+        private IConnectableObservable<Frame> _observable;
 
         private readonly SemaphoreSlim _sendLock = new SemaphoreSlim(1, 1);
         private Task _task;
@@ -36,16 +35,19 @@ namespace ZWave4Net.Channel.Protocol
         public void Run(CancellationToken cancellation)
         {
             // create the Observable, use Publish so frame are all published to all subcribers 
-            _frameObservable = Observable.Create<Frame>(observer => Execute(observer, cancellation)).Publish();
+            _observable = Observable.Create<Frame>(observer => Execute(observer, cancellation)).Publish();
 
-            // connect the observer so it starts immediately (normally the Observable will only start after the first subscription)
-            _frameObservable.Connect();
+            // connect the observerable (start running)
+            _observable.Connect();
         }
 
         private Task Execute(IObserver<Frame> observer, CancellationToken cancellation)
         {
+
             return _task = Task.Run(async () =>
             {
+                _logger.LogError("Starting Task");
+
                 // execute until externally cancelled
                 while (!cancellation.IsCancellationRequested)
                 {
@@ -108,16 +110,16 @@ namespace ZWave4Net.Channel.Protocol
                         _logger.LogDebug($"Writing: {Frame.ACK}");
                         await _writer.Write(Frame.ACK, cancellation);
 
-                        // convert to message
-                        var message = Decode(dataFrame);
-
-                        // publish the message
-                        _messageSubject.OnNext(message);
+                        // publish the frame
+                        observer.OnNext(dataFrame);
 
                         // wait for next frame
                         continue;
                     }
                 }
+
+                _logger.LogError("Task Completed");
+
             }, cancellation);
         }
 
@@ -149,9 +151,9 @@ namespace ZWave4Net.Channel.Protocol
             return new DataFrame(DataFrameType.REQ, message.Payload);
         }
 
-        IDisposable IObservable<Message>.Subscribe(IObserver<Message> observer)
+        public IObservable<Message> GetObservable()
         {
-            return ((IObservable<Message>)_messageSubject).Subscribe(observer);
+            return _observable.OfType<DataFrame>().Select(element => Decode(element));
         }
 
 
@@ -170,93 +172,79 @@ namespace ZWave4Net.Channel.Protocol
                 // return only on ACK or Exception
                 while (true)
                 {
-                    // create completion source, will be completed on an expected response (ACK, NAK, CAN)
                     var completion = new TaskCompletionSource<Frame>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-                    // callback, called on every frame received
-                    void onValidateResponse(Frame frame)
+                    // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 5.1 ACK frame
+                    // The host MUST wait for a period of 1500ms before timing out waiting for the ACK frame
+                    // timeoutCancellation.CancelAfter(ProtocolSettings.ACKWaitTime);
+                    var chain = _observable
+                        .Where(frame => frame == Frame.ACK || frame == Frame.NAK || frame == Frame.CAN)
+                        .Timeout(ProtocolSettings.ACKWaitTime);
+
+                    // start listening for received frames, call onVerifyResponse for every received frame 
+                    using (var subscription = chain.Subscribe((element) => completion.TrySetResult(element)))
                     {
-                        // one of the expected responses?
-                        if (frame == Frame.ACK || frame == Frame.NAK || frame == Frame.CAN)
+                        // encode the message to a dataframe
+                        var frame = Encode(message);
+
+                        if (retransmissions == 0)
+                            _logger.LogDebug($"Sending: {frame}");
+                        else
+                            _logger.LogWarning($"Resending: {frame}, attempt: {retransmissions}");
+
+                        // send the request
+                        await _writer.Write(frame, cancellation);
+
+                        // mesasure time until frame received
+                        stopwatch.Restart();
+
+                        try
                         {
-                            // yes, so set complete
-                            completion.TrySetResult(frame);
-                        }
-                    };
-                    using (var timeoutCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellation))
-                    {
-                        // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 5.1 ACK frame
-                        // The host MUST wait for a period of 1500ms before timing out waiting for the ACK frame
-                        timeoutCancellation.CancelAfter(ProtocolSettings.ACKWaitTime);
-                        using (timeoutCancellation.Token.Register(() => completion.TrySetCanceled()))
-                        {
-                            // start listening for received frames, call onVerifyResponse for every received frame 
-                            using (var subscription = _frameObservable.Subscribe(onValidateResponse))
-                            {
-                                // encode the message to a dataframe
-                                var frame = Encode(message);
+                            // wait for validated response
+                            var response = await completion.Task;
 
-                                if (retransmissions == 0)
-                                    _logger.LogDebug($"Sending: {frame}");
-                                else
-                                    _logger.LogWarning($"Resending: {frame}, attempt: {retransmissions}");
-
-                                // send the request
-                                await _writer.Write(frame, cancellation);
-
-                                // mesasure time until frame received
-                                stopwatch.Restart();
-
-                                //_logger.LogDebug($"Wait for ACK, NAK or CAN or timeout");
-                                try
-                                {
-                                    // wait for validated response
-                                    var response = await completion.Task;
-
-                                    // ACK received, so where done 
-                                    if (response == Frame.ACK)
-                                        break;
-
-                                    // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.3 Retransmission
-                                    // A host or Z-Wave chip MUST NOT carry out more than 3 retransmissions
-                                    if (retransmissions >= ProtocolSettings.MaxRetryAttempts)
-                                    {
-                                        if (response == Frame.CAN)
-                                            throw new CanResponseException();
-                                        if (response == Frame.NAK)
-                                            throw new NakResponseException();
-                                    }
-                                }
-                                catch (TaskCanceledException) when (cancellation.IsCancellationRequested)
-                                {
-                                    // operation was externally canceled, so rethrow
-                                    throw;
-                                }
-                                catch (TaskCanceledException) when (timeoutCancellation.IsCancellationRequested)
-                                {
-                                    // operation timed-out
-                                    _logger.LogWarning($"Timeout while waiting for an ACK");
-
-                                    // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.3 Retransmission
-                                    // A host or Z-Wave chip MUST NOT carry out more than 3 retransmissions
-                                    if (retransmissions >= ProtocolSettings.MaxRetryAttempts)
-                                        throw new TimeoutException("Timeout while waiting for an ACK");
-                                }
-                            }
+                            // ACK received, so where done 
+                            if (response == Frame.ACK)
+                                break;
 
                             // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.3 Retransmission
-                            // Twaiting = 100ms + n*1000ms 
-                            // where n is incremented at each retransmission. n = 0 is used for the first waiting period.
-                            var waitTime = ProtocolSettings.RetryDelayWaitTime.TotalMilliseconds + (retransmissions++ * ProtocolSettings.RetryAttemptWaitTime.TotalMilliseconds);
-
-                            // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.2.2 Data frame delivery timeout
-                            // The transmitter MAY compensate for the 1600ms already elapsed when calculating the retransmission waiting period
-                            waitTime -= stopwatch.ElapsedMilliseconds;
-                            if (waitTime > 0)
+                            // A host or Z-Wave chip MUST NOT carry out more than 3 retransmissions
+                            if (retransmissions >= ProtocolSettings.MaxRetryAttempts)
                             {
-                                await Task.Delay((int)waitTime, cancellation);
+                                if (response == Frame.CAN)
+                                    throw new CanResponseException();
+                                if (response == Frame.NAK)
+                                    throw new NakResponseException();
                             }
                         }
+                        catch (TaskCanceledException) when (cancellation.IsCancellationRequested)
+                        {
+                            // operation was externally canceled, so rethrow
+                            throw;
+                        }
+                        catch (TimeoutException)
+                        {
+                            // operation timed-out
+                            _logger.LogWarning($"Timeout while waiting for an ACK");
+
+                            // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.3 Retransmission
+                            // A host or Z-Wave chip MUST NOT carry out more than 3 retransmissions
+                            if (retransmissions >= ProtocolSettings.MaxRetryAttempts)
+                                throw new TimeoutException("Timeout while waiting for an ACK");
+                        }
+                    }
+
+                    // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.3 Retransmission
+                    // Twaiting = 100ms + n*1000ms 
+                    // where n is incremented at each retransmission. n = 0 is used for the first waiting period.
+                    var waitTime = ProtocolSettings.RetryDelayWaitTime.TotalMilliseconds + (retransmissions++ * ProtocolSettings.RetryAttemptWaitTime.TotalMilliseconds);
+
+                    // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.2.2 Data frame delivery timeout
+                    // The transmitter MAY compensate for the 1600ms already elapsed when calculating the retransmission waiting period
+                    waitTime -= stopwatch.ElapsedMilliseconds;
+                    if (waitTime > 0)
+                    {
+                        await Task.Delay((int)waitTime, cancellation);
                     }
                 }
             }

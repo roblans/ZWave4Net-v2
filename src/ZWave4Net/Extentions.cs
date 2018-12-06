@@ -18,5 +18,13 @@ namespace ZWave4Net
         {
             value.Write(writer);
         }
+
+        public static T Deserialize<T>(this Payload payload) where T : IPayload, new()
+        {
+            using (var reader = new PayloadReader(payload))
+            {
+                return reader.ReadObject<T>();
+            }
+        }
     }
 }

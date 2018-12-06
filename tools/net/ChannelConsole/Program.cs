@@ -88,22 +88,22 @@ namespace ChannelConsole
                 Console.WriteLine($"Controller NodeID: {controller.NodeID}");
                 //Console.WriteLine();
 
-                //foreach (var node in controller.Nodes)
-                //{
-                //    var protocolInfo = await node.GetProtocolInfo();
-                //    Console.WriteLine($"Node: {node}, Specific = {protocolInfo.SpecificType}, Generic = {protocolInfo.GenericType}, Basic = {protocolInfo.BasicType}, Listening = {protocolInfo.IsListening} ");
+                foreach (var node in controller.Nodes)
+                {
+                    var protocolInfo = await node.GetProtocolInfo();
+                    Console.WriteLine($"Node: {node}, Specific = {protocolInfo.SpecificType}, Generic = {protocolInfo.GenericType}, Basic = {protocolInfo.BasicType}, Listening = {protocolInfo.IsListening} ");
 
-                //    var neighbours = await node.GetNeighbours();
-                //    Console.WriteLine($"Node: {node}, Neighbours = {string.Join(", ", neighbours.Cast<object>().ToArray())}");
+                    var neighbours = await node.GetNeighbours();
+                    Console.WriteLine($"Node: {node}, Neighbours = {string.Join(", ", neighbours.Cast<object>().ToArray())}");
 
-                //    Console.WriteLine();
-                //}
+                    Console.WriteLine();
+                }
 
-                //var powerSwitch = controller.Nodes[24];
-                //await powerSwitch.RequestNeighborUpdate(new Progress<NeighborUpdateStatus>(status =>
-                //{
-                //    Console.WriteLine($"RequestNeighborUpdate: {status}");
-                //}));
+                var powerSwitch = controller.Nodes[24];
+                await powerSwitch.RequestNeighborUpdate(new Progress<NeighborUpdateStatus>(status =>
+                {
+                    Console.WriteLine($"RequestNeighborUpdate: {status}");
+                }));
 
                 //var basic = new Basic(powerSwitch);
                 //var value1 = await basic.GetValue();
