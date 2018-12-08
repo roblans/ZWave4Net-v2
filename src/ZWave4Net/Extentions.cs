@@ -26,5 +26,14 @@ namespace ZWave4Net
                 return reader.ReadObject<T>();
             }
         }
+
+        public static Payload Serialize(this IPayload payload)
+        {
+            using (var writer = new PayloadWriter())
+            {
+                writer.WriteObject(payload);
+                return writer.GetPayload();
+            }
+        }
     }
 }

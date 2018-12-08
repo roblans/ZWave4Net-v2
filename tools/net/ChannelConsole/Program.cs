@@ -19,7 +19,7 @@ namespace ChannelConsole
     {
         public static async Task Main2(string[] args)
         {
-            Logging.Factory.Subscribe((message) => WriteConsole(message));
+            //Logging.Factory.Subscribe((message) => WriteConsole(message));
 
             var cancellation = new CancellationTokenSource();
 
@@ -73,7 +73,7 @@ namespace ChannelConsole
 
         public static async Task Main(string[] args)
         {
-            Logging.Factory.Subscribe((message) => WriteConsole(message));
+            //Logging.Factory.Subscribe((message) => WriteConsole(message));
 
             var port = new SerialPort(SerialPort.GetPortNames().Where(element => element != "COM1").First());
             var controller = new ZWaveController(port);
@@ -105,8 +105,19 @@ namespace ChannelConsole
                     Console.WriteLine($"RequestNeighborUpdate: {status}");
                 }));
 
-                //var basic = new Basic(powerSwitch);
-                //var value1 = await basic.GetValue();
+                var basic = new Basic(powerSwitch);
+
+                for (int i = 0; i < 59; i++)
+                {
+                    await basic.SetValue(255);
+                    var value1 = await basic.GetValue();
+                    Console.WriteLine($"{value1}");
+                    await Task.Delay(500);
+                    await basic.SetValue(0);
+                    var value2 = await basic.GetValue();
+                    Console.WriteLine($"{value2}");
+                    await Task.Delay(500);
+                }
                 //var value2 = await basic.GetValue();
                 //var value3 = await basic.GetValue();
                 //var value4 = await basic.GetValue();

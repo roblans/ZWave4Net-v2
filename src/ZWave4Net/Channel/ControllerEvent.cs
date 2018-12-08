@@ -5,11 +5,14 @@ using ZWave4Net.Channel.Protocol;
 
 namespace ZWave4Net.Channel
 {
-    public class ControllerEvent : ControllerNotification
+    public class ControllerEvent : ControllerMessage
     {
+        public readonly byte? CallbackID;
+
         public ControllerEvent(Function function, byte? callbackID, Payload payload)
-            : base(function, callbackID, payload)
+            : base(function, payload)
         {
+            CallbackID = callbackID;
         }
     }
 }

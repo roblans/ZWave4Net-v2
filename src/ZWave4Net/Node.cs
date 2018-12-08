@@ -22,7 +22,7 @@ namespace ZWave4Net
 
         public async Task<NodeProtocolInfo> GetProtocolInfo(CancellationToken cancellationToken = default(CancellationToken))
         {
-            var command = new ControllerCommand(Function.GetNodeProtocolInfo, new Payload(NodeID));
+            var command = new ControllerRequest(Function.GetNodeProtocolInfo, new Payload(NodeID));
             return await Channel.Send<NodeProtocolInfo>(command, cancellationToken);
         }
 
@@ -30,7 +30,7 @@ namespace ZWave4Net
         {
             var results = new List<Node>();
 
-            var command = new ControllerCommand(Function.GetRoutingTableLine, new Payload(NodeID));
+            var command = new ControllerRequest(Function.GetRoutingTableLine, new Payload(NodeID));
 
             // send request
             var response = await Channel.Send<Payload>(command, cancellationToken);
@@ -49,7 +49,7 @@ namespace ZWave4Net
 
         public async Task<NeighborUpdateStatus> RequestNeighborUpdate(IProgress<NeighborUpdateStatus> progress = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var command = new ControllerCommand(Function.RequestNodeNeighborUpdate, new Payload(NodeID))
+            var command = new ControllerRequest(Function.RequestNodeNeighborUpdate, new Payload(NodeID))
             {
                 UseCallbackID = true,
             };

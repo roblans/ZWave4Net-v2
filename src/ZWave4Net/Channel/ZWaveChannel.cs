@@ -60,7 +60,7 @@ namespace ZWave4Net.Channel
             _broker.Run(_cancellationSource.Token);
         }
 
-        private RequestMessage Encode(ControllerCommand command, byte? callbackID)
+        private RequestMessage Encode(ControllerRequest command, byte? callbackID)
         {
             // create writer to serialize te request
             using (var writer = new PayloadWriter())
@@ -86,7 +86,7 @@ namespace ZWave4Net.Channel
             }
         }
 
-        private ControllerNotification Decode(Message message, bool hasCallbackID)
+        private ControllerMessage Decode(Message message, bool hasCallbackID)
         {
             // create reader to deserialize the request
             using (var reader = new PayloadReader(message.Payload))
@@ -94,12 +94,7 @@ namespace ZWave4Net.Channel
                 // read the function
                 var function = (Function)reader.ReadByte();
 
-                var callbackID = default(byte?);
-                if (hasCallbackID && function != Function.ApplicationCommandHandler)
-                {
-                    // read the (optional callback
-                    callbackID = reader.ReadByte();
-                }
+                var callbackID = hasCallbackID ? reader.ReadByte() : default(byte?);
 
                 // read the payload
                 var payload = new Payload(reader.ReadBytes(reader.Length - reader.Position));
@@ -118,25 +113,25 @@ namespace ZWave4Net.Channel
         }
 
 
-        // ControllerCommand: Request followed by one response from the controller
-        public async Task<T> Send<T>(ControllerCommand command, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
+        // ControllerRequest: request followed by one response from the controller
+        public async Task<T> Send<T>(ControllerRequest request, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
         {
             var completion = new TaskCompletionSource<Payload>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            var callbackID = command.UseCallbackID ? GetNextCallbackID() : default(byte?);
+            var callbackID = request.UseCallbackID ? GetNextCallbackID() : default(byte?);
 
             var chain = _broker.GetObservable()
                 .Select(element => Decode(element, callbackID.HasValue))
                 .OfType<ControllerResponse>()
-                .Where(element => Equals(element.Function, command.Function))
+                .Where(element => Equals(element.Function, request.Function))
                 .Where(element => Equals(element.CallbackID, callbackID))
-                .Timeout(command.ResponseTimeout)
+                .Timeout(request.ResponseTimeout)
                 .Select(element => element.Payload);
 
             using (chain.Subscribe((element) => completion.TrySetResult(element)))
             {
                 // send the request
-                await _broker.Send(Encode(command, callbackID), cancellation);
+                await _broker.Send(Encode(request, callbackID), cancellation);
 
                 // wait for response
                 var payload = await completion.Task;
@@ -146,21 +141,21 @@ namespace ZWave4Net.Channel
             }
         }
 
-        // ControllerCommand: Request followed by one or more events. The passed predicate is called on every event (progress)
+        // ControllerRequest: request followed by one or more events. The passed predicate is called on every event (progress)
         // When the caller returns true on the predicate then the command is considered complete
         // The result of the completed task is the payload of the last event received
-        public async Task<T> Send<T>(ControllerCommand command, Func<T, bool> predicate, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
+        public async Task<T> Send<T>(ControllerRequest request, Func<T, bool> predicate, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
         {
             var completion = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            var callbackID = command.UseCallbackID ? GetNextCallbackID() : default(byte?);
+            var callbackID = request.UseCallbackID ? GetNextCallbackID() : default(byte?);
 
             var chain = _broker.GetObservable()
                 .Select(element => Decode(element, callbackID.HasValue))
                 .OfType<ControllerEvent>()
-                .Where(element => Equals(element.Function, command.Function))
+                .Where(element => Equals(element.Function, request.Function))
                 .Where(element => Equals(element.CallbackID, callbackID))
-                .Timeout(command.ResponseTimeout)
+                .Timeout(request.ResponseTimeout)
                 .Select(element => element.Payload)
                 .Select(element => element.Deserialize<T>())
                 .Where(predicate);
@@ -168,145 +163,102 @@ namespace ZWave4Net.Channel
             using (chain.Subscribe((element) => completion.TrySetResult(element)))
             {
                 // send the request
-                await _broker.Send(Encode(command, callbackID), cancellation);
+                await _broker.Send(Encode(request, callbackID), cancellation);
 
                 // wait for response
                 return await completion.Task;
             }
         }
 
-
         // NodeCommand, no return value. Request followed by:
         // 1) a response from the controller
-        // 2) a event from the node (command deliverd at node)  
-        //public async Task Send(byte nodeID, NodeCommand nodeCommand, CancellationToken cancellation = default(CancellationToken))
-        //{
-        //using (var writer = new PayloadWriter())
-        //{
-        //    writer.WriteByte(nodeID);
-        //    writer.WriteObject(nodeCommand);
-        //    writer.WriteByte((byte)(TransmitOptions.Ack | TransmitOptions.AutoRoute | TransmitOptions.Explore));
+        // 2) a event from the controller: command deliverd at node)  
+        public async Task Send(byte nodeID, NodeCommand command, CancellationToken cancellation = default(CancellationToken))
+        {
+            var completion = new TaskCompletionSource<NodeResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var callbackID = GetNextCallbackID();
 
-        //    var command = new ControllerCommand(Function.SendData, writer.GetPayload())
-        //    {
-        //        UseCallbackID = true,
-        //    };
+            var nodeRequest = new NodeRequest(nodeID, command);
 
-        //    var predicates = new Func<ControllerNotification, bool>[]
-        //    {
-        //        // phase 1: Response from controller 
-        //        (ControllerNotification response) => response is ControllerResponse && Equals(command.Function, response.Function),
+            var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize())
+            {
+                UseCallbackID = true,
+            };
 
-        //        // phase 2: Event received, command delivered at Node
-        //        (ControllerNotification response) =>
-        //        {
-        //            if (response is ControllerEvent && Equals(command.Function, response.Function))
-        //            {
-        //                var transmissionState = (TransmissionState)response.Payload[0];
-        //                if (transmissionState == TransmissionState.CompleteOK)
-        //                    return true;
+            var responseChain = _broker.GetObservable()
+                .Select(element => Decode(element, false))
+                .OfType<ControllerResponse>()
+                .Where(element => Equals(element.Function, controllerRequest.Function));
 
-        //                _logger.LogError($"Transmission failure: {transmissionState}");
-        //            }
-        //            return false;
-        //         }
-        //    };
+            var chain = _broker.GetObservable()
+                .SkipUntil(responseChain)
+                .Select(element => Decode(element, true))
+                .OfType<ControllerEvent>()
+                .Where(element => Equals(element.Function, controllerRequest.Function))
+                .Where(element => Equals(element.CallbackID, callbackID))
+                .Select(element => element.Payload.Deserialize<NodeResponse>())
+                .Where(element => element.NodeID == 0);
 
-        //    await Send(command, predicates, cancellation);
-        //}
-        //}
+            using (chain.Subscribe((element) => completion.TrySetResult(element)))
+            {
+                // send the request
+                await _broker.Send(Encode(controllerRequest, callbackID), cancellation);
+
+                // wait for response
+                var response = await completion.Task;
+            }
+        }
 
         // NodeCommand, with return value. Request followed by:
         // 1) a response from the controller
-        // 2) a event from the node (command deliverd at node)  
-        //public async Task<Payload> Send(byte nodeID, NodeCommand nodeCommand, byte responseCommandID, CancellationToken cancellation = default(CancellationToken))
-        //{
-        //using (var writer = new PayloadWriter())
-        //{
-        //    writer.WriteByte(nodeID);
-        //    writer.WriteObject(nodeCommand);
-        //    writer.WriteByte((byte)(TransmitOptions.Ack | TransmitOptions.AutoRoute | TransmitOptions.Explore));
+        // 2) a event from the controller: command deliverd at node)  
+        // 3) a event from the node: return value
+        public async Task<Payload> Send(byte nodeID, NodeCommand command, byte responseCommandID, CancellationToken cancellation = default(CancellationToken))
+        {
+            var completion = new TaskCompletionSource<Payload>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var callbackID = GetNextCallbackID();
 
-        //    var command = new ControllerCommand(Function.SendData, writer.GetPayload())
-        //    {
-        //        UseCallbackID = true,
-        //    };
+            var nodeRequest = new NodeRequest(nodeID, command);
 
-        //    var predicates = new Func<ControllerNotification, bool>[]
-        //    {
-        //        // phase 1: Response from controller 
-        //        (ControllerNotification response) => response is ControllerResponse && Equals(command.Function, response.Function),
+            var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize())
+            {
+                UseCallbackID = true,
+            };
 
-        //        // phase 2: Event received, command delivered at Node
-        //        (ControllerNotification response) =>
-        //        {
-        //            if (response is ControllerEvent && Equals(command.Function, response.Function))
-        //            {
-        //                var transmissionState = (TransmissionState)response.Payload[0];
-        //                if (transmissionState == TransmissionState.CompleteOK)
-        //                    return true;
+            var responseChain = _broker.GetObservable()
+                .Select(element => Decode(element, false))
+                .OfType<ControllerResponse>()
+                .Where(element => Equals(element.Function, controllerRequest.Function));
 
-        //                _logger.LogError($"Transmission failure: {transmissionState}");
-        //            }
-        //            return false;
-        //        },
-        //        // phase 3: Event received, return value from node
-        //        (ControllerNotification response) =>
-        //        {
-        //            if (response is ControllerEvent && Equals(Function.ApplicationCommandHandler, response.Function))
-        //            {
-        //                using(var reader = new PayloadReader(response.Payload))
-        //                {
-        //                    var status = reader.ReadByte();
+            var eventChain = _broker.GetObservable()
+                .SkipUntil(responseChain)
+                .Select(element => Decode(element, true))
+                .OfType<ControllerEvent>()
+                .Where(element => Equals(element.Function, controllerRequest.Function))
+                .Where(element => Equals(element.CallbackID, callbackID));
 
-        //                    var receiveStatus = ReceiveStatus.None;
+            var chain = _broker.GetObservable()
+                .SkipUntil(responseChain)
+                .SkipUntil(eventChain)
+                .Select(element => Decode(element, false))
+                .OfType<ControllerEvent>()
+                .Where(element => Equals(element.Function, Function.ApplicationCommandHandler))
+                .Select(element => element.Payload.Deserialize<NodeResponse>())
+                .Where(element => element.NodeID == nodeID)
+                .Select(element => element.Payload.Deserialize<NodeReply>())
+                .Where(element => element.CommandID == responseCommandID)
+                .Select(element => element.Payload);
 
-        //                    if ((status & 0x01) > 0)
-        //                        receiveStatus |= ReceiveStatus.RoutedBusy;
-        //                    if ((status & 0x02) > 0)
-        //                        receiveStatus |= ReceiveStatus.LowPower;
-        //                    if ((status & 0x0C) == 0x00)
-        //                        receiveStatus |= ReceiveStatus.TypeSingle;
-        //                    if ((status & 0x0C) == 0x01)
-        //                        receiveStatus |= ReceiveStatus.TypeBroad;
-        //                    if ((status & 0x0C) == 0x10)
-        //                        receiveStatus |= ReceiveStatus.TypeMulti;
-        //                    if ((status & 0x10) > 0)
-        //                        receiveStatus |= ReceiveStatus.TypeExplore;
-        //                    if ((status & 0x40) > 0)
-        //                        receiveStatus |= ReceiveStatus.ForeignFrame;
 
-        //                    var responseNodeID = reader.ReadByte();
-        //                    if (responseNodeID != nodeID)
-        //                        return false;
+            using (chain.Subscribe((element) => completion.TrySetResult(element)))
+            {
+                // send the request
+                await _broker.Send(Encode(controllerRequest, callbackID), cancellation);
 
-        //                    var nodeResponse = reader.ReadObject<NodeResponse>();
-        //                    if (nodeResponse.ClassID != (byte)nodeCommand.Class)
-        //                        return false;
-        //                    if (nodeResponse.CommandID != responseCommandID)
-        //                        return false;
-
-        //                    return true;
-        //                }
-        //            }
-        //            return false;
-        //        },
-        //    };
-
-        //    var payload = await Send(command, predicates, cancellation);
-        //    using (var reader = new PayloadReader(payload))
-        //    {
-        //        // skip receivestatus and responseNodeID
-        //        reader.SkipBytes(2);
-
-        //        // read the response
-        //        var nodeResponse = reader.ReadObject<NodeResponse>();
-
-        //        // but only return the payload
-        //        return nodeResponse.Payload;
-        //    }
-        //}
-        //}
+                // wait for response
+                return await completion.Task;
+            }
+        }
 
         public async Task Close()
         {

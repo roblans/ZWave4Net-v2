@@ -20,14 +20,12 @@ namespace ZWave4Net.CommandClasses
 
         protected Task Send(NodeCommand command)
         {
-            return null;
-//            return Node.Controller.Channel.Send(Node.NodeID, command);
+            return Node.Controller.Channel.Send(Node.NodeID, command);
         }
 
         protected Task<Payload> Send(NodeCommand command, Enum responseCommand)
         {
-            return null;
-            //return Node.Controller.Channel.Send(Node.NodeID, command, Convert.ToByte(responseCommand));
+            return Node.Controller.Channel.Send(Node.NodeID, command, Convert.ToByte(responseCommand));
         }
     }
 }

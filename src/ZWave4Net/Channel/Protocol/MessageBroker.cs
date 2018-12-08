@@ -156,7 +156,6 @@ namespace ZWave4Net.Channel.Protocol
             return _observable.OfType<DataFrame>().Select(element => Decode(element));
         }
 
-
         public async Task Send(RequestMessage message, CancellationToken cancellation)
         {
             var stopwatch = Stopwatch.StartNew();

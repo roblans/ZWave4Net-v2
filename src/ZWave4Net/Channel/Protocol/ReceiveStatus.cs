@@ -5,7 +5,7 @@ using System.Text;
 namespace ZWave4Net.Channel.Protocol
 {
     [Flags()]
-    enum ReceiveStatus : byte
+    public enum ReceiveStatus : byte
     {
         None = 0x00,
         RoutedBusy = 0x01,

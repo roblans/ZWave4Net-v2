@@ -4,11 +4,14 @@ using System.Text;
 
 namespace ZWave4Net.Channel.Protocol
 {
-    public class ControllerResponse : ControllerNotification
+    public class ControllerResponse : ControllerMessage
     {
+        public readonly byte? CallbackID;
+
         public ControllerResponse(Function function, byte? callbackID, Payload payload)
-            : base(function, callbackID, payload)
+            : base(function, payload)
         {
+            CallbackID = callbackID;
         }
     }
 }
