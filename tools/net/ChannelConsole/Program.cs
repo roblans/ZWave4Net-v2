@@ -115,8 +115,9 @@ namespace ChannelConsole
 
                     await Task.Delay(500);
                     await basic.SetValue(0);
+                    var stopwatch = Stopwatch.StartNew();
                     var value2 = await basic.GetValue();
-                    Console.WriteLine($"{value2}");
+                    Console.WriteLine($"{value2}, {stopwatch.ElapsedMilliseconds}");
                     await Task.Delay(500);
                 }
                 //var value2 = await basic.GetValue();

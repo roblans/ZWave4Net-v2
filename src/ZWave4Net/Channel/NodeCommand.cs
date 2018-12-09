@@ -8,6 +8,9 @@ namespace ZWave4Net.Channel
 {
     public class NodeCommand : IPayload
     {
+        public TimeSpan ReplyTimeout = TimeSpan.FromSeconds(1);
+        public int MaxRetryAttempts = 3;
+
         public readonly CommandClass Class;
         public readonly Enum Command;
         public readonly byte[] Payload;

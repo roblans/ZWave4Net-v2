@@ -112,11 +112,11 @@ namespace ZWave4Net.Channel
             }
         }
 
-        private async Task<T> Send<T>(RequestMessage request, IObservable<T> pipeline,  CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
+        private async Task<T> Send<T>(RequestMessage request, IObservable<T> pipeline, TimeSpan timeout, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
         {
             var completion = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            using (pipeline.Subscribe
+            using (pipeline.Timeout(timeout).Subscribe
             (
                 (T element) => completion.TrySetResult(element),
                 (Exception ex) => completion.TrySetException(ex)
@@ -140,12 +140,9 @@ namespace ZWave4Net.Channel
                 .OfType<ControllerResponse>()
                 .Where(element => Equals(element.Function, request.Function))
                 .Where(element => Equals(element.CallbackID, callbackID))
-                .Timeout(request.ResponseTimeout)
-                .Select(element => element.Payload);
+                .Select(element => element.Payload.Deserialize<T>());
 
-            var response = await Send(Encode(request, callbackID), pipeline, cancellation);
-
-            return response.Deserialize<T>();
+            return await Send(Encode(request, callbackID), pipeline, request.ResponseTimeout, cancellation);
         }
 
         // ControllerRequest: request followed by one or more events. The passed predicate is called on every event (progress)
@@ -160,12 +157,11 @@ namespace ZWave4Net.Channel
                 .OfType<ControllerEvent>()
                 .Where(element => Equals(element.Function, request.Function))
                 .Where(element => Equals(element.CallbackID, callbackID))
-                .Timeout(request.ResponseTimeout)
                 .Select(element => element.Payload)
                 .Select(element => element.Deserialize<T>())
                 .Where(predicate);
 
-            return await Send(Encode(request, callbackID), pipeline, cancellation);
+            return await Send(Encode(request, callbackID), pipeline, request.ResponseTimeout, cancellation);
         }
 
         // NodeCommand, no return value. Request followed by:
@@ -173,14 +169,14 @@ namespace ZWave4Net.Channel
         // 2) a event from the controller: command deliverd at node)  
         public async Task Send(byte nodeID, NodeCommand command, CancellationToken cancellation = default(CancellationToken))
         {
-            var callbackID = GetNextCallbackID();
-
             var nodeRequest = new NodeRequest(nodeID, command);
 
             var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize())
             {
                 UseCallbackID = true,
             };
+
+            var callbackID = GetNextCallbackID();
 
             var responsePipeline = _broker.GetObservable()
                 .Select(element => Decode(element, false))
@@ -196,7 +192,7 @@ namespace ZWave4Net.Channel
                 .Select(element => element.Payload.Deserialize<NodeResponse>())
                 .Where(element => element.NodeID == 0);
 
-            await Send(Encode(controllerRequest, callbackID), pipeline, cancellation);
+            await Send(Encode(controllerRequest, callbackID), pipeline, command.ReplyTimeout, cancellation);
         }
 
         // NodeCommand, with return value. Request followed by:
@@ -205,15 +201,14 @@ namespace ZWave4Net.Channel
         // 3) a event from the node: return value
         public async Task<T> Send<T>(byte nodeID, NodeCommand command, byte responseCommandID, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
         {
-            var completion = new TaskCompletionSource<ByteArray>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var callbackID = GetNextCallbackID();
-
             var nodeRequest = new NodeRequest(nodeID, command);
 
             var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize())
             {
                 UseCallbackID = true,
             };
+
+            var callbackID = GetNextCallbackID();
 
             var responsePipeline = _broker.GetObservable()
                 .Select(element => Decode(element, false))
@@ -237,11 +232,9 @@ namespace ZWave4Net.Channel
                 .Where(element => element.NodeID == nodeID)
                 .Select(element => element.Payload.Deserialize<NodeReply>())
                 .Where(element => element.CommandID == responseCommandID)
-                .Select(element => element.Payload);
+                .Select(element => element.Payload.Deserialize<T>());
 
-            var response = await Send(Encode(controllerRequest, callbackID), pipeline, cancellation);
-
-            return response.Deserialize<T>();
+            return await Send(Encode(controllerRequest, callbackID), pipeline, command.ReplyTimeout, cancellation);
         }
 
         public async Task Close()

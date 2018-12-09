@@ -7,7 +7,7 @@ namespace ZWave4Net.Channel
 {
     public class ControllerRequest : ControllerMessage
     {
-        public TimeSpan ResponseTimeout = TimeSpan.FromSeconds(60);
+        public TimeSpan ResponseTimeout = TimeSpan.FromSeconds(1);
         public int MaxRetryAttempts = 3;
 
         public bool UseCallbackID { get; set; }
