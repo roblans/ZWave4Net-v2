@@ -8,10 +8,14 @@ namespace ZWave4Net.Channel.Protocol
     {
         public readonly byte? CallbackID;
 
-        public ControllerResponse(Function function, byte? callbackID, ByteArray payload)
+        public ControllerResponse(Function function, byte? callbackID, PayloadBytes payload)
             : base(function, payload)
         {
             CallbackID = callbackID;
+            if (function == Function.SendData)
+            {
+
+            }
         }
     }
 }

@@ -6,7 +6,7 @@ using ZWave4Net.CommandClasses;
 
 namespace ZWave4Net.Channel
 {
-    public class NodeCommand : IPayload
+    public class NodeCommand : IPayloadSerializable
     {
         public TimeSpan ReplyTimeout = TimeSpan.FromSeconds(1);
         public int MaxRetryAttempts = 3;
@@ -23,12 +23,12 @@ namespace ZWave4Net.Channel
         }
 
 
-        void IPayload.Read(PayloadReader reader)
+        void IPayloadSerializable.Read(PayloadReader reader)
         {
             throw new NotImplementedException();
         }
 
-        void IPayload.Write(PayloadWriter writer)
+        void IPayloadSerializable.Write(PayloadWriter writer)
         {
             writer.WriteByte((byte)(2 + Payload.Length));
             writer.WriteByte(Convert.ToByte(Class));

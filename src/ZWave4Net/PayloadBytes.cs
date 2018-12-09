@@ -4,17 +4,17 @@ using System.Text;
 
 namespace ZWave4Net
 {
-    public class ByteArray : IPayload
+    public class PayloadBytes : IPayloadSerializable
     {
-        public static readonly ByteArray Empty = new ByteArray();
+        public static readonly PayloadBytes Empty = new PayloadBytes();
 
         private byte[] _values;
 
-        public ByteArray() : this(new byte[0])
+        public PayloadBytes() : this(new byte[0])
         {
         }
 
-        public ByteArray(params byte[] values)
+        public PayloadBytes(params byte[] values)
         {
             _values = values ?? new byte[0];
         }
@@ -39,12 +39,12 @@ namespace ZWave4Net
             return BitConverter.ToString(_values);
         }
 
-        void IPayload.Read(PayloadReader reader)
+        void IPayloadSerializable.Read(PayloadReader reader)
         {
             _values = reader.ReadBytes(reader.Length - reader.Position);
         }
 
-        void IPayload.Write(PayloadWriter writer)
+        void IPayloadSerializable.Write(PayloadWriter writer)
         {
             writer.WriteBytes(_values);
         }

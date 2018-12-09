@@ -22,7 +22,7 @@ namespace ZWave4Net
 
         public async Task<NodeProtocolInfo> GetProtocolInfo(CancellationToken cancellationToken = default(CancellationToken))
         {
-            var command = new ControllerRequest(Function.GetNodeProtocolInfo, new ByteArray(NodeID));
+            var command = new ControllerRequest(Function.GetNodeProtocolInfo, new PayloadBytes(NodeID));
             return await Channel.Send<NodeProtocolInfo>(command, cancellationToken);
         }
 
@@ -30,10 +30,10 @@ namespace ZWave4Net
         {
             var results = new List<Node>();
 
-            var command = new ControllerRequest(Function.GetRoutingTableLine, new ByteArray(NodeID));
+            var command = new ControllerRequest(Function.GetRoutingTableLine, new PayloadBytes(NodeID));
 
             // send request
-            var response = await Channel.Send<ByteArray>(command, cancellationToken);
+            var response = await Channel.Send<PayloadBytes>(command, cancellationToken);
 
             var bits = new BitArray(response.ToArray());
             for (byte i = 0; i < bits.Length; i++)
@@ -49,13 +49,14 @@ namespace ZWave4Net
 
         public async Task<NeighborUpdateStatus> RequestNeighborUpdate(IProgress<NeighborUpdateStatus> progress = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var command = new ControllerRequest(Function.RequestNodeNeighborUpdate, new ByteArray(NodeID))
+
+            var command = new ControllerRequest(Function.RequestNodeNeighborUpdate, new PayloadBytes(NodeID))
             {
                 UseCallbackID = true,
                 ResponseTimeout = TimeSpan.FromSeconds(5),
             };
 
-            var requestNodeNeighborUpdate = await Channel.Send<ByteArray>(command, (payload) =>
+            var requestNodeNeighborUpdate = await Channel.Send<PayloadBytes>(command, (payload) =>
             {
                 var status = (NeighborUpdateStatus)payload[0];
 

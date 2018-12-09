@@ -12,12 +12,12 @@ namespace ZWave4Net.Channel
 
         public bool UseCallbackID { get; set; }
 
-        public ControllerRequest(Function function, ByteArray payload)
+        public ControllerRequest(Function function, PayloadBytes payload)
             : base(function, payload)
         {
         }
 
-        public ControllerRequest(Function function) : this(function, ByteArray.Empty)
+        public ControllerRequest(Function function) : this(function, PayloadBytes.Empty)
         {
         }
     }

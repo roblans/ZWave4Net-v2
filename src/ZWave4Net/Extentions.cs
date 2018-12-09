@@ -7,19 +7,19 @@ namespace ZWave4Net
 {
     public static partial class Extentions
     {
-        public static T ReadObject<T>(this PayloadReader reader) where T: IPayload, new()
+        public static T ReadObject<T>(this PayloadReader reader) where T: IPayloadSerializable, new()
         {
             var instance = new T();
             instance.Read(reader);
             return instance;
         }
 
-        public static void WriteObject<T>(this PayloadWriter writer, T value) where T : IPayload
+        public static void WriteObject<T>(this PayloadWriter writer, T value) where T : IPayloadSerializable
         {
             value.Write(writer);
         }
 
-        public static T Deserialize<T>(this ByteArray payload) where T : IPayload, new()
+        public static T Deserialize<T>(this PayloadBytes payload) where T : IPayloadSerializable, new()
         {
             using (var reader = new PayloadReader(payload))
             {
@@ -27,12 +27,12 @@ namespace ZWave4Net
             }
         }
 
-        public static ByteArray Serialize(this IPayload payload)
+        public static PayloadBytes Serialize(this IPayloadSerializable payload)
         {
             using (var writer = new PayloadWriter())
             {
                 writer.WriteObject(payload);
-                return writer.ToByteArray();
+                return writer.ToPayloadBytes();
             }
         }
     }

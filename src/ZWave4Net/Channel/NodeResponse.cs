@@ -5,13 +5,13 @@ using ZWave4Net.Channel.Protocol;
 
 namespace ZWave4Net.Channel
 {
-    public class NodeResponse : IPayload
+    public class NodeResponse : IPayloadSerializable
     {
         public ReceiveStatus Status { get; private set; }
         public byte NodeID { get; private set; }
-        public ByteArray Payload { get; private set; }
+        public PayloadBytes Payload { get; private set; }
 
-        void IPayload.Read(PayloadReader reader)
+        void IPayloadSerializable.Read(PayloadReader reader)
         {
             var status = reader.ReadByte();
 
@@ -32,10 +32,10 @@ namespace ZWave4Net.Channel
                 Status |= ReceiveStatus.ForeignFrame;
 
             NodeID = reader.ReadByte();
-            Payload = reader.ReadObject<ByteArray>();
+            Payload = reader.ReadObject<PayloadBytes>();
         }
 
-        void IPayload.Write(PayloadWriter writer)
+        void IPayloadSerializable.Write(PayloadWriter writer)
         {
             throw new NotImplementedException();
         }

@@ -23,7 +23,7 @@ namespace ZWave4Net.CommandClasses
             return Node.Controller.Channel.Send(Node.NodeID, command);
         }
 
-        protected Task<T> Send<T>(NodeCommand command, Enum responseCommand) where T : IPayload, new()
+        protected Task<T> Send<T>(NodeCommand command, Enum responseCommand) where T : IPayloadSerializable, new()
         {
             return Node.Controller.Channel.Send<T>(Node.NodeID, command, Convert.ToByte(responseCommand));
         }

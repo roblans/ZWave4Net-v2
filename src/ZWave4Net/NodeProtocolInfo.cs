@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ZWave4Net
 {
-    public class NodeProtocolInfo : IPayload
+    public class NodeProtocolInfo : IPayloadSerializable
     {
         public byte Capability { get; private set; }
         public byte Reserved { get; private set; }
@@ -13,7 +13,7 @@ namespace ZWave4Net
         public SpecificType SpecificType { get; private set; }
         public Security Security { get; private set; }
 
-        void IPayload.Read(PayloadReader reader)
+        void IPayloadSerializable.Read(PayloadReader reader)
         {
             Capability = reader.ReadByte();
             Security = (Security)reader.ReadByte();
@@ -33,7 +33,7 @@ namespace ZWave4Net
 
         }
 
-        void IPayload.Write(PayloadWriter writer)
+        void IPayloadSerializable.Write(PayloadWriter writer)
         {
             throw new NotImplementedException();
         }

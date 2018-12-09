@@ -186,59 +186,62 @@ namespace ZWave4Net.Channel.Protocol
                         .Where(frame => frame == Frame.ACK || frame == Frame.NAK || frame == Frame.CAN)
                         .Timeout(ProtocolSettings.ACKWaitTime);
 
-                    // start listening for received frames, call onVerifyResponse for every received frame 
-                    using (var subscription = chain.Subscribe((element) => completion.TrySetResult(element)))
+                    // set completion cancelled when token gets cancelled
+                    using (cancellation.Register(() => completion.TrySetCanceled()))
                     {
-                        // encode the message to a dataframe
-                        var frame = Encode(message);
-
-                        if (retransmissions == 0)
-                            _logger.LogDebug($"Sending: {frame}");
-                        else
-                            _logger.LogWarning($"Resending: {frame}, attempt: {retransmissions}");
-
-                        // send the request
-                        await _writer.Write(frame, cancellation);
-
-                        // mesasure time until frame received
-                        stopwatch.Restart();
-
-                        try
+                        // start listening for received frames, call onVerifyResponse for every received frame 
+                        using (var subscription = chain.Subscribe((element) => completion.TrySetResult(element)))
                         {
-                            // wait for validated response
-                            var response = await completion.Task;
+                            // encode the message to a dataframe
+                            var frame = Encode(message);
 
-                            // ACK received, so where done 
-                            if (response == Frame.ACK)
-                                break;
+                            if (retransmissions == 0)
+                                _logger.LogDebug($"Sending: {frame}");
+                            else
+                                _logger.LogWarning($"Resending: {frame}, attempt: {retransmissions}");
 
-                            // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.3 Retransmission
-                            // A host or Z-Wave chip MUST NOT carry out more than 3 retransmissions
-                            if (retransmissions >= ProtocolSettings.MaxRetryAttempts)
+                            // send the request
+                            await _writer.Write(frame, cancellation);
+
+                            // mesasure time until frame received
+                            stopwatch.Restart();
+
+                            try
                             {
-                                if (response == Frame.CAN)
-                                    throw new CanResponseException();
-                                if (response == Frame.NAK)
-                                    throw new NakResponseException();
+                                // wait for validated response
+                                var response = await completion.Task;
+
+                                // ACK received, so where done 
+                                if (response == Frame.ACK)
+                                    break;
+
+                                // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.3 Retransmission
+                                // A host or Z-Wave chip MUST NOT carry out more than 3 retransmissions
+                                if (retransmissions >= ProtocolSettings.MaxRetryAttempts)
+                                {
+                                    if (response == Frame.CAN)
+                                        throw new CanResponseException();
+                                    if (response == Frame.NAK)
+                                        throw new NakResponseException();
+                                }
+                            }
+                            catch (TaskCanceledException) when (cancellation.IsCancellationRequested)
+                            {
+                                // operation was externally canceled, so rethrow
+                                throw;
+                            }
+                            catch (TimeoutException)
+                            {
+                                // operation timed-out
+                                _logger.LogWarning($"Timeout while waiting for an ACK");
+
+                                // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.3 Retransmission
+                                // A host or Z-Wave chip MUST NOT carry out more than 3 retransmissions
+                                if (retransmissions >= ProtocolSettings.MaxRetryAttempts)
+                                    throw new TimeoutException("Timeout while waiting for an ACK");
                             }
                         }
-                        catch (TaskCanceledException) when (cancellation.IsCancellationRequested)
-                        {
-                            // operation was externally canceled, so rethrow
-                            throw;
-                        }
-                        catch (TimeoutException)
-                        {
-                            // operation timed-out
-                            _logger.LogWarning($"Timeout while waiting for an ACK");
-
-                            // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.3 Retransmission
-                            // A host or Z-Wave chip MUST NOT carry out more than 3 retransmissions
-                            if (retransmissions >= ProtocolSettings.MaxRetryAttempts)
-                                throw new TimeoutException("Timeout while waiting for an ACK");
-                        }
                     }
-
                     // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.3 Retransmission
                     // Twaiting = 100ms + n*1000ms 
                     // where n is incremented at each retransmission. n = 0 is used for the first waiting period.

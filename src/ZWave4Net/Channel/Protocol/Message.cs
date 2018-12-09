@@ -8,9 +8,9 @@ namespace ZWave4Net.Channel.Protocol
 {
     public abstract class Message : IEquatable<Message>
     {
-        public readonly ByteArray Payload;
+        public readonly PayloadBytes Payload;
 
-        protected Message(ByteArray payload)
+        protected Message(PayloadBytes payload)
         {
             Payload = payload;
         }

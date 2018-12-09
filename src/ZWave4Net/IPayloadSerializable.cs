@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ZWave4Net
 {
-    public interface IPayload
+    public interface IPayloadSerializable
     {
         void Read(PayloadReader reader);
         void Write(PayloadWriter writer);
