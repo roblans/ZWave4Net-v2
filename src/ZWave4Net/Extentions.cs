@@ -19,7 +19,7 @@ namespace ZWave4Net
             value.Write(writer);
         }
 
-        public static T Deserialize<T>(this Payload payload) where T : IPayload, new()
+        public static T Deserialize<T>(this ByteArray payload) where T : IPayload, new()
         {
             using (var reader = new PayloadReader(payload))
             {
@@ -27,12 +27,12 @@ namespace ZWave4Net
             }
         }
 
-        public static Payload Serialize(this IPayload payload)
+        public static ByteArray Serialize(this IPayload payload)
         {
             using (var writer = new PayloadWriter())
             {
                 writer.WriteObject(payload);
-                return writer.GetPayload();
+                return writer.ToByteArray();
             }
         }
     }

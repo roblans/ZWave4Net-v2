@@ -8,7 +8,7 @@ namespace ZWave4Net.Channel.Protocol
     {
         public readonly byte? CallbackID;
 
-        public ControllerResponse(Function function, byte? callbackID, Payload payload)
+        public ControllerResponse(Function function, byte? callbackID, ByteArray payload)
             : base(function, payload)
         {
             CallbackID = callbackID;

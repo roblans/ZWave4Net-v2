@@ -22,7 +22,7 @@ namespace ZWave4Net.CommandClasses
         public async Task<byte> GetValue()
         {
             var command = new NodeCommand(Class, Command.Get);
-            var response = await Send(command, Command.Report);
+            var response = await Send<ByteArray>(command, Command.Report);
             return response[0];
         }
 

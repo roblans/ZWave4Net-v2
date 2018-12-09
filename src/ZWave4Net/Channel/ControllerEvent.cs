@@ -9,7 +9,7 @@ namespace ZWave4Net.Channel
     {
         public readonly byte? CallbackID;
 
-        public ControllerEvent(Function function, byte? callbackID, Payload payload)
+        public ControllerEvent(Function function, byte? callbackID, ByteArray payload)
             : base(function, payload)
         {
             CallbackID = callbackID;

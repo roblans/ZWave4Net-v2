@@ -35,7 +35,7 @@ namespace ZWave4Net.Tests
 
             broker.Run(cancellation.Token);
 
-            var payload = new Payload(new byte[] { (byte)Function.ApplicationUpdate, 1, 2, 3 });
+            var payload = new ByteArray(new byte[] { (byte)Function.ApplicationUpdate, 1, 2, 3 });
 
             await broker.Send(new RequestMessage(payload), cancellation.Token);
 
@@ -59,7 +59,7 @@ namespace ZWave4Net.Tests
             var broker = new MessageBroker(stream);
             broker.Run(cancellation.Token);
 
-            var payload = new Payload(new byte[] { (byte)Function.ApplicationUpdate, 1, 2, 3 });
+            var payload = new ByteArray(new byte[] { (byte)Function.ApplicationUpdate, 1, 2, 3 });
             await broker.Send(new RequestMessage(payload), cancellation.Token);
 
             cancellation.Cancel();
@@ -84,7 +84,7 @@ namespace ZWave4Net.Tests
 
             broker.Run(cancellation.Token);
 
-            var payload = new Payload(new byte[] { (byte)Function.ApplicationUpdate, 1, 2, 3 });
+            var payload = new ByteArray(new byte[] { (byte)Function.ApplicationUpdate, 1, 2, 3 });
             await broker.Send(new RequestMessage(payload), cancellation.Token);
 
             cancellation.Cancel();
@@ -109,7 +109,7 @@ namespace ZWave4Net.Tests
 
             broker.Run(cancellation.Token);
 
-            var payload = new Payload(new byte[] { (byte)Function.ApplicationUpdate, 1, 2, 3 });
+            var payload = new ByteArray(new byte[] { (byte)Function.ApplicationUpdate, 1, 2, 3 });
             await broker.Send(new RequestMessage(payload), cancellation.Token);
 
             cancellation.Cancel();
@@ -142,7 +142,7 @@ namespace ZWave4Net.Tests
 
             broker.Run(cancellation.Token);
 
-            var payload = new Payload(new byte[] { (byte)Function.ApplicationUpdate, 1, 2, 3 });
+            var payload = new ByteArray(new byte[] { (byte)Function.ApplicationUpdate, 1, 2, 3 });
             await broker.Send(new RequestMessage(payload), cancellation.Token);
 
             cancellation.Cancel();

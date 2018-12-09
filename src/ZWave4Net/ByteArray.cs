@@ -4,17 +4,17 @@ using System.Text;
 
 namespace ZWave4Net
 {
-    public class Payload : IPayload
+    public class ByteArray : IPayload
     {
-        public static readonly Payload Empty = new Payload();
+        public static readonly ByteArray Empty = new ByteArray();
 
         private byte[] _values;
 
-        public Payload() : this(new byte[0])
+        public ByteArray() : this(new byte[0])
         {
         }
 
-        public Payload(params byte[] values)
+        public ByteArray(params byte[] values)
         {
             _values = values ?? new byte[0];
         }

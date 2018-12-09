@@ -9,11 +9,11 @@ namespace ZWave4Net.Channel.Protocol
     /// </summary>
     public class ResponseMessage : Message
     {
-        public ResponseMessage(Payload payload) : base(payload)
+        public ResponseMessage(ByteArray payload) : base(payload)
         {
         }
 
-        public ResponseMessage() : this(Payload.Empty)
+        public ResponseMessage() : this(ByteArray.Empty)
         {
         }
 

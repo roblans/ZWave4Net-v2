@@ -112,6 +112,7 @@ namespace ChannelConsole
                     await basic.SetValue(255);
                     var value1 = await basic.GetValue();
                     Console.WriteLine($"{value1}");
+
                     await Task.Delay(500);
                     await basic.SetValue(0);
                     var value2 = await basic.GetValue();
