@@ -112,21 +112,40 @@ namespace ZWave4Net.Channel
             }
         }
 
-        private async Task<T> Send<T>(RequestMessage request, IObservable<T> pipeline, TimeSpan timeout, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
+        private async Task<T> Send<T>(RequestMessage request, IObservable<T> pipeline, TimeSpan timeout, int maxRetryAttempts, CancellationToken cancellation = default(CancellationToken)) where T : IPayload, new()
         {
-            var completion = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-            using (pipeline.Timeout(timeout).Subscribe
-            (
-                (T element) => completion.TrySetResult(element),
-                (Exception ex) => completion.TrySetException(ex)
-            ))
+            while (true)
             {
-                // send the request
-                await _broker.Send(request, cancellation);
+                // number of retransmissions
+                var retransmissions = 0;
 
-                // wait for response
-                return await completion.Task;
+                try
+                {
+                    var completion = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+                    using (pipeline.Timeout(timeout).Subscribe
+                    (
+                        (T element) => completion.TrySetResult(element),
+                        (Exception ex) => completion.TrySetException(ex)
+                    ))
+                    {
+                        // send the request
+                        await _broker.Send(request, cancellation);
+
+                        // wait for response
+                        return await completion.Task;
+                    }
+                }
+                catch (TimeoutException)
+                {
+                    // operation timed-out
+                    _logger.LogWarning($"Timeout while waiting for a response");
+
+                    if (retransmissions >= ProtocolSettings.MaxRetryAttempts)
+                        throw new TimeoutException("Timeout while waiting for a response");
+                }
+
+                retransmissions++;
             }
         }
 
@@ -142,7 +161,7 @@ namespace ZWave4Net.Channel
                 .Where(element => Equals(element.CallbackID, callbackID))
                 .Select(element => element.Payload.Deserialize<T>());
 
-            return await Send(Encode(request, callbackID), pipeline, request.ResponseTimeout, cancellation);
+            return await Send(Encode(request, callbackID), pipeline, request.ResponseTimeout, request.MaxRetryAttempts, cancellation);
         }
 
         // ControllerRequest: request followed by one or more events. The passed predicate is called on every event (progress)
@@ -161,7 +180,7 @@ namespace ZWave4Net.Channel
                 .Select(element => element.Deserialize<T>())
                 .Where(predicate);
 
-            return await Send(Encode(request, callbackID), pipeline, request.ResponseTimeout, cancellation);
+            return await Send(Encode(request, callbackID), pipeline, request.ResponseTimeout, request.MaxRetryAttempts, cancellation);
         }
 
         // NodeCommand, no return value. Request followed by:
@@ -192,7 +211,7 @@ namespace ZWave4Net.Channel
                 .Select(element => element.Payload.Deserialize<NodeResponse>())
                 .Where(element => element.NodeID == 0);
 
-            await Send(Encode(controllerRequest, callbackID), pipeline, command.ReplyTimeout, cancellation);
+            await Send(Encode(controllerRequest, callbackID), pipeline, command.ReplyTimeout, command.MaxRetryAttempts, cancellation);
         }
 
         // NodeCommand, with return value. Request followed by:
@@ -216,7 +235,6 @@ namespace ZWave4Net.Channel
                 .Where(element => Equals(element.Function, controllerRequest.Function));
 
             var eventPipeline = _broker.GetObservable()
-                .SkipUntil(responsePipeline)
                 .Select(element => Decode(element, true))
                 .OfType<ControllerEvent>()
                 .Where(element => Equals(element.Function, controllerRequest.Function))
@@ -234,7 +252,7 @@ namespace ZWave4Net.Channel
                 .Where(element => element.CommandID == responseCommandID)
                 .Select(element => element.Payload.Deserialize<T>());
 
-            return await Send(Encode(controllerRequest, callbackID), pipeline, command.ReplyTimeout, cancellation);
+            return await Send(Encode(controllerRequest, callbackID), pipeline, command.ReplyTimeout, command.MaxRetryAttempts, cancellation);
         }
 
         public async Task Close()

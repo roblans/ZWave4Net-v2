@@ -38,7 +38,13 @@ namespace ZWave4Net.Channel.Protocol
             _observable = Observable.Create<Frame>(observer => Execute(observer, cancellation)).Publish();
 
             // connect the observerable (start running)
-            _observable.Connect();
+            var subscription = _observable.Connect();
+
+            // when canceled dispose subscription
+            cancellation.Register(() =>
+            {
+                subscription.Dispose();
+            });
         }
 
         private Task Execute(IObserver<Frame> observer, CancellationToken cancellation)

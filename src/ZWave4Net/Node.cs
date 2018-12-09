@@ -52,6 +52,7 @@ namespace ZWave4Net
             var command = new ControllerRequest(Function.RequestNodeNeighborUpdate, new ByteArray(NodeID))
             {
                 UseCallbackID = true,
+                ResponseTimeout = TimeSpan.FromSeconds(5),
             };
 
             var requestNodeNeighborUpdate = await Channel.Send<ByteArray>(command, (payload) =>

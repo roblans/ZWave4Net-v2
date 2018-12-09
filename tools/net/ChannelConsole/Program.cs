@@ -107,20 +107,20 @@ namespace ChannelConsole
 
                 var basic = new Basic(powerSwitch);
 
-                for (int i = 0; i < 59; i++)
-                {
-                    await basic.SetValue(255);
-                    var value1 = await basic.GetValue();
-                    Console.WriteLine($"{value1}");
+                //for (int i = 0; i < 59; i++)
+                //{
+                //    await basic.SetValue(255);
+                //    var value1 = await basic.GetValue();
+                //    Console.WriteLine($"{value1}");
 
-                    await Task.Delay(500);
-                    await basic.SetValue(0);
-                    var stopwatch = Stopwatch.StartNew();
-                    var value2 = await basic.GetValue();
-                    Console.WriteLine($"{value2}, {stopwatch.ElapsedMilliseconds}");
-                    await Task.Delay(500);
-                }
-                //var value2 = await basic.GetValue();
+                //    await Task.Delay(500);
+                //    await basic.SetValue(0);
+                //    var stopwatch = Stopwatch.StartNew();
+                //    var value2 = await basic.GetValue();
+                //    Console.WriteLine($"{value2}, {stopwatch.ElapsedMilliseconds}");
+                //    await Task.Delay(500);
+                //}
+                ////var value2 = await basic.GetValue();
                 //var value3 = await basic.GetValue();
                 //var value4 = await basic.GetValue();
                 //var value5 = await basic.GetValue();
