@@ -106,50 +106,8 @@ namespace ChannelConsole
                 }));
 
                 var basic = new Basic(powerSwitch);
-                for (int i = 0; i < 59; i++)
-                {
-                    await basic.SetValue(255);
-                    var value1 = await basic.GetValue();
-                    Console.WriteLine($"{value1}");
-
-                    await Task.Delay(500);
-                    await basic.SetValue(0);
-                    var stopwatch = Stopwatch.StartNew();
-                    var value2 = await basic.GetValue();
-                    Console.WriteLine($"{value2}, {stopwatch.ElapsedMilliseconds}");
-                    await Task.Delay(500);
-                }
-                ////var value2 = await basic.GetValue();
-                //var value3 = await basic.GetValue();
-                //var value4 = await basic.GetValue();
-                //var value5 = await basic.GetValue();
-
-                //await basic.SetValue(0);
-                //await Task.Delay(1000);
-                //await basic.SetValue(255);
-                //await Task.Delay(1000);
-                //await basic.SetValue(0);
-                //await Task.Delay(1000);
-                //await basic.SetValue(255);
-                //await Task.Delay(1000);
-
-                //var value1 = await basic.GetValue();
-                //var value2 = await basic.GetValue();
-                //var value3 = await basic.GetValue();
-                //var value4 = await basic.GetValue();
-                //var value5 = await basic.GetValue();
-                //Console.WriteLine(await basic.GetValue());
-
-                //await Task.Delay(1000);
-
-                //await basic.SetValue(255);
-                //value1 = await basic.GetValue();
-                //value2 = await basic.GetValue();
-                //value3 = await basic.GetValue();
-                //value4 = await basic.GetValue();
-                //value5 = await basic.GetValue();
-
-                //Console.WriteLine(await basic.GetValue());
+                await basic.SetValue(0);
+                Console.WriteLine(await basic.GetValue());
 
                 Console.ReadLine();
 

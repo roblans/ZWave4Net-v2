@@ -190,7 +190,11 @@ namespace ZWave4Net.Channel.Protocol
                     using (cancellation.Register(() => completion.TrySetCanceled()))
                     {
                         // start listening for received frames, call onVerifyResponse for every received frame 
-                        using (var subscription = chain.Subscribe((element) => completion.TrySetResult(element)))
+                        using (var subscription = chain.Subscribe
+                        (
+                            (element) => completion.TrySetResult(element),
+                            (error) => completion.TrySetException(error))
+                        )
                         {
                             // encode the message to a dataframe
                             var frame = Encode(message);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,44 +10,22 @@ namespace ZWave4Net.Channel
 {
     public static partial class Extentions
     {
-    //    public static Task<T> Send<T>(this ZWaveChannel channel, ControllerCommand command) where T : IPayload, new()
-    //    {
-    //        return channel.Send<T>(command, null, default(CancellationToken));
-    //    }
-
-    //    public static Task<T> Send<T>(this ZWaveChannel channel, ControllerCommand command, CancellationToken cancellation) where T : IPayload, new()
-    //    {
-    //        return channel.Send<T>(command, null, cancellation);
-    //    }
-
-    //    public static Task<T> Send<T>(this ZWaveChannel channel, ControllerCommand command, Func<T, bool> predicate) where T : IPayload, new()
-    //    {
-    //        return channel.Send<T>(command, predicate, default(CancellationToken));
-    //    }
-
-    //    public static Task<Payload> Send(this ZWaveChannel channel, ControllerCommand command)
-    //    {
-    //        return channel.Send<Payload>(command, null, default(CancellationToken));
-    //    }
-
-    //    public static Task<Payload> Send(this ZWaveChannel channel, ControllerCommand command, CancellationToken cancellation)
-    //    {
-    //        return channel.Send<Payload>(command, null, cancellation);
-    //    }
-
-    //    public static Task<Payload> Send(this ZWaveChannel channel, ControllerCommand command, Func<Payload, bool> predicate)
-    //    {
-    //        return channel.Send<Payload>(command, predicate, default(CancellationToken));
-    //    }
-
-    //    public static Task<Payload> Send(this ZWaveChannel channel, ControllerCommand command, Func<Payload, bool> predicate, CancellationToken cancellation)
-    //    {
-    //        return channel.Send<Payload>(command, predicate, cancellation);
-    //    }
-
-    //    public static Task Send(this ZWaveChannel channel, byte nodeID, NodeCommand command)
-    //    {
-    //        return channel.Send<Payload>(nodeID, command);
-    //    }
+        public static IObservable<T> Verify<T>(this IObservable<T> source, Predicate<T> predicate, Func<T, Exception> getError)
+        {
+            return Observable.Create<T>(o =>
+                source.Subscribe(x => 
+                {
+                    if (predicate(x))
+                    {
+                        o.OnNext(x);
+                    }
+                    else
+                    {
+                        o.OnError(getError(x));
+                    }
+                },
+                o.OnError,
+                o.OnCompleted));
+        }
     }
 }

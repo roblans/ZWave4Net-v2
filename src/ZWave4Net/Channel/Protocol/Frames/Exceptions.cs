@@ -28,6 +28,7 @@ namespace ZWave4Net.Channel.Protocol.Frames
     public class TransmissionException : ProtocolException
     {
         public TransmissionException() : base("Transmission failure.") { }
+        public TransmissionException(TransmissionState state) : base($"Transmission failure: {state}.") { }
         public TransmissionException(string message) : base(message) { }
         public TransmissionException(string message, System.Exception inner) : base(message, inner) { }
     }
