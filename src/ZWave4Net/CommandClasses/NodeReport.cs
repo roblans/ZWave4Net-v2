@@ -10,6 +10,11 @@ namespace ZWave4Net.CommandClasses
 
         protected abstract void Read(PayloadReader reader);
 
+        public override string ToString()
+        {
+            return $"{GetType().Name}, Node: {NodeID:D3}";
+        }
+
         void IPayloadSerializable.Read(PayloadReader reader)
         {
             NodeID = reader.ReadByte();

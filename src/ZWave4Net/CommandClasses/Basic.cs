@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using ZWave4Net.Channel;
+using System.Reactive.Linq;
 
 namespace ZWave4Net.CommandClasses
 {
@@ -19,17 +20,21 @@ namespace ZWave4Net.CommandClasses
         {
         }
 
-        public async Task<byte> GetValue()
+        public async Task<BasicReport> GetValue()
         {
             var command = new NodeCommand(Class, Command.Get);
-            var response = await Send<PayloadBytes>(command, Command.Report);
-            return response[0];
+            return await Send<BasicReport>(command, Command.Report);
         }
 
         public Task SetValue(byte value)
         {
             var command = new NodeCommand(Class, Command.Set, value);
             return Send(command); 
+        }
+
+        public IObservable<BasicReport> Reports
+        {
+            get { return Receive<BasicReport>(Command.Report); }
         }
     }
 }

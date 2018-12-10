@@ -330,6 +330,27 @@ namespace ZWave4Net.Channel
             return await Send(Encode(controllerRequest, callbackID), pipeline, command.ReplyTimeout, command.MaxRetryAttempts, cancellation);
         }
 
+        public IObservable<T> Receive<T>(byte nodeID, byte commandID) where T : IPayloadSerializable, new()
+        {
+            return _broker.GetObservable()
+            // decode the response
+            .Select(message => Decode(message, false))
+            // we only want events (no responses)
+            .OfType<ControllerEvent>()
+            // after SendData controler will respond with ApplicationCommandHandler
+            .Where(message => Equals(message.Function, Function.ApplicationCommandHandler))
+            // deserialize the received payload to a NodeResponse
+            .Select(message => message.Payload.Deserialize<NodeResponse>())
+            // verify if the responding node is the correct one
+            .Where(message => message.NodeID == nodeID)
+            // deserialize the received payload to a NodeReply
+            .Select(message => message.Payload.Deserialize<NodeReply>())
+            // verify if the response conmmand is the correct on
+            .Where(message => message.CommandID == commandID)
+            // finally deserialize the payload
+            .Select(message => message.Payload.Deserialize<T>());
+        }
+
         public async Task Close()
         {
             _cancellationSource.Cancel();

@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 using System.Threading.Tasks;
 using ZWave4Net.Channel;
 using ZWave4Net.Channel.Protocol;
+using System.Reactive.Linq;
 
 namespace ZWave4Net.CommandClasses
 {
@@ -23,9 +23,17 @@ namespace ZWave4Net.CommandClasses
             return Node.Controller.Channel.Send(Node.NodeID, command);
         }
 
-        protected Task<T> Send<T>(NodeCommand command, Enum responseCommand) where T : IPayloadSerializable, new()
+        protected async Task<T> Send<T>(NodeCommand command, Enum responseCommand) where T : NodeReport, new()
         {
-            return Node.Controller.Channel.Send<T>(Node.NodeID, command, Convert.ToByte(responseCommand));
+            var payload = await Node.Controller.Channel.Send<PayloadBytes>(Node.NodeID, command, Convert.ToByte(responseCommand));
+            return new PayloadBytes(new[] { Node.NodeID }.Concat(payload.ToArray()).ToArray()).Deserialize<T>();
+        }
+
+        protected IObservable<T> Receive<T>(Enum command) where T : NodeReport, new()
+        {
+            return Node.Controller.Channel.Receive<PayloadBytes>(Node.NodeID, Convert.ToByte(command))
+                .Select(element => new PayloadBytes(new[] { Node.NodeID }.Concat(element.ToArray()).ToArray()))
+                .Select(element => element.Deserialize<T>()); 
         }
     }
 }

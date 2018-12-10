@@ -12,5 +12,10 @@ namespace ZWave4Net.CommandClasses
         {
             reader.ReadByte();
         }
+
+        public override string ToString()
+        {
+            return $"{base.ToString()}, Value: {Value}";
+        }
     }
 }
