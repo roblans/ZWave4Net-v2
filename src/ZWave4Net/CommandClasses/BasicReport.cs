@@ -10,7 +10,7 @@ namespace ZWave4Net.CommandClasses
 
         protected override void Read(PayloadReader reader)
         {
-            reader.ReadByte();
+            Value = reader.ReadByte();
         }
 
         public override string ToString()

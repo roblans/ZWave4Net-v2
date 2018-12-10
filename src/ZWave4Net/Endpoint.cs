@@ -27,7 +27,7 @@ namespace ZWave4Net
 
         public override string ToString()
         {
-            return $"{Node}.{EndpointID:D3}";
+            return $"{Node:D3}.{EndpointID:D3}";
         }
 
         protected ZWaveChannel Channel

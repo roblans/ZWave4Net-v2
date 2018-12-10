@@ -22,19 +22,19 @@ namespace ZWave4Net.CommandClasses
 
         public async Task<BasicReport> GetValue()
         {
-            var command = new NodeCommand(Class, Command.Get);
+            var command = new NodeCommand(CommandClass, Command.Get);
             return await Send<BasicReport>(command, Command.Report);
         }
 
         public Task SetValue(byte value)
         {
-            var command = new NodeCommand(Class, Command.Set, value);
+            var command = new NodeCommand(CommandClass, Command.Set, value);
             return Send(command); 
         }
 
         public IObservable<BasicReport> Reports
         {
-            get { return Receive<BasicReport>(Command.Report); }
+            get { return Reports<BasicReport>(Command.Report); }
         }
     }
 }

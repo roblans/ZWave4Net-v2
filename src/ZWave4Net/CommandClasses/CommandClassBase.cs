@@ -10,12 +10,12 @@ namespace ZWave4Net.CommandClasses
     public class CommandClassBase
     {
         public readonly Node Node;
-        public readonly CommandClass Class;
+        public readonly CommandClass CommandClass;
 
-        public CommandClassBase(Node node, CommandClass @class)
+        public CommandClassBase(Node node, CommandClass commandClass)
         {
             Node = node;
-            Class = @class;
+            CommandClass = commandClass;
         }
 
         protected Task Send(NodeCommand command)
@@ -29,7 +29,7 @@ namespace ZWave4Net.CommandClasses
             return new PayloadBytes(new[] { Node.NodeID }.Concat(payload.ToArray()).ToArray()).Deserialize<T>();
         }
 
-        protected IObservable<T> Receive<T>(Enum command) where T : NodeReport, new()
+        protected IObservable<T> Reports<T>(Enum command) where T : NodeReport, new()
         {
             return Node.Controller.Channel.Receive<PayloadBytes>(Node.NodeID, Convert.ToByte(command))
                 .Select(element => new PayloadBytes(new[] { Node.NodeID }.Concat(element.ToArray()).ToArray()))

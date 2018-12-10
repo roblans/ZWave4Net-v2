@@ -12,7 +12,7 @@ namespace ZWave4Net.CommandClasses
 
         public override string ToString()
         {
-            return $"{GetType().Name}, Node: {NodeID:D3}";
+            return $"{GetType().Name}: Node: {NodeID:D3}";
         }
 
         void IPayloadSerializable.Read(PayloadReader reader)
