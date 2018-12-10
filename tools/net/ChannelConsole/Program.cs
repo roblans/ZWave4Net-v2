@@ -106,16 +106,16 @@ namespace ChannelConsole
                 //}));
 
                 var basic = new Basic(powerSwitch);
-                await basic.SetValue(0);
-                var value = await basic.GetValue();
+                await basic.Set(0);
+                var value = await basic.Get();
 
                 Console.WriteLine(value);
 
                 using (basic.Reports.Subscribe((element) => Console.WriteLine(element)))
                 {
-                    await basic.SetValue(255);
+                    await basic.Set(255);
                     await Task.Delay(1000);
-                    await basic.SetValue(0);
+                    await basic.Set(0);
                     Console.ReadLine();
                 }
 

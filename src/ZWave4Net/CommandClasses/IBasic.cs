@@ -7,8 +7,8 @@ namespace ZWave4Net.CommandClasses
 {
     public interface IBasic
     {
-        Task<BasicReport> GetValue();
-        Task SetValue(byte value);
+        Task<BasicReport> Get();
+        Task Set(byte value);
         IObservable<BasicReport> Reports { get; }
     }
 }
