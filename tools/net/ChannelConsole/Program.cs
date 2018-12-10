@@ -107,7 +107,9 @@ namespace ChannelConsole
 
                 var basic = new Basic(powerSwitch);
                 await basic.SetValue(0);
-                Console.WriteLine(await basic.GetValue());
+                var value = await basic.GetValue();
+
+                Console.WriteLine(value);
 
                 Console.ReadLine();
 
