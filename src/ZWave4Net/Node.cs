@@ -22,7 +22,7 @@ namespace ZWave4Net
 
         public async Task<NodeProtocolInfo> GetProtocolInfo(CancellationToken cancellationToken = default(CancellationToken))
         {
-            var command = new ControllerRequest(Function.GetNodeProtocolInfo, new PayloadBytes(NodeID));
+            var command = new ControllerRequest(Function.GetNodeProtocolInfo, new Payload(NodeID));
             return await Channel.Send<NodeProtocolInfo>(command, cancellationToken);
         }
 
@@ -35,10 +35,10 @@ namespace ZWave4Net
         {
             var results = new List<Node>();
 
-            var command = new ControllerRequest(Function.GetRoutingTableLine, new PayloadBytes(NodeID));
+            var command = new ControllerRequest(Function.GetRoutingTableLine, new Payload(NodeID));
 
             // send request
-            var response = await Channel.Send<PayloadBytes>(command, cancellationToken);
+            var response = await Channel.Send<Payload>(command, cancellationToken);
 
             var bits = new BitArray(response.ToArray());
             for (byte i = 0; i < bits.Length; i++)

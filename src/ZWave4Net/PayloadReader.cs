@@ -12,7 +12,7 @@ namespace ZWave4Net
         private readonly Stream _stream;
         private readonly byte[] _buffer = new byte[256];
 
-        public PayloadReader(PayloadBytes payload)
+        public PayloadReader(Payload payload)
         {
             _stream = new MemoryStream(payload.ToArray());
         }

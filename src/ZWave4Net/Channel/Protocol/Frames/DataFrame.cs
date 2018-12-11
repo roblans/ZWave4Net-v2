@@ -10,9 +10,9 @@ namespace ZWave4Net.Channel.Protocol.Frames
     public class DataFrame : Frame, IEquatable<DataFrame>
     {
         public readonly DataFrameType Type;
-        public readonly PayloadBytes Payload;
+        public readonly Payload Payload;
 
-        public DataFrame(DataFrameType type, PayloadBytes payload)
+        public DataFrame(DataFrameType type, Payload payload)
             : base(FrameHeader.SOF)
         {
             Type = type;

@@ -8,13 +8,13 @@ namespace ZWave4Net
     {
         public NodeUpdateState State { get; private set; }
         public byte NodeID { get; private set; }
-        public PayloadBytes Payload { get; private set; }
+        public Payload Payload { get; private set; }
 
         void IPayloadSerializable.Read(PayloadReader reader)
         {
             State = (NodeUpdateState)reader.ReadByte();
             NodeID = reader.ReadByte();
-            Payload = new PayloadBytes(reader.ReadBytes(reader.Length - reader.Position));
+            Payload = new Payload(reader.ReadBytes(reader.Length - reader.Position));
         }
 
         void IPayloadSerializable.Write(PayloadWriter writer)

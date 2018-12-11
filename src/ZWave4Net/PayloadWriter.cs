@@ -27,9 +27,9 @@ namespace ZWave4Net
             get { return (int)_stream.Position; }
         }
 
-        public PayloadBytes ToPayloadBytes()
+        public Payload ToPayloadBytes()
         {
-            return new PayloadBytes(_stream.ToArray());
+            return new Payload(_stream.ToArray());
         }
 
         public void WriteByte(byte value)

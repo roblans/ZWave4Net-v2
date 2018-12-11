@@ -15,22 +15,20 @@ namespace ZWave4Net.Channel
             var responseTimeout = TimeSpan.FromSeconds(5);
             var callbackID = ZWaveChannel.GetNextCallbackID();
 
-            var command = new ControllerRequest(Function.RequestNodeNeighborUpdate, new PayloadBytes(nodeID));
-
+            var command = new ControllerRequest(Function.RequestNodeNeighborUpdate, new Payload(nodeID));
             var request = channel.Encode(command, callbackID);
-
 
             var pipeline = channel.Messages
                 // decode the response
-                .Select(message => channel.Decode(message, true))
+                .Select(message => channel.Decode(message, hasCallbackID: true))
                 // we only want events (no responses)
                 .OfType<ControllerEvent>()
                 // verify matching function
-                .Where(message => Equals(message.Function, command.Function))
+                .Where(@event => Equals(@event.Function, command.Function))
                 // verify mathing callback (can be null)
-                .Where(message => Equals(message.CallbackID, callbackID))
+                .Where(@event => Equals(@event.CallbackID, callbackID))
                 // deserialize the received payload
-                .Select(message => message.Payload.Deserialize<PayloadBytes>())
+                .Select(@event => @event.Payload.Deserialize<Payload>())
                 // report progress
                 .Do(payload => progress?.Report((NeighborUpdateStatus)payload[0]))
                 // and check for final state
@@ -45,37 +43,36 @@ namespace ZWave4Net.Channel
 
         public static async Task<NodeInfo> SendRequestNodeInfo(this ZWaveChannel channel, byte nodeID, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var command = new ControllerRequest(Function.RequestNodeInfo, new PayloadBytes(nodeID));
-
+            var command = new ControllerRequest(Function.RequestNodeInfo, new Payload(nodeID));
             var request = channel.Encode(command, null);
 
             var responsePipeline = channel.Messages
                 // decode the response
-                .Select(message => channel.Decode(message, false))
+                .Select(message => channel.Decode(message, hasCallbackID: false))
                 // we only want responses (no events)
                 .OfType<ControllerResponse>()
                 // verify matching function
-                .Where(message => Equals(message.Function, command.Function))
-                // unknown what the 0x01 byte means
-                .Where(message => message.Payload[0] == 0x01);
+                .Where(response => Equals(response.Function, command.Function))
+                // unknown what the 0x01 byte means, probably: ready, finished, OK
+                .Where(response => response.Payload[0] == 0x01);
 
             var pipeline = channel.Messages
                 // wait until the response pipeline has finished
                 .SkipUntil(responsePipeline)
                 // decode the response
-                .Select(message => channel.Decode(message, false))
+                .Select(message => channel.Decode(message, hasCallbackID: false))
                 // we only want events (no responses)
                 .OfType<ControllerEvent>()
                 // verify matching function
-                .Where(message => Equals(message.Function, Function.ApplicationUpdate))
+                .Where(@event => Equals(@event.Function, Function.ApplicationUpdate))
                 // deserialize the received payload to a NodeUpdate
-                .Select(message => message.Payload.Deserialize<NodeUpdate>())
+                .Select(@event => @event.Payload.Deserialize<NodeUpdate>())
                 // verify node
-                .Where(message => message.NodeID == nodeID)
+                .Where(update => update.NodeID == nodeID)
                 // verify state
-                .Where(message => message.State == NodeUpdateState.InfoReceived)
+                .Where(update => update.State == NodeUpdateState.InfoReceived)
                 // deserialize to nodeinfo
-                .Select(message => message.Payload.Deserialize<NodeInfo>());
+                .Select(update => update.Payload.Deserialize<NodeInfo>());
 
             // send request
             return await channel.Send(request, pipeline, cancellationToken);

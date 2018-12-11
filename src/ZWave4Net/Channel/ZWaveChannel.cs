@@ -50,7 +50,7 @@ namespace ZWave4Net.Channel
             // 4) Send SerialAPI command: FUNC_ID_SERIAL_API_SOFT_RESET
             // 5) Wait 1.5s
 
-            var message = new RequestMessage(new PayloadBytes((byte)Function.SerialApiSoftReset));
+            var message = new RequestMessage(new Payload((byte)Function.SerialApiSoftReset));
             var frame = MessageBroker.Encode(message);
 
             var writer = new FrameWriter(Port);
@@ -69,7 +69,7 @@ namespace ZWave4Net.Channel
             _broker.Run(_cancellationSource.Token);
         }
 
-        internal RequestMessage Encode(ControllerRequest command, byte? callbackID)
+        public RequestMessage Encode(ControllerRequest command, byte? callbackID)
         {
             // create writer to serialize te request
             using (var writer = new PayloadWriter())
@@ -95,7 +95,7 @@ namespace ZWave4Net.Channel
             }
         }
 
-        internal ControllerMessage Decode(Message message, bool hasCallbackID)
+        public ControllerMessage Decode(Message message, bool hasCallbackID)
         {
             // create reader to deserialize the request
             using (var reader = new PayloadReader(message.Payload))
@@ -106,7 +106,7 @@ namespace ZWave4Net.Channel
                 var callbackID = hasCallbackID ? reader.ReadByte() : default(byte?);
 
                 // read the payload
-                var payload = new PayloadBytes(reader.ReadBytes(reader.Length - reader.Position));
+                var payload = new Payload(reader.ReadBytes(reader.Length - reader.Position));
 
                 if (message is ResponseMessage)
                 {
@@ -190,13 +190,13 @@ namespace ZWave4Net.Channel
             // create the response pipeline
             var pipeline = Messages
                 // decode the response
-                .Select(message => Decode(message, false))
+                .Select(message => Decode(message, hasCallbackID: false))
                 // we only want responses (no events)
                 .OfType<ControllerResponse>()
                 // verify matching function
-                .Where(message => Equals(message.Function, request.Function))
+                .Where(response => Equals(response.Function, request.Function))
                 // and finally deserialize the received payload
-                .Select(message => message.Payload.Deserialize<T>());
+                .Select(response => response.Payload.Deserialize<T>());
 
             return await Send(Encode(request, null), pipeline, cancellation);
         }
@@ -207,38 +207,37 @@ namespace ZWave4Net.Channel
         // 2) a event from the controller: command deliverd at node)  
         public async Task Send(byte nodeID, NodeCommand command, CancellationToken cancellation = default(CancellationToken))
         {
-            var nodeRequest = new NodeRequest(nodeID, command);
-
-            var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize());
-
             // generate new callback
             var callbackID = GetNextCallbackID();
 
+            var nodeRequest = new NodeRequest(nodeID, command);
+            var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize());
+
             var responsePipeline = Messages
                 // decode the response
-                .Select(message => Decode(message, false))
+                .Select(message => Decode(message, hasCallbackID: false))
                 // we only want responses (no events)
                 .OfType<ControllerResponse>()
                 // verify matching function
-                .Where(message => Equals(message.Function, controllerRequest.Function))
-                // unknown what the 0x01 byte means
-                .Where(message => message.Payload[0] == 0x01);
+                .Where(response => Equals(response.Function, controllerRequest.Function))
+                // unknown what the 0x01 byte means, probably: ready, finished, OK
+                .Where(response => response.Payload[0] == 0x01);
 
             var pipeline = Messages
                 // wait until the response pipeline has finished
                 .SkipUntil(responsePipeline)
                 // decode the response
-                .Select(message => Decode(message, true))
+                .Select(message => Decode(message, hasCallbackID: true))
                 // we only want events (no responses)
                 .OfType<ControllerEvent>()
                 // verify matching function
-                .Where(message => Equals(message.Function, controllerRequest.Function))
+                .Where(@event => Equals(@event.Function, controllerRequest.Function))
                 // verify mathing callback
-                .Where(message => Equals(message.CallbackID, callbackID))
+                .Where(@event => Equals(@event.CallbackID, callbackID))
                 // deserialize the received payload to a NodeCommandCompleted
-                .Select(message => message.Payload.Deserialize<NodeCommandCompleted>())
+                .Select(@event => @event.Payload.Deserialize<NodeCommandCompleted>())
                 // verify the state
-                .Verify(message => message.TransmissionState == TransmissionState.CompleteOK, message => new TransmissionException(message.TransmissionState));
+                .Verify(completed => completed.TransmissionState == TransmissionState.CompleteOK, completed => new TransmissionException(completed.TransmissionState));
 
             await Send(Encode(controllerRequest, callbackID), pipeline, cancellation);
         }
@@ -249,37 +248,36 @@ namespace ZWave4Net.Channel
         // 3) a event from the node: return value
         public async Task<T> Send<T>(byte nodeID, NodeCommand command, byte responseCommandID, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
         {
-            var nodeRequest = new NodeRequest(nodeID, command);
-
-            var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize());
-
             // generate new callback
             var callbackID = GetNextCallbackID();
 
+            var nodeRequest = new NodeRequest(nodeID, command);
+            var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize());
+
             var responsePipeline = Messages
                 // decode the response
-                .Select(message => Decode(message, false))
+                .Select(message => Decode(message, hasCallbackID: false))
                 // we only want responses (no events)
                 .OfType<ControllerResponse>()
                 // verify matching function
-                .Where(message => Equals(message.Function, controllerRequest.Function))
-                // unknown what the 0x01 byte means
-                .Where(message => message.Payload[0] == 0x01);
+                .Where(response => Equals(response.Function, controllerRequest.Function))
+                // unknown what the 0x01 byte means, probably: ready, finished, OK
+                .Where(response => response.Payload[0] == 0x01);
 
 
             var eventPipeline = Messages
                 // decode the response
-                .Select(message => Decode(message, true))
+                .Select(message => Decode(message, hasCallbackID: true))
                 // we only want events (no responses)
                 .OfType<ControllerEvent>()
                 // verify matching function
-                .Where(message => Equals(message.Function, controllerRequest.Function))
+                .Where(@event => Equals(@event.Function, controllerRequest.Function))
                 // verify matching callback
-                .Where(message => Equals(message.CallbackID, callbackID))
+                .Where(@event => Equals(@event.CallbackID, callbackID))
                 // deserialize the received payload to a NodeCommandCompleted
-                .Select(message => message.Payload.Deserialize<NodeCommandCompleted>())
+                .Select(@event => @event.Payload.Deserialize<NodeCommandCompleted>())
                 // verify the state
-                .Verify(message => message.TransmissionState == TransmissionState.CompleteOK, message => new TransmissionException(message.TransmissionState));
+                .Verify(completed => completed.TransmissionState == TransmissionState.CompleteOK, completed => new TransmissionException(completed.TransmissionState));
 
             var pipeline = Messages
                 // wait until the response pipeline has finished
@@ -287,21 +285,21 @@ namespace ZWave4Net.Channel
                 // wait until the event pipeline has finished
                 .SkipUntil(eventPipeline)
                 // decode the response
-                .Select(message => Decode(message, false))
+                .Select(message => Decode(message, hasCallbackID: false))
                 // we only want events (no responses)
                 .OfType<ControllerEvent>()
                 // after SendData controler will respond with ApplicationCommandHandler
-                .Where(message => Equals(message.Function, Function.ApplicationCommandHandler))
+                .Where(@event => Equals(@event.Function, Function.ApplicationCommandHandler))
                 // deserialize the received payload to a NodeResponse
-                .Select(message => message.Payload.Deserialize<NodeResponse>())
+                .Select(@event => @event.Payload.Deserialize<NodeResponse>())
                 // verify if the responding node is the correct one
-                .Where(message => message.NodeID == nodeID)
+                .Where(response => response.NodeID == nodeID)
                 // deserialize the received payload to a NodeReply
-                .Select(message => message.Payload.Deserialize<NodeReply>())
+                .Select(response => response.Payload.Deserialize<NodeReply>())
                 // verify if the response conmmand is the correct on
-                .Where(message => message.CommandID == responseCommandID)
+                .Where(reply => reply.CommandID == responseCommandID)
                 // finally deserialize the payload
-                .Select(message => message.Payload.Deserialize<T>());
+                .Select(reply => reply.Payload.Deserialize<T>());
 
             return await Send(Encode(controllerRequest, callbackID), pipeline, cancellation);
         }
@@ -310,21 +308,21 @@ namespace ZWave4Net.Channel
         {
             return Messages
             // decode the response
-            .Select(message => Decode(message, false))
+            .Select(message => Decode(message, hasCallbackID: false))
             // we only want events (no responses)
             .OfType<ControllerEvent>()
             // after SendData controler will respond with ApplicationCommandHandler
-            .Where(message => Equals(message.Function, Function.ApplicationCommandHandler))
+            .Where(@event => Equals(@event.Function, Function.ApplicationCommandHandler))
             // deserialize the received payload to a NodeResponse
-            .Select(message => message.Payload.Deserialize<NodeResponse>())
+            .Select(@event => @event.Payload.Deserialize<NodeResponse>())
             // verify if the responding node is the correct one
-            .Where(message => message.NodeID == nodeID)
+            .Where(response => response.NodeID == nodeID)
             // deserialize the received payload to a NodeReply
-            .Select(message => message.Payload.Deserialize<NodeReply>())
+            .Select(response => response.Payload.Deserialize<NodeReply>())
             // verify if the response conmmand is the correct on
-            .Where(message => message.CommandID == commandID)
+            .Where(reply => reply.CommandID == commandID)
             // finally deserialize the payload
-            .Select(message => message.Payload.Deserialize<T>());
+            .Select(reply => reply.Payload.Deserialize<T>());
         }
 
         public async Task Close()
