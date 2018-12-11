@@ -18,6 +18,10 @@ namespace ZWave4Net.Channel
         private readonly ILogger _logger = Logging.Factory.CreatLogger("Channel");
         private readonly MessageBroker _broker;
         private readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
+
+        public TimeSpan ResponseTimeout = TimeSpan.FromSeconds(1);
+        public int MaxRetryAttempts = 3;
+
         public readonly ISerialPort Port;
 
         public ZWaveChannel(ISerialPort port)
@@ -117,11 +121,13 @@ namespace ZWave4Net.Channel
             }
         }
 
-        internal async Task<T> Send<T>(RequestMessage request, IObservable<T> pipeline, TimeSpan timeout, int maxRetryAttempts, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
+        public Task<T> Send<T>(RequestMessage request, IObservable<T> pipeline, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
         {
-#if DEBUG
-            timeout = TimeSpan.FromSeconds(60);
-#endif
+            return Send(request, pipeline, ResponseTimeout, MaxRetryAttempts, cancellation);
+        }
+
+        public async Task<T> Send<T>(RequestMessage request, IObservable<T> pipeline, TimeSpan timeout, int maxRetryAttempts, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
+        {
             // number of retransmissions
             var retransmissions = 0;
 
@@ -192,41 +198,9 @@ namespace ZWave4Net.Channel
                 // and finally deserialize the received payload
                 .Select(message => message.Payload.Deserialize<T>());
 
-            return await Send(Encode(request, null), pipeline, request.ResponseTimeout, request.MaxRetryAttempts, cancellation);
+            return await Send(Encode(request, null), pipeline, cancellation);
         }
 
-
-        // ControllerRequest: request followed by one events.
-        // The result of the completed task is the payload of the response function received
-        public async Task<T> Send<T>(ControllerRequest request, Function responseFunction, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
-        {
-            // generate new callback
-            var callbackID = GetNextCallbackID();
-
-            var responsePipeline = Messages
-                // decode the response
-                .Select(message => Decode(message, false))
-                // we only want responses (no events)
-                .OfType<ControllerResponse>()
-                // verify matching function
-                .Where(message => Equals(message.Function, request.Function))
-                // unknown what the 0x01 byte means
-                .Where(message => message.Payload[0] == 0x01);
-
-            var pipeline = Messages
-                // wait until the response pipeline has finished
-                .SkipUntil(responsePipeline)
-                // decode the response
-                .Select(message => Decode(message, false))
-                // we only want events (no responses)
-                .OfType<ControllerEvent>()
-                // verify matching function
-                .Where(message => Equals(message.Function, responseFunction))
-                // deserialize the received payload to a NodeCommandCompleted
-                .Select(message => message.Payload.Deserialize<T>());
-
-            return await Send(Encode(request, null), pipeline, request.ResponseTimeout, request.MaxRetryAttempts, cancellation);
-        }
 
         // NodeCommand, no return value. Request followed by:
         // 1) a response from the controller
@@ -266,7 +240,7 @@ namespace ZWave4Net.Channel
                 // verify the state
                 .Verify(message => message.TransmissionState == TransmissionState.CompleteOK, message => new TransmissionException(message.TransmissionState));
 
-            await Send(Encode(controllerRequest, callbackID), pipeline, command.ReplyTimeout, command.MaxRetryAttempts, cancellation);
+            await Send(Encode(controllerRequest, callbackID), pipeline, cancellation);
         }
 
         // NodeCommand, with return value. Request followed by:
@@ -329,7 +303,7 @@ namespace ZWave4Net.Channel
                 // finally deserialize the payload
                 .Select(message => message.Payload.Deserialize<T>());
 
-            return await Send(Encode(controllerRequest, callbackID), pipeline, command.ReplyTimeout, command.MaxRetryAttempts, cancellation);
+            return await Send(Encode(controllerRequest, callbackID), pipeline, cancellation);
         }
 
         public IObservable<T> Receive<T>(byte nodeID, byte commandID) where T : IPayloadSerializable, new()

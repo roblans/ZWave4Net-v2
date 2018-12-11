@@ -15,41 +15,25 @@ namespace ZWave4Net
 
         void IPayloadSerializable.Read(PayloadReader reader)
         {
-            var unknown1 = reader.ReadByte();
-            var unknown2 = reader.ReadByte();
             var length = reader.ReadByte();
+            BasicType = (BasicType)reader.ReadByte();
+            GenericType = (GenericType)reader.ReadByte();
 
-            if (reader.Position < reader.Length)
+            var specificType = reader.ReadByte();
+            if (specificType == 0)
             {
-                BasicType = (BasicType)reader.ReadByte();
+                SpecificType = SpecificType.NotUsed;
+            }
+            else
+            {
+                SpecificType = (SpecificType)((int)GenericType << 16 | specificType);
             }
 
-            if (reader.Position < reader.Length)
-            {
-                GenericType = (GenericType)reader.ReadByte();
-            }
-
-            if (reader.Position < reader.Length)
-            {
-                var specificType = reader.ReadByte();
-                if (specificType == 0)
-                {
-                    SpecificType = SpecificType.NotUsed;
-                }
-                else
-                {
-                    SpecificType = (SpecificType)((int)GenericType << 16 | specificType);
-                }
-            }
-
-            if (reader.Position < reader.Length)
-            {
-                SupportedCommandClasses = reader
-                    .ReadBytes(reader.Length - reader.Position)
-                    .TakeWhile(x => x != 0xEF)
-                    .Select(x => (CommandClass)x)
-                    .ToArray();
-            }
+            SupportedCommandClasses = reader
+                .ReadBytes(reader.Length - reader.Position)
+                .TakeWhile(x => x != 0xEF)
+                .Select(x => (CommandClass)x)
+                .ToArray();
         }
 
         void IPayloadSerializable.Write(PayloadWriter writer)
