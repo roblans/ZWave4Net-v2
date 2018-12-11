@@ -10,8 +10,6 @@ namespace ZWave4Net.Channel
         public TimeSpan ResponseTimeout = TimeSpan.FromSeconds(1);
         public int MaxRetryAttempts = 3;
 
-        public bool UseCallbackID { get; set; }
-
         public ControllerRequest(Function function, PayloadBytes payload)
             : base(function, payload)
         {

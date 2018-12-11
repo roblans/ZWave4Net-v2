@@ -55,26 +55,7 @@ namespace ZWave4Net
 
         public async Task<NeighborUpdateStatus> RequestNeighborUpdate(IProgress<NeighborUpdateStatus> progress = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-
-            var command = new ControllerRequest(Function.RequestNodeNeighborUpdate, new PayloadBytes(NodeID))
-            {
-                UseCallbackID = true,
-                ResponseTimeout = TimeSpan.FromSeconds(5),
-            };
-
-            var requestNodeNeighborUpdate = await Channel.Send<PayloadBytes>(command, (payload) =>
-            {
-                var status = (NeighborUpdateStatus)payload[0];
-
-                progress?.Report(status);
-
-                return status == NeighborUpdateStatus.Done || status == NeighborUpdateStatus.Failed;
-
-            },
-            cancellationToken);
-
-            // return the status of the final response
-            return (NeighborUpdateStatus)requestNodeNeighborUpdate[0];
+            return await Channel.SendRequestNeighborUpdate(NodeID, progress, cancellationToken);
         }
 
         public override bool Equals(object obj)

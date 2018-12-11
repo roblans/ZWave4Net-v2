@@ -8,7 +8,7 @@ using ZWave4Net.Channel.Protocol;
 
 namespace ZWave4Net.Channel
 {
-    public static partial class Extentions
+    public static partial class ObservableExtentions
     {
         public static IObservable<T> Verify<T>(this IObservable<T> source, Predicate<T> predicate, Func<T, Exception> getError)
         {

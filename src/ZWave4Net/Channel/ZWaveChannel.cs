@@ -27,9 +27,14 @@ namespace ZWave4Net.Channel
             _broker = new MessageBroker(port);
         }
 
-        private static byte GetNextCallbackID()
+        internal static byte GetNextCallbackID()
         {
             lock (_lock) { return _callbackID = (byte)((_callbackID % 255) + 1); }
+        }
+
+        internal IObservable<Message> Messages
+        {
+            get { return _broker.GetObservable(); }
         }
 
         private async Task SoftReset()
@@ -60,7 +65,7 @@ namespace ZWave4Net.Channel
             _broker.Run(_cancellationSource.Token);
         }
 
-        private RequestMessage Encode(ControllerRequest command, byte? callbackID)
+        internal RequestMessage Encode(ControllerRequest command, byte? callbackID)
         {
             // create writer to serialize te request
             using (var writer = new PayloadWriter())
@@ -86,7 +91,7 @@ namespace ZWave4Net.Channel
             }
         }
 
-        private ControllerMessage Decode(Message message, bool hasCallbackID)
+        internal ControllerMessage Decode(Message message, bool hasCallbackID)
         {
             // create reader to deserialize the request
             using (var reader = new PayloadReader(message.Payload))
@@ -112,7 +117,7 @@ namespace ZWave4Net.Channel
             }
         }
 
-        private async Task<T> Send<T>(RequestMessage request, IObservable<T> pipeline, TimeSpan timeout, int maxRetryAttempts, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
+        internal async Task<T> Send<T>(RequestMessage request, IObservable<T> pipeline, TimeSpan timeout, int maxRetryAttempts, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
         {
 #if DEBUG
             timeout = TimeSpan.FromSeconds(60);
@@ -176,49 +181,20 @@ namespace ZWave4Net.Channel
         // ControllerRequest: request followed by one response from the controller
         public async Task<T> Send<T>(ControllerRequest request, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
         {
-            // generate new callback if required
-            var callbackID = request.UseCallbackID ? GetNextCallbackID() : default(byte?);
-
             // create the response pipeline
-            var pipeline = _broker.GetObservable()
+            var pipeline = Messages
                 // decode the response
-                .Select(message => Decode(message, callbackID.HasValue))
+                .Select(message => Decode(message, false))
                 // we only want responses (no events)
                 .OfType<ControllerResponse>()
                 // verify matching function
                 .Where(message => Equals(message.Function, request.Function))
-                // verify mathing callback (can be null)
-                .Where(message => Equals(message.CallbackID, callbackID))
                 // and finally deserialize the received payload
                 .Select(message => message.Payload.Deserialize<T>());
 
-            return await Send(Encode(request, callbackID), pipeline, request.ResponseTimeout, request.MaxRetryAttempts, cancellation);
+            return await Send(Encode(request, null), pipeline, request.ResponseTimeout, request.MaxRetryAttempts, cancellation);
         }
 
-        // ControllerRequest: request followed by one or more events. The passed predicate is called on every event (progress)
-        // When the caller returns true on the predicate then the command is considered complete
-        // The result of the completed task is the payload of the last event received
-        public async Task<T> Send<T>(ControllerRequest request, Func<T, bool> predicate, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
-        {
-            // generate new callback if required
-            var callbackID = request.UseCallbackID ? GetNextCallbackID() : default(byte?);
-
-            var pipeline = _broker.GetObservable()
-                // decode the response
-                .Select(message => Decode(message, callbackID.HasValue))
-                // we only want events (no responses)
-                .OfType<ControllerEvent>()
-                // verify matching function
-                .Where(message => Equals(message.Function, request.Function))
-                // verify mathing callback (can be null)
-                .Where(message => Equals(message.CallbackID, callbackID))
-                // deserialize the received payload
-                .Select(message => message.Payload.Deserialize<T>())
-                // and verify by using external custom predicate
-                .Where(predicate);
-
-            return await Send(Encode(request, callbackID), pipeline, request.ResponseTimeout, request.MaxRetryAttempts, cancellation);
-        }
 
         // ControllerRequest: request followed by one events.
         // The result of the completed task is the payload of the response function received
@@ -227,7 +203,7 @@ namespace ZWave4Net.Channel
             // generate new callback
             var callbackID = GetNextCallbackID();
 
-            var responsePipeline = _broker.GetObservable()
+            var responsePipeline = Messages
                 // decode the response
                 .Select(message => Decode(message, false))
                 // we only want responses (no events)
@@ -237,7 +213,7 @@ namespace ZWave4Net.Channel
                 // unknown what the 0x01 byte means
                 .Where(message => message.Payload[0] == 0x01);
 
-            var pipeline = _broker.GetObservable()
+            var pipeline = Messages
                 // wait until the response pipeline has finished
                 .SkipUntil(responsePipeline)
                 // decode the response
@@ -259,15 +235,12 @@ namespace ZWave4Net.Channel
         {
             var nodeRequest = new NodeRequest(nodeID, command);
 
-            var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize())
-            {
-                UseCallbackID = true,
-            };
+            var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize());
 
             // generate new callback
             var callbackID = GetNextCallbackID();
 
-            var responsePipeline = _broker.GetObservable()
+            var responsePipeline = Messages
                 // decode the response
                 .Select(message => Decode(message, false))
                 // we only want responses (no events)
@@ -277,7 +250,7 @@ namespace ZWave4Net.Channel
                 // unknown what the 0x01 byte means
                 .Where(message => message.Payload[0] == 0x01);
 
-            var pipeline = _broker.GetObservable()
+            var pipeline = Messages
                 // wait until the response pipeline has finished
                 .SkipUntil(responsePipeline)
                 // decode the response
@@ -304,15 +277,12 @@ namespace ZWave4Net.Channel
         {
             var nodeRequest = new NodeRequest(nodeID, command);
 
-            var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize())
-            {
-                UseCallbackID = true,
-            };
+            var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize());
 
             // generate new callback
             var callbackID = GetNextCallbackID();
 
-            var responsePipeline = _broker.GetObservable()
+            var responsePipeline = Messages
                 // decode the response
                 .Select(message => Decode(message, false))
                 // we only want responses (no events)
@@ -323,7 +293,7 @@ namespace ZWave4Net.Channel
                 .Where(message => message.Payload[0] == 0x01);
 
 
-            var eventPipeline = _broker.GetObservable()
+            var eventPipeline = Messages
                 // decode the response
                 .Select(message => Decode(message, true))
                 // we only want events (no responses)
@@ -337,7 +307,7 @@ namespace ZWave4Net.Channel
                 // verify the state
                 .Verify(message => message.TransmissionState == TransmissionState.CompleteOK, message => new TransmissionException(message.TransmissionState));
 
-            var pipeline = _broker.GetObservable()
+            var pipeline = Messages
                 // wait until the response pipeline has finished
                 .SkipUntil(responsePipeline)
                 // wait until the event pipeline has finished
@@ -364,7 +334,7 @@ namespace ZWave4Net.Channel
 
         public IObservable<T> Receive<T>(byte nodeID, byte commandID) where T : IPayloadSerializable, new()
         {
-            return _broker.GetObservable()
+            return Messages
             // decode the response
             .Select(message => Decode(message, false))
             // we only want events (no responses)
