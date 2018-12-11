@@ -93,17 +93,27 @@ namespace ChannelConsole
                     var protocolInfo = await node.GetProtocolInfo();
                     Console.WriteLine($"Node: {node}, Specific = {protocolInfo.SpecificType}, Generic = {protocolInfo.GenericType}, Basic = {protocolInfo.BasicType}, Listening = {protocolInfo.IsListening} ");
 
+                    if (node.NodeID != controller.NodeID && protocolInfo.IsListening)
+                    {
+                        var nodeInfo = await node.GetNodeInfo();
+                        Console.WriteLine($"Node: {node}, CommandClasses = {string.Join(", ", nodeInfo.SupportedCommandClasses)}");
+                    }
+
                     var neighbours = await node.GetNeighbours();
                     Console.WriteLine($"Node: {node}, Neighbours = {string.Join(", ", neighbours.Cast<object>().ToArray())}");
 
                     Console.WriteLine();
                 }
 
-                var powerSwitch = controller.Nodes[3];
+                var powerSwitch = controller.Nodes[24];
+
                 //await powerSwitch.RequestNeighborUpdate(new Progress<NeighborUpdateStatus>(status =>
                 //{
                 //    Console.WriteLine($"RequestNeighborUpdate: {status}");
                 //}));
+
+
+                Console.ReadLine();
 
                 var basic = new Basic(powerSwitch);
                 await basic.Set(0);

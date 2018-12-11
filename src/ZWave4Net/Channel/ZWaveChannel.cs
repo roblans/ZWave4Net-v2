@@ -220,6 +220,38 @@ namespace ZWave4Net.Channel
             return await Send(Encode(request, callbackID), pipeline, request.ResponseTimeout, request.MaxRetryAttempts, cancellation);
         }
 
+        // ControllerRequest: request followed by one events.
+        // The result of the completed task is the payload of the response function received
+        public async Task<T> Send<T>(ControllerRequest request, Function responseFunction, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
+        {
+            // generate new callback
+            var callbackID = GetNextCallbackID();
+
+            var responsePipeline = _broker.GetObservable()
+                // decode the response
+                .Select(message => Decode(message, false))
+                // we only want responses (no events)
+                .OfType<ControllerResponse>()
+                // verify matching function
+                .Where(message => Equals(message.Function, request.Function))
+                // unknown what the 0x01 byte means
+                .Where(message => message.Payload[0] == 0x01);
+
+            var pipeline = _broker.GetObservable()
+                // wait until the response pipeline has finished
+                .SkipUntil(responsePipeline)
+                // decode the response
+                .Select(message => Decode(message, false))
+                // we only want events (no responses)
+                .OfType<ControllerEvent>()
+                // verify matching function
+                .Where(message => Equals(message.Function, responseFunction))
+                // deserialize the received payload to a NodeCommandCompleted
+                .Select(message => message.Payload.Deserialize<T>());
+
+            return await Send(Encode(request, null), pipeline, request.ResponseTimeout, request.MaxRetryAttempts, cancellation);
+        }
+
         // NodeCommand, no return value. Request followed by:
         // 1) a response from the controller
         // 2) a event from the controller: command deliverd at node)  
