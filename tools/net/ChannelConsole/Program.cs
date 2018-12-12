@@ -17,60 +17,6 @@ namespace ChannelConsole
 {
     class Program
     {
-        public static async Task Main2(string[] args)
-        {
-            Logging.Factory.Subscribe((message) => WriteConsole(message));
-
-            var cancellation = new CancellationTokenSource();
-
-            var port = new SerialPort(SerialPort.GetPortNames().Where(element => element != "COM1").First());
-            await port.Open();
-
-            Console.WriteLine($"{Thread.CurrentThread.ManagedThreadId} Starting");
-
-            var broker = new MessageBroker(port);
-
-            //var subsciption1 = broker.Subscribe((frame) =>
-            //{
-            //    Console.ForegroundColor = ConsoleColor.Yellow;
-            //    Console.WriteLine($"Next {frame}");
-            //},
-            //() =>
-            //{
-            //    Console.ForegroundColor = ConsoleColor.Yellow;
-            //    Console.WriteLine($"Complete");
-            //});
-
-            //var subsciption2 = broker.OfType<DataFrame>().Subscribe((frame) =>
-            //{
-            //    Console.ForegroundColor = ConsoleColor.Red;
-            //    Console.WriteLine($"Next {frame}");
-            //},
-            //() =>
-            //{
-            //    Console.ForegroundColor = ConsoleColor.Red;
-            //    Console.WriteLine($"Complete");
-            //});
-
-            //broker.Run(cancellation.Token);
-
-
-            Console.ReadLine();
-
-            //subsciption1.Dispose();
-            //subsciption2.Dispose();
-
-            await broker;
-
-            Console.ReadLine();
-
-            cancellation.Cancel();
-
-            //await broker;
-
-            await port.Close();
-        }
-
         public static async Task Main(string[] args)
         {
             //Logging.Factory.Subscribe((message) => WriteConsole(message));
@@ -82,34 +28,42 @@ namespace ChannelConsole
             {
                 await controller.Open();
 
-                Console.WriteLine($"Controller Version: {controller.Version}");
-                Console.WriteLine($"Controller ChipType: {controller.ChipType}");
-                Console.WriteLine($"Controller HomeID: {controller.HomeID:X}");
-                Console.WriteLine($"Controller NodeID: {controller.NodeID}");
-                //Console.WriteLine();
+                WriteInfo($"Controller Version: {controller.Version}");
+                WriteInfo($"Controller ChipType: {controller.ChipType}");
+                WriteInfo($"Controller HomeID: {controller.HomeID:X}");
+                WriteInfo($"Controller NodeID: {controller.NodeID}");
+                WriteLine();
 
                 foreach (var node in controller.Nodes)
                 {
                     var protocolInfo = await node.GetProtocolInfo();
-                    Console.WriteLine($"Node: {node}, Specific = {protocolInfo.SpecificType}, Generic = {protocolInfo.GenericType}, Basic = {protocolInfo.BasicType}, Listening = {protocolInfo.IsListening} ");
+                    WriteInfo($"Node: {node}, Specific = {protocolInfo.SpecificType}, Generic = {protocolInfo.GenericType}, Basic = {protocolInfo.BasicType}, Listening = {protocolInfo.IsListening} ");
 
                     if (node.NodeID != controller.NodeID && protocolInfo.IsListening)
                     {
-                        var nodeInfo = await node.GetNodeInfo();
-                        Console.WriteLine($"Node: {node}, CommandClasses = {string.Join(", ", nodeInfo.SupportedCommandClasses)}");
+
+                        try
+                        {
+                            var nodeInfo = await node.GetNodeInfo();
+                            WriteInfo($"Node: {node}, CommandClasses = {string.Join(", ", nodeInfo.SupportedCommandClasses)}");
+                        }
+                        catch (OperationFailedException ex)
+                        {
+                            WriteError($"Error: {ex.Message}");
+                        }
                     }
 
                     var neighbours = await node.GetNeighbours();
-                    Console.WriteLine($"Node: {node}, Neighbours = {string.Join(", ", neighbours.Cast<object>().ToArray())}");
+                    WriteInfo($"Node: {node}, Neighbours = {string.Join(", ", neighbours.Cast<object>().ToArray())}");
 
-                    Console.WriteLine();
+                    WriteLine();
                 }
 
                 var powerSwitch = controller.Nodes[24];
 
                 await powerSwitch.RequestNeighborUpdate(new Progress<NeighborUpdateStatus>(status =>
                 {
-                    Console.WriteLine($"RequestNeighborUpdate: {status}");
+                    WriteInfo($"RequestNeighborUpdate: {status}");
                 }));
 
 
@@ -119,9 +73,9 @@ namespace ChannelConsole
                 await basic.Set(0);
                 var value = await basic.Get();
 
-                Console.WriteLine(value);
+                WriteInfo(value);
 
-                using (basic.Reports.Subscribe((element) => Console.WriteLine(element)))
+                using (basic.Reports.Subscribe((element) => WriteInfo(element)))
                 {
                     await basic.Set(255);
                     await Task.Delay(1000);
@@ -134,7 +88,7 @@ namespace ChannelConsole
             }
             catch(Exception ex)
             {
-                Console.WriteLine(ex);
+                WriteError(ex);
                 Console.ReadLine();
             }
         }
@@ -144,19 +98,47 @@ namespace ChannelConsole
             switch (record.Level)
             {
                 case LogLevel.Debug:
-                    Console.ForegroundColor = ConsoleColor.Gray;
+                    WriteDebug(record);
                     break;
                 case LogLevel.Info:
-                    Console.ForegroundColor = ConsoleColor.White;
+                    WriteInfo(record);
                     break;
                 case LogLevel.Warning:
-                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    WriteWarning(record);
                     break;
                 case LogLevel.Error:
-                    Console.ForegroundColor = ConsoleColor.Red;
+                    WriteError(record);
                     break;
             }
-            Console.WriteLine(record);
+        }
+
+        private static void WriteLine()
+        {
+            Console.WriteLine();
+        }
+
+        private static void WriteDebug(object state)
+        {
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine(state);
+        }
+
+        private static void WriteInfo(object state)
+        {
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine(state);
+        }
+
+        private static void WriteWarning(object state)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine(state);
+        }
+
+        private static void WriteError(object state)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(state);
         }
     }
 }

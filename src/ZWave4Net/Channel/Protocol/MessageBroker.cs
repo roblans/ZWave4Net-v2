@@ -52,7 +52,7 @@ namespace ZWave4Net.Channel.Protocol
 
             return _task = Task.Run(async () =>
             {
-                _logger.LogError("Starting Task");
+                _logger.LogDebug("Started");
 
                 // execute until externally cancelled
                 while (!cancellation.IsCancellationRequested)
@@ -124,7 +124,7 @@ namespace ZWave4Net.Channel.Protocol
                     }
                 }
 
-                _logger.LogError("Task Completed");
+                _logger.LogDebug("Completed");
 
             }, cancellation);
         }

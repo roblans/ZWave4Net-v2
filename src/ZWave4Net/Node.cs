@@ -26,7 +26,7 @@ namespace ZWave4Net
             return await Channel.Send<NodeProtocolInfo>(command, cancellationToken);
         }
 
-        public async Task<NodeInfo> GetNodeInfo(CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<NodeInfoData> GetNodeInfo(CancellationToken cancellationToken = default(CancellationToken))
         {
             return await Channel.SendRequestNodeInfo(NodeID, cancellationToken);
         }

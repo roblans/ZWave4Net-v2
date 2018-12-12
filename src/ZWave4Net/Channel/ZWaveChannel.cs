@@ -19,8 +19,8 @@ namespace ZWave4Net.Channel
         private readonly MessageBroker _broker;
         private readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
 
-        public TimeSpan ResponseTimeout = TimeSpan.FromSeconds(1);
-        public int MaxRetryAttempts = 3;
+        public TimeSpan ResponseTimeout = TimeSpan.FromSeconds(5);
+        public int MaxRetryAttempts = 0;
 
         public readonly ISerialPort Port;
 
@@ -164,11 +164,11 @@ namespace ZWave4Net.Channel
                 catch (TimeoutException)
                 {
                     // operation timed-out
-                    _logger.LogWarning($"Timeout while waiting for a response");
+                    _logger.LogWarning($"Timeout while waiting for a response on: {request}");
 
                     // throw exception when max retransmissions reached
                     if (retransmissions >= ProtocolSettings.MaxRetryAttempts)
-                        throw new TimeoutException("Timeout while waiting for a response");
+                        throw new TimeoutException($"Timeout while waiting for a response on: {request}");
                 }
                 catch (TransmissionException ex)
                 {
@@ -304,7 +304,7 @@ namespace ZWave4Net.Channel
             return await Send(Encode(controllerRequest, callbackID), pipeline, cancellation);
         }
 
-        public IObservable<T> Receive<T>(byte nodeID, byte commandID) where T : IPayloadSerializable, new()
+        public IObservable<T> NodeEvents<T>(byte nodeID, byte commandID) where T : IPayloadSerializable, new()
         {
             return Messages
             // decode the response

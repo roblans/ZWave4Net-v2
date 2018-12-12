@@ -41,7 +41,7 @@ namespace ZWave4Net.Channel
             return (NeighborUpdateStatus)response[0];
         }
 
-        public static async Task<NodeInfo> SendRequestNodeInfo(this ZWaveChannel channel, byte nodeID, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<NodeInfoData> SendRequestNodeInfo(this ZWaveChannel channel, byte nodeID, CancellationToken cancellationToken = default(CancellationToken))
         {
             var command = new ControllerRequest(Function.RequestNodeInfo, new Payload(nodeID));
             var request = channel.Encode(command, null);
@@ -66,13 +66,11 @@ namespace ZWave4Net.Channel
                 // verify matching function
                 .Where(@event => Equals(@event.Function, Function.ApplicationUpdate))
                 // deserialize the received payload to a NodeUpdate
-                .Select(@event => @event.Payload.Deserialize<NodeUpdate>())
-                // verify node
-                .Where(update => update.NodeID == nodeID)
-                // verify state
-                .Where(update => update.State == NodeUpdateState.InfoReceived)
+                .Select(@event => @event.Payload.Deserialize<NodeUpdate<NodeInfoData>>())
+                // verify the state
+                .Verify(@event => @event.State == NodeUpdateState.InfoReceived, @event => new OperationFailedException($"RequestNodeInfo failed with state: {@event.State}"))
                 // deserialize to nodeinfo
-                .Select(update => update.Payload.Deserialize<NodeInfo>());
+                .Select(update => update.Data);
 
             // send request
             return await channel.Send(request, pipeline, cancellationToken);

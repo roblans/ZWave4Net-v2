@@ -31,7 +31,7 @@ namespace ZWave4Net.CommandClasses
 
         protected IObservable<T> Reports<T>(Enum command) where T : NodeReport, new()
         {
-            return Node.Controller.Channel.Receive<Payload>(Node.NodeID, Convert.ToByte(command))
+            return Node.Controller.Channel.NodeEvents<Payload>(Node.NodeID, Convert.ToByte(command))
                 .Select(element => new Payload(new[] { Node.NodeID }.Concat(element.ToArray()).ToArray()))
                 .Select(element => element.Deserialize<T>()); 
         }

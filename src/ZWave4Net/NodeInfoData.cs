@@ -6,7 +6,7 @@ using ZWave4Net.CommandClasses;
 
 namespace ZWave4Net
 {
-    public class NodeInfo : IPayloadSerializable
+    public class NodeInfoData : IPayloadSerializable
     {
         public BasicType BasicType { get; private set; }
         public GenericType GenericType { get; private set; }
@@ -15,7 +15,6 @@ namespace ZWave4Net
 
         void IPayloadSerializable.Read(PayloadReader reader)
         {
-            var length = reader.ReadByte();
             BasicType = (BasicType)reader.ReadByte();
             GenericType = (GenericType)reader.ReadByte();
 
