@@ -6,7 +6,7 @@ using ZWave4Net.CommandClasses;
 
 namespace ZWave4Net
 {
-    public class NodeUpdateInfo : IPayloadSerializable
+    public class NodeInfo : IPayloadSerializable
     {
         public byte NodeID { get; private set; }
         public BasicType BasicType { get; private set; }
@@ -16,7 +16,7 @@ namespace ZWave4Net
 
         public override string ToString()
         {
-            return $"NodeUpdateData";
+            return $"Node: {NodeID:D3}, BasicType = {BasicType}, GenericType = {GenericType}, SpecificType = {SpecificType}, CommandClasses = {string.Join(", ", SupportedCommandClasses)}";
         }
 
         void IPayloadSerializable.Read(PayloadReader reader)

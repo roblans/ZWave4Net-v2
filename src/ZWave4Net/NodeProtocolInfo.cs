@@ -60,7 +60,7 @@ namespace ZWave4Net
 
         public override string ToString()
         {
-            return $"GenericType = {GenericType}, BasicType = {BasicType}, Listening = {IsListening}, Version = {Version}, Security = [{Security}], Routing = {Routing}, MaxBaudrate = {MaxBaudrate}";
+            return $"BasicType = {BasicType}, GenericType = {GenericType}, SpecificType = {SpecificType}, Listening = {IsListening}, Version = {Version}, Security = [{Security}], Routing = {Routing}, MaxBaudrate = {MaxBaudrate}";
         }
     }
 }

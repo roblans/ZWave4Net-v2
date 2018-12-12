@@ -5,11 +5,11 @@ using System.Text;
 
 namespace ZWave4Net
 {
-    public class NodeUpdate<T> : IPayloadSerializable where T : IPayloadSerializable, new()
+    public class NodeUpdate : IPayloadSerializable
     {
         public NodeUpdateState State { get; private set; }
         public byte NodeID { get; private set; }
-        public T Data { get; private set; }
+        public NodeInfo Info { get; private set; }
 
         void IPayloadSerializable.Read(PayloadReader reader)
         {
@@ -17,12 +17,16 @@ namespace ZWave4Net
             NodeID = reader.ReadByte();
 
             var length = reader.ReadByte();
-            if (length > 0)
+            if (length > 0 && State == NodeUpdateState.InfoReceived)
             {
-                // push NodeID in the payload so T has access to the node
+                // push NodeID in the payload so NodeInfo has access to the node
                 var payload = new Payload(new byte[] { NodeID }.Concat(reader.ReadBytes(reader.Length - reader.Position)));
-                Data = payload.Deserialize<T>();
+                Info = payload.Deserialize<NodeInfo>();
             }
+        }
+        public override string ToString()
+        {
+            return $"{State} {NodeID:D3} {Info}";
         }
 
         void IPayloadSerializable.Write(PayloadWriter writer)
