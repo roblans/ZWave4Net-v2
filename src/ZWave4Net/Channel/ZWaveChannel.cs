@@ -325,6 +325,25 @@ namespace ZWave4Net.Channel
             .Select(reply => reply.Payload.Deserialize<T>());
         }
 
+        public IObservable<NodeUpdateInfo> NodeUpdates(byte nodeID)
+        {
+            return Messages
+            // decode the response
+            .Select(message => Decode(message, hasCallbackID: false))
+            // we only want events (no responses)
+            .OfType<ControllerEvent>()
+            // verify function
+            .Where(@event => Equals(@event.Function, Function.ApplicationUpdate))
+            // deserialize the received payload to a NodeUpdate
+            .Select(@event => @event.Payload.Deserialize<NodeUpdate<NodeUpdateInfo>>())
+            // verify node
+            .Where(update => update.NodeID == nodeID)
+            // verify state
+            .Where(update => update.State == NodeUpdateState.InfoReceived)
+            // select the data
+            .Select(update => update.Data);
+        }
+
         public async Task Close()
         {
             _cancellationSource.Cancel();

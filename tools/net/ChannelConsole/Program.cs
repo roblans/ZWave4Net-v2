@@ -66,6 +66,10 @@ namespace ChannelConsole
                     WriteInfo($"RequestNeighborUpdate: {status}");
                 }));
 
+                using (powerSwitch.Updates.Subscribe((element) => WriteInfo(element)))
+                {
+                    Console.ReadLine();
+                }
 
                 Console.ReadLine();
 

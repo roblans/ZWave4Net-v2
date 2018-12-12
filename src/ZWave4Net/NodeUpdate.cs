@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 
@@ -18,7 +19,9 @@ namespace ZWave4Net
             var length = reader.ReadByte();
             if (length > 0)
             {
-                Data = reader.ReadObject<T>();
+                // push NodeID as first byte in in payload so T can read and save the node
+                var payload = new Payload(new byte[] { NodeID }.Concat(reader.ReadBytes(reader.Length - reader.Position)));
+                Data = payload.Deserialize<T>();
             }
         }
 

@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Text;
+using System.Collections;
 
 namespace ZWave4Net
 {
-    public class Payload : IPayloadSerializable
+    public class Payload : IEnumerable<byte>, IPayloadSerializable
     {
         public static readonly Payload Empty = new Payload();
 
@@ -17,6 +19,11 @@ namespace ZWave4Net
         public Payload(params byte[] values)
         {
             _values = values ?? new byte[0];
+        }
+
+        public Payload(IEnumerable<byte> values)
+        {
+            _values = values?.ToArray() ?? new byte[0];
         }
 
         public int Length
@@ -47,6 +54,16 @@ namespace ZWave4Net
         void IPayloadSerializable.Write(PayloadWriter writer)
         {
             writer.WriteBytes(_values);
+        }
+
+        public IEnumerator<byte> GetEnumerator()
+        {
+            return ((IEnumerable<byte>)_values).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable<byte>)_values).GetEnumerator();
         }
     }
 }

@@ -69,7 +69,7 @@ namespace ZWave4Net.Channel.Protocol.Frames
                         throw new ChecksumException("Checksum failure");
 
                     // return dataframe
-                    return new DataFrame((DataFrameType)payload[0], new Payload(payload.Skip(1).ToArray()));
+                    return new DataFrame((DataFrameType)payload[0], new Payload(payload.Skip(1)));
                 }
             }
         }

@@ -26,13 +26,17 @@ namespace ZWave4Net.CommandClasses
         protected async Task<T> Send<T>(NodeCommand command, Enum responseCommand) where T : NodeReport, new()
         {
             var payload = await Node.Controller.Channel.Send<Payload>(Node.NodeID, command, Convert.ToByte(responseCommand));
-            return new Payload(new[] { Node.NodeID }.Concat(payload.ToArray()).ToArray()).Deserialize<T>();
+
+            // push NodeID as first byte in in payload so T has access to the node
+            return new Payload(new[] { Node.NodeID }.Concat(payload))
+                .Deserialize<T>();
         }
 
         protected IObservable<T> Reports<T>(Enum command) where T : NodeReport, new()
         {
             return Node.Controller.Channel.NodeEvents<Payload>(Node.NodeID, Convert.ToByte(command))
-                .Select(element => new Payload(new[] { Node.NodeID }.Concat(element.ToArray()).ToArray()))
+                // push NodeID as first byte in in payload so T has access to the node
+                .Select(element => new Payload(new[] { Node.NodeID }.Concat(element)))
                 .Select(element => element.Deserialize<T>()); 
         }
     }

@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ZWave4Net.Channel;
 using ZWave4Net.Channel.Protocol;
+using System.Reactive.Linq;
 
 namespace ZWave4Net
 {
@@ -26,7 +27,7 @@ namespace ZWave4Net
             return await Channel.Send<NodeProtocolInfo>(command, cancellationToken);
         }
 
-        public async Task<NodeInfoData> GetNodeInfo(CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<NodeUpdateInfo> GetNodeInfo(CancellationToken cancellationToken = default(CancellationToken))
         {
             return await Channel.SendRequestNodeInfo(NodeID, cancellationToken);
         }
@@ -55,6 +56,11 @@ namespace ZWave4Net
         public async Task<NeighborUpdateStatus> RequestNeighborUpdate(IProgress<NeighborUpdateStatus> progress = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             return await Channel.SendRequestNeighborUpdate(NodeID, progress, cancellationToken);
+        }
+
+        public IObservable<NodeUpdateInfo> Updates
+        {
+            get { return Channel.NodeUpdates(NodeID); }
         }
 
         public override bool Equals(object obj)

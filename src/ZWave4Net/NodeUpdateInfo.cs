@@ -6,15 +6,22 @@ using ZWave4Net.CommandClasses;
 
 namespace ZWave4Net
 {
-    public class NodeInfoData : IPayloadSerializable
+    public class NodeUpdateInfo : IPayloadSerializable
     {
+        public byte NodeID { get; private set; }
         public BasicType BasicType { get; private set; }
         public GenericType GenericType { get; private set; }
         public SpecificType SpecificType { get; private set; }
         public CommandClass[] SupportedCommandClasses { get; private set; } = new CommandClass[0];
 
+        public override string ToString()
+        {
+            return $"NodeUpdateData";
+        }
+
         void IPayloadSerializable.Read(PayloadReader reader)
         {
+            NodeID = reader.ReadByte();
             BasicType = (BasicType)reader.ReadByte();
             GenericType = (GenericType)reader.ReadByte();
 
