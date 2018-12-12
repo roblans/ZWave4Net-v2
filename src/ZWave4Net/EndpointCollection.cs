@@ -7,9 +7,9 @@ using System.Collections.Concurrent;
 
 namespace ZWave4Net
 {
-    public class EndpointCollection : IEnumerable<Endpoint>
+    public class EndpointCollection : IEnumerable<IEndpoint>
     {
-        private ConcurrentDictionary<byte, Endpoint> _endpoints = new ConcurrentDictionary<byte, Endpoint>();
+        private ConcurrentDictionary<byte, IEndpoint> _endpoints = new ConcurrentDictionary<byte, IEndpoint>();
         public readonly Node Node;
 
         public EndpointCollection(Node node)
@@ -19,7 +19,7 @@ namespace ZWave4Net
             _endpoints.TryAdd(0, Node);
         }
 
-        public IEnumerator<Endpoint> GetEnumerator()
+        public IEnumerator<IEndpoint> GetEnumerator()
         {
             for (byte i = 0; i < 128; i++)
             {
@@ -32,9 +32,9 @@ namespace ZWave4Net
             return GetEnumerator();
         }
 
-        public Endpoint this[byte endpointID]
+        public IEndpoint this[byte endpointID]
         {
-            get { return _endpoints.GetOrAdd(endpointID, new Endpoint(endpointID, Node, Node.Controller)); }
+            get { return _endpoints.GetOrAdd(endpointID, EndpointFactory.CreateEndpoint(endpointID, Node)); }
         }
 
     }

@@ -2,10 +2,16 @@
 using System.Collections.Generic;
 using System.Text;
 using ZWave4Net.Channel;
+using ZWave4Net.CommandClasses;
 
 namespace ZWave4Net
 {
-    public class Endpoint : IEquatable<Endpoint>
+    public interface IEndpoint
+    {
+
+    }
+
+    public class Endpoint : IEquatable<Endpoint>, IEndpoint
     {
         public readonly byte EndpointID;
         public readonly Node Node;
@@ -18,11 +24,19 @@ namespace ZWave4Net
             Controller = controller;
         }
 
-        public Endpoint(byte endpointID, Node node, ZWaveController controller)
+        public Endpoint(byte endpointID, Node node)
         {
             Node = node;
             EndpointID = endpointID;
-            Controller = controller;
+            Controller = node.Controller;
+        }
+
+        public CommandClassBase GetCommandClass(Type interfaceType)
+        {
+            if (interfaceType == typeof(IBasic))
+                return new Basic(this);
+
+            return null;
         }
 
         public override string ToString()

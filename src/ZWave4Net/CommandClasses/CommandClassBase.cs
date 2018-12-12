@@ -9,34 +9,34 @@ namespace ZWave4Net.CommandClasses
 {
     public class CommandClassBase
     {
-        public readonly Node Node;
+        public readonly Endpoint Endpoint;
         public readonly CommandClass CommandClass;
 
-        public CommandClassBase(Node node, CommandClass commandClass)
+        public CommandClassBase(Endpoint endpoint, CommandClass commandClass)
         {
-            Node = node;
+            Endpoint = endpoint;
             CommandClass = commandClass;
         }
 
         protected Task Send(NodeCommand command)
         {
-            return Node.Controller.Channel.Send(Node.NodeID, command);
+            return Endpoint.Controller.Channel.Send(Endpoint.Node.NodeID, command);
         }
 
         protected async Task<T> Send<T>(NodeCommand command, Enum responseCommand) where T : NodeReport, new()
         {
-            var payload = await Node.Controller.Channel.Send<Payload>(Node.NodeID, command, Convert.ToByte(responseCommand));
+            var payload = await Endpoint.Node.Controller.Channel.Send<Payload>(Endpoint.Node.NodeID, command, Convert.ToByte(responseCommand));
 
             // push NodeID in the payload so T has access to the node
-            return new Payload(new[] { Node.NodeID }.Concat(payload))
+            return new Payload(new[] { Endpoint.Node.NodeID }.Concat(payload))
                 .Deserialize<T>();
         }
 
         protected IObservable<T> Reports<T>(Enum command) where T : NodeReport, new()
         {
-            return Node.Controller.Channel.ReceiveNodeEvents<Payload>(Node.NodeID, Convert.ToByte(command))
+            return Endpoint.Node.Controller.Channel.ReceiveNodeEvents<Payload>(Endpoint.Node.NodeID, Convert.ToByte(command))
                 // push NodeID in the payload so T has access to the node
-                .Select(element => new Payload(new[] { Node.NodeID }.Concat(element)))
+                .Select(element => new Payload(new[] { Endpoint.Node.NodeID }.Concat(element)))
                 .Select(element => element.Deserialize<T>()); 
         }
     }

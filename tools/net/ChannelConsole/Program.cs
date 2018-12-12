@@ -34,6 +34,37 @@ namespace ChannelConsole
                 WriteInfo($"Controller NodeID: {controller.NodeID}");
                 WriteLine();
 
+                var enpoint = EndpointFactory.CreateEndpoint(1, controller.Nodes[24]);
+                var basic = enpoint as IBasic;
+                await basic.Get();
+            }
+            catch (Exception ex)
+            {
+
+            }
+            finally
+            {
+                await controller.Close();
+            }
+        }
+
+        public static async Task Main1(string[] args)
+        {
+            //Logging.Factory.Subscribe((message) => WriteConsole(message));
+
+            var port = new SerialPort(SerialPort.GetPortNames().Where(element => element != "COM1").First());
+            var controller = new ZWaveController(port);
+
+            try
+            {
+                await controller.Open();
+
+                WriteInfo($"Controller Version: {controller.Version}");
+                WriteInfo($"Controller ChipType: {controller.ChipType}");
+                WriteInfo($"Controller HomeID: {controller.HomeID:X}");
+                WriteInfo($"Controller NodeID: {controller.NodeID}");
+                WriteLine();
+
                 foreach (var node in controller.Nodes)
                 {
                     var protocolInfo = await node.GetProtocolInfo();

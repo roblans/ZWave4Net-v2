@@ -16,7 +16,7 @@ namespace ZWave4Net.CommandClasses
             Report = 0x03
         }
 
-        public Basic(Node node) : base(node, CommandClass.Basic)
+        public Basic(Endpoint endpoint) : base(endpoint, CommandClass.Basic)
         {
         }
 
