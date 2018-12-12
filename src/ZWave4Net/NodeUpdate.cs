@@ -19,7 +19,7 @@ namespace ZWave4Net
             var length = reader.ReadByte();
             if (length > 0)
             {
-                // push NodeID as first byte in in payload so T can read and save the node
+                // push NodeID in the payload so T has access to the node
                 var payload = new Payload(new byte[] { NodeID }.Concat(reader.ReadBytes(reader.Length - reader.Position)));
                 Data = payload.Deserialize<T>();
             }

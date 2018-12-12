@@ -304,7 +304,7 @@ namespace ZWave4Net.Channel
             return await Send(Encode(controllerRequest, callbackID), pipeline, cancellation);
         }
 
-        public IObservable<T> NodeEvents<T>(byte nodeID, byte commandID) where T : IPayloadSerializable, new()
+        public IObservable<T> ReceiveNodeEvents<T>(byte nodeID, byte commandID) where T : IPayloadSerializable, new()
         {
             return Messages
             // decode the response
@@ -325,7 +325,7 @@ namespace ZWave4Net.Channel
             .Select(reply => reply.Payload.Deserialize<T>());
         }
 
-        public IObservable<NodeUpdateInfo> NodeUpdates(byte nodeID)
+        public IObservable<NodeUpdateInfo> ReceiveNodeUpdates(byte nodeID)
         {
             return Messages
             // decode the response

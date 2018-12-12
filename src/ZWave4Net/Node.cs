@@ -60,7 +60,7 @@ namespace ZWave4Net
 
         public IObservable<NodeUpdateInfo> Updates
         {
-            get { return Channel.NodeUpdates(NodeID); }
+            get { return Channel.ReceiveNodeUpdates(NodeID); }
         }
 
         public override bool Equals(object obj)
