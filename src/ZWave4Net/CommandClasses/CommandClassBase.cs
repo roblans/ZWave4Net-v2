@@ -9,13 +9,17 @@ namespace ZWave4Net.CommandClasses
 {
     public class CommandClassBase
     {
-        public readonly Endpoint Endpoint;
         public readonly CommandClass CommandClass;
+        public Endpoint Endpoint { get; private set; }
 
-        public CommandClassBase(Endpoint endpoint, CommandClass commandClass)
+        public CommandClassBase(CommandClass commandClass)
+        {
+            CommandClass = commandClass;
+        }
+
+        public void Initialize(Endpoint endpoint)
         {
             Endpoint = endpoint;
-            CommandClass = commandClass;
         }
 
         protected Task Send(NodeCommand command)

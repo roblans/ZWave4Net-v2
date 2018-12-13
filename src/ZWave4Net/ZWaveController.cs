@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ZWave4Net;
 using ZWave4Net.Channel;
 using ZWave4Net.Channel.Protocol;
 using ZWave4Net.Channel.Protocol.Frames;
@@ -55,13 +56,23 @@ namespace ZWave4Net
                 {
                     if (bits[i])
                     {
-                        var node = new Node((byte)(i + 1), this);
+                        var node = EndpointFactory.CreateNode((byte)(i + 1), this);
+
+                        await node.Initialize();
+
                         Nodes.Add(node);
                     }
                 }
 
                 ChipType = (ZWaveChipType)reader.ReadUInt16();
             }
+        }
+
+        private async Task<Node> CreateNode(byte nodeID)
+        {
+            var node = new Node(nodeID, this);
+            await node.Initialize();
+            return node;
         }
 
         public async Task Close()

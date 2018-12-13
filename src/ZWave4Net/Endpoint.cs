@@ -6,12 +6,7 @@ using ZWave4Net.CommandClasses;
 
 namespace ZWave4Net
 {
-    public interface IEndpoint
-    {
-
-    }
-
-    public class Endpoint : IEquatable<Endpoint>, IEndpoint
+    public class Endpoint : IEquatable<Endpoint>
     {
         public readonly byte EndpointID;
         public readonly Node Node;
@@ -29,14 +24,6 @@ namespace ZWave4Net
             Node = node;
             EndpointID = endpointID;
             Controller = node.Controller;
-        }
-
-        public CommandClassBase GetCommandClass(Type interfaceType)
-        {
-            if (interfaceType == typeof(IBasic))
-                return new Basic(this);
-
-            return null;
         }
 
         public override string ToString()

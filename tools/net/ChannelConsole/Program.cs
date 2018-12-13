@@ -17,7 +17,7 @@ namespace ChannelConsole
 {
     class Program
     {
-        public static async Task Main(string[] args)
+        public static async Task Main2(string[] args)
         {
             //Logging.Factory.Subscribe((message) => WriteConsole(message));
 
@@ -34,9 +34,9 @@ namespace ChannelConsole
                 WriteInfo($"Controller NodeID: {controller.NodeID}");
                 WriteLine();
 
-                var enpoint = EndpointFactory.CreateEndpoint(1, controller.Nodes[24]);
-                var basic = enpoint as IBasic;
-                await basic.Get();
+                //var enpoint = EndpointFactory.CreateEndpoint(1, controller.Nodes[24]);
+                //var basic = enpoint as IBasic;
+                //await basic.Get();
             }
             catch (Exception ex)
             {
@@ -48,7 +48,7 @@ namespace ChannelConsole
             }
         }
 
-        public static async Task Main1(string[] args)
+        public static async Task Main(string[] args)
         {
             //Logging.Factory.Subscribe((message) => WriteConsole(message));
 
@@ -67,10 +67,9 @@ namespace ChannelConsole
 
                 foreach (var node in controller.Nodes)
                 {
-                    var protocolInfo = await node.GetProtocolInfo();
-                    WriteInfo($"Node: {node}, Specific = {protocolInfo.SpecificType}, Generic = {protocolInfo.GenericType}, Basic = {protocolInfo.BasicType}, Listening = {protocolInfo.IsListening} ");
+                    WriteInfo($"Node: {node}, Specific = {node.SpecificType}, Generic = {node.GenericType}, Basic = {node.BasicType}, Listening = {node.IsListening} ");
 
-                    if (node.NodeID != controller.NodeID && protocolInfo.IsListening)
+                    if (node.NodeID != controller.NodeID && node.IsListening)
                     {
 
                         try
@@ -97,32 +96,26 @@ namespace ChannelConsole
                     WriteInfo($"RequestNeighborUpdate: {status}");
                 }));
 
-                using (powerSwitch.Updates.Subscribe(async (element) => 
-                {
-                    WriteInfo(element);
-                    var basic2 = new Basic(powerSwitch);
-                    WriteInfo(await basic2.Get());
-                }))
-                {
-                    Console.ReadLine();
-                }
+                var basic = powerSwitch.Endpoints[1] as IBasic;
+                await basic.Set(255);
 
                 Console.ReadLine();
 
-                var basic = new Basic(powerSwitch);
-                await basic.Set(0);
-                var value = await basic.Get();
+                //var basic = new Basic(powerSwitch);
+                //await basic.Set(0);
+                //var value = await basic.Get();
 
-                WriteInfo(value);
+                //WriteInfo(value);
 
-                using (basic.Reports.Subscribe((element) => WriteInfo(element)))
-                {
-                    await basic.Set(255);
-                    await Task.Delay(1000);
-                    await basic.Set(0);
-                    Console.ReadLine();
-                }
+                //using (basic.Reports.Subscribe((element) => WriteInfo(element)))
+                //{
+                //    await basic.Set(255);
+                //    await Task.Delay(1000);
+                //    await basic.Set(0);
+                //    Console.ReadLine();
+                //}
 
+                Console.ReadLine();
                 await controller.Close();
 
             }
