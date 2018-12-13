@@ -37,6 +37,11 @@ namespace ZWave4Net
             IsListening = protocolInfo.IsListening;
         }
 
+        public bool IsController
+        {
+            get { return NodeID == Controller.NodeID; }
+        }
+
         public Endpoint CreateEndpoint(byte endpointID)
         {
             return EndpointFactory.CreateEndpoint(endpointID, this);

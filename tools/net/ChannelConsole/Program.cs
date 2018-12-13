@@ -69,7 +69,7 @@ namespace ChannelConsole
                 {
                     WriteInfo($"Node: {node}, Specific = {node.SpecificType}, Generic = {node.GenericType}, Basic = {node.BasicType}, Listening = {node.IsListening} ");
 
-                    if (node.NodeID != controller.NodeID && node.IsListening)
+                    if (!node.IsController && node.IsListening)
                     {
 
                         try
@@ -88,34 +88,17 @@ namespace ChannelConsole
 
                     WriteLine();
                 }
-
-                var powerSwitch = controller.Nodes[24];
-
-                await powerSwitch.RequestNeighborUpdate(new Progress<NeighborUpdateStatus>(status =>
+                
+                foreach(var basic in controller.Nodes.Where(element => !element.IsController && element.IsListening).Cast<IBasic>())
                 {
-                    WriteInfo($"RequestNeighborUpdate: {status}");
-                }));
+                    var report = await basic.Get();
+                    Console.WriteLine(report);
 
-                var basic = powerSwitch.Endpoints[1] as IBasic;
-                await basic.Set(255);
-
-                Console.ReadLine();
-
-                //var basic = new Basic(powerSwitch);
-                //await basic.Set(0);
-                //var value = await basic.Get();
-
-                //WriteInfo(value);
-
-                //using (basic.Reports.Subscribe((element) => WriteInfo(element)))
-                //{
-                //    await basic.Set(255);
-                //    await Task.Delay(1000);
-                //    await basic.Set(0);
-                //    Console.ReadLine();
-                //}
+                    basic.Reports.Subscribe((element) => WriteInfo(element));
+                }
 
                 Console.ReadLine();
+
                 await controller.Close();
 
             }

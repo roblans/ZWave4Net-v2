@@ -6,13 +6,13 @@ using ZWave4Net.CommandClasses;
 
 namespace ZWave4Net.Channel
 {
-    public class NodeCommand : IPayloadSerializable
+    public class EndpointCommand : IPayloadSerializable
     {
         public readonly CommandClass Class;
         public readonly Enum Command;
         public readonly byte[] Payload;
 
-        public NodeCommand(CommandClass @class, Enum command, params byte[] payload)
+        public EndpointCommand(CommandClass @class, Enum command, params byte[] payload)
         {
             Class = @class;
             Command = command;
