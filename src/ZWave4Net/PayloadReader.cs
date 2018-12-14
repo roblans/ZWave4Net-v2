@@ -43,6 +43,12 @@ namespace ZWave4Net
             return _buffer[0];
         }
 
+        public bool ReadBoolean()
+        {
+            FillBuffer(1);
+            return _buffer[0] == 0xFF;
+        }
+
         public sbyte ReadSByte()
         {
             FillBuffer(1);

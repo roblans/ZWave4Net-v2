@@ -208,7 +208,7 @@ namespace ZWave4Net.Channel
         public async Task Send(byte nodeID, byte endpointID, Command command, CancellationToken cancellation = default(CancellationToken))
         {
             // generate new callback
-            var callbackID = GetNextCallbackID();
+            var callbackID = (byte)0xAA;// GetNextCallbackID();
 
             var nodeRequest = default(NodeRequest);
 

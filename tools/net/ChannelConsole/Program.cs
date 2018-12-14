@@ -100,8 +100,10 @@ namespace ChannelConsole
                 //}
 
                 Console.Clear();
-                var basic = (IBasic)controller.Nodes[25].Endpoints[1];
-                await basic.Set(0);
+                var switchBinary = (ISwitchBinary)controller.Nodes[25].Endpoints[1];
+                await switchBinary.Set(true);
+
+                await switchBinary.Set(true);
 
                 Console.ReadLine();
 

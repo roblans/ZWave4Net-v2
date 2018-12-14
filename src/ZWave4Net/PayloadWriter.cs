@@ -37,6 +37,11 @@ namespace ZWave4Net
             _stream.WriteByte(value);
         }
 
+        public void WriteBoolean(bool value)
+        {
+            _stream.WriteByte((byte)(value ? 0xFF : 0x00));
+        }
+
         public void WriteSByte(sbyte value)
         {
             _stream.WriteByte((byte)value);

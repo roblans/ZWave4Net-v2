@@ -23,11 +23,13 @@ namespace ZWave4Net.Channel
 
         void IPayloadSerializable.Write(PayloadWriter writer)
         {
+            writer.WriteByte((byte)(6 + NodeCommand.Payload.Length));
+
             writer.WriteByte((byte)CommandClass.MultiChannel);
             writer.WriteByte(0x0D);
             writer.WriteByte(1);
             writer.WriteByte(EndpointID);
-            writer.WriteByte((byte)NodeCommand.CommandClass);
+            writer.WriteByte(Convert.ToByte(NodeCommand.CommandClass));
             writer.WriteByte(Convert.ToByte(NodeCommand.CommandID));
             writer.WriteBytes(NodeCommand.Payload);
         }
