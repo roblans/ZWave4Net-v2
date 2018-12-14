@@ -205,12 +205,23 @@ namespace ZWave4Net.Channel
         // NodeCommand, no return value. Request followed by:
         // 1) a response from the controller
         // 2) a event from the controller: command deliverd at node)  
-        public async Task Send(byte nodeID, Command command, CancellationToken cancellation = default(CancellationToken))
+        public async Task Send(byte nodeID, byte endpointID, Command command, CancellationToken cancellation = default(CancellationToken))
         {
             // generate new callback
             var callbackID = GetNextCallbackID();
 
-            var nodeRequest = new NodeRequest(nodeID, command);
+            var nodeRequest = default(NodeRequest);
+
+            if (endpointID != 0)
+            {
+                var endpointCommand = new EncapsulatedCommand(endpointID, command);
+                nodeRequest = new NodeRequest(nodeID, endpointCommand);
+            }
+            else
+            {
+                nodeRequest = new NodeRequest(nodeID, command);
+            }
+
             var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize());
 
             var responsePipeline = Messages
@@ -295,7 +306,7 @@ namespace ZWave4Net.Channel
                 // verify if the responding node is the correct one
                 .Where(response => response.NodeID == nodeID)
                 // deserialize the received payload to a NodeReply
-                .Select(response => response.Payload.Deserialize<Reply>())
+                .Select(response => response.Payload.Deserialize<NodeReply>())
                 // verify if the response conmmand is the correct on
                 .Where(reply => reply.CommandID == responseCommandID)
                 // finally deserialize the payload
@@ -318,7 +329,7 @@ namespace ZWave4Net.Channel
             // verify if the responding node is the correct one
             .Where(response => response.NodeID == nodeID)
             // deserialize the received payload to a NodeReply
-            .Select(response => response.Payload.Deserialize<Reply>())
+            .Select(response => response.Payload.Deserialize<NodeReply>())
             // verify if the response conmmand is the correct on
             .Where(reply => reply.CommandID == commandID)
             // finally deserialize the payload

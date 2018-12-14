@@ -50,7 +50,7 @@ namespace ChannelConsole
 
         public static async Task Main(string[] args)
         {
-            //Logging.Factory.Subscribe((message) => WriteConsole(message));
+            Logging.Factory.Subscribe((message) => WriteConsole(message));
 
             var port = new SerialPort(SerialPort.GetPortNames().Where(element => element != "COM1").First());
             var controller = new ZWaveController(port);
@@ -89,15 +89,19 @@ namespace ChannelConsole
                     WriteLine();
                 }
 
-                foreach(var basic in controller.Nodes.Where(element => !element.IsController && element.IsListening).Cast<IBasic>())
-                {
-                    var stopwatch = Stopwatch.StartNew();
+                //foreach(var basic in controller.Nodes.Where(element => !element.IsController && element.IsListening).Cast<IBasic>())
+                //{
+                //    var stopwatch = Stopwatch.StartNew();
 
-                    var report = await basic.Get();
-                    Console.WriteLine($"{report} {stopwatch.Elapsed}");
+                //    var report = await basic.Get();
+                //    Console.WriteLine($"{report} {stopwatch.Elapsed}");
 
-                    basic.Reports.Subscribe((element) => WriteInfo(element));
-                }
+                //    basic.Reports.Subscribe((element) => WriteInfo(element));
+                //}
+
+                Console.Clear();
+                var basic = (IBasic)controller.Nodes[25].Endpoints[1];
+                await basic.Set(0);
 
                 Console.ReadLine();
 

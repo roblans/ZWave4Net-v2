@@ -8,9 +8,9 @@ namespace ZWave4Net.Channel
     public class NodeRequest : IPayloadSerializable
     {
         public readonly byte NodeID;
-        public readonly Command Command;
+        public readonly ICommand Command;
 
-        public NodeRequest(byte nodeID, Command command)
+        public NodeRequest(byte nodeID, ICommand command)
         {
             NodeID = nodeID;
             Command = command;

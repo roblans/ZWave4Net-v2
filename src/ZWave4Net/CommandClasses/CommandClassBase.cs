@@ -24,7 +24,7 @@ namespace ZWave4Net.CommandClasses
 
         protected Task Send(Command command)
         {
-            return Controller.Channel.Send(NodeID, command);
+            return Controller.Channel.Send(NodeID, EndpointID, command);
         }
 
         protected async Task<T> Send<T>(Command command, Enum responseCommand) where T : NodeReport, new()

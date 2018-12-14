@@ -6,7 +6,12 @@ using ZWave4Net.CommandClasses;
 
 namespace ZWave4Net.Channel
 {
-    public class Command : IPayloadSerializable
+    public interface ICommand : IPayloadSerializable
+    {
+
+    }
+
+    public class Command : ICommand
     {
         public readonly CommandClass CommandClass;
         public readonly Enum CommandID;
@@ -18,7 +23,6 @@ namespace ZWave4Net.Channel
             CommandID = commandID;
             Payload = payload;
         }
-
 
         void IPayloadSerializable.Read(PayloadReader reader)
         {
