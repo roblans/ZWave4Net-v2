@@ -56,7 +56,7 @@ namespace ZWave4Net
                 {
                     if (bits[i])
                     {
-                        var node = EndpointFactory.CreateNode((byte)(i + 1), this);
+                        var node = EndpointFactory.CreateNode(this, (byte)(i + 1));
 
                         await node.Initialize();
 
@@ -70,7 +70,7 @@ namespace ZWave4Net
 
         private async Task<Node> CreateNode(byte nodeID)
         {
-            var node = new Node(nodeID, this);
+            var node = new Node(this, nodeID);
             await node.Initialize();
             return node;
         }

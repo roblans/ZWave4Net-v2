@@ -7,50 +7,39 @@ namespace ZWave4Net
 {
     public static class EndpointFactory
     {
-        private static CommandClassBase[] CreateCommandClasses()
+        private static CommandClassBase[] CreateCommandClasses(ZWaveController controller, byte nodeID, byte endpointID)
         {
             return new CommandClassBase[]
             {
-                new Basic()
+                new Basic(controller, nodeID, endpointID),
             };
         }
 
-        private static ProxyGenerationOptions CreateProxyGenerationOptions()
+
+        public static Node CreateNode(ZWaveController controller, byte nodeID)
         {
+            var generator = new ProxyGenerator();
+
             var options = new ProxyGenerationOptions();
-            foreach (var commandClass in CreateCommandClasses())
+            foreach (var commandClass in CreateCommandClasses(controller, nodeID, 0))
             {
                 options.AddMixinInstance(commandClass);
             }
-            return options;
+
+            return (Node)generator.CreateClassProxy(typeof(Node), options, new object[] { controller, nodeID });
         }
 
-        public static Node CreateNode(byte nodeID, ZWaveController controller)
+        public static Endpoint CreateEndpoint(ZWaveController controller, byte nodeID, byte endpointID)
         {
             var generator = new ProxyGenerator();
-            var options = CreateProxyGenerationOptions();
 
-            var nodeProxy = (Node)generator.CreateClassProxy(typeof(Node), options, new object[] { nodeID, controller });
-
-            foreach(var commandClass in options.MixinsAsArray().OfType< CommandClassBase>())
+            var options = new ProxyGenerationOptions();
+            foreach (var commandClass in CreateCommandClasses(controller, nodeID, endpointID))
             {
-                commandClass.Initialize(nodeProxy);
+                options.AddMixinInstance(commandClass);
             }
-            return nodeProxy;
-        }
 
-        public static Endpoint CreateEndpoint(byte endpointID, Node node)
-        {
-            var generator = new ProxyGenerator();
-            var options = CreateProxyGenerationOptions();
-
-            var endpointProxy = (Endpoint)generator.CreateClassProxy(typeof(Endpoint), options, new object[] { endpointID, node });
-
-            foreach (var commandClass in options.MixinsAsArray().OfType<CommandClassBase>())
-            {
-                commandClass.Initialize(endpointProxy);
-            }
-            return endpointProxy;
+            return (Endpoint)generator.CreateClassProxy(typeof(Endpoint), options, new object[] { controller, nodeID, endpointID });
         }
     }
 }

@@ -6,16 +6,16 @@ using ZWave4Net.CommandClasses;
 
 namespace ZWave4Net.Channel
 {
-    public class EndpointCommand : IPayloadSerializable
+    public class Command : IPayloadSerializable
     {
-        public readonly CommandClass Class;
-        public readonly Enum Command;
+        public readonly CommandClass CommandClass;
+        public readonly Enum CommandID;
         public readonly byte[] Payload;
 
-        public EndpointCommand(CommandClass @class, Enum command, params byte[] payload)
+        public Command(CommandClass commandClass, Enum commandID, params byte[] payload)
         {
-            Class = @class;
-            Command = command;
+            CommandClass = commandClass;
+            CommandID = commandID;
             Payload = payload;
         }
 
@@ -28,8 +28,8 @@ namespace ZWave4Net.Channel
         void IPayloadSerializable.Write(PayloadWriter writer)
         {
             writer.WriteByte((byte)(2 + Payload.Length));
-            writer.WriteByte(Convert.ToByte(Class));
-            writer.WriteByte(Convert.ToByte(Command));
+            writer.WriteByte(Convert.ToByte(CommandClass));
+            writer.WriteByte(Convert.ToByte(CommandID));
             writer.WriteBytes(Payload);
         }
     }

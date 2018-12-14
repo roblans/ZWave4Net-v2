@@ -88,11 +88,13 @@ namespace ChannelConsole
 
                     WriteLine();
                 }
-                
+
                 foreach(var basic in controller.Nodes.Where(element => !element.IsController && element.IsListening).Cast<IBasic>())
                 {
+                    var stopwatch = Stopwatch.StartNew();
+
                     var report = await basic.Get();
-                    Console.WriteLine(report);
+                    Console.WriteLine($"{report} {stopwatch.Elapsed}");
 
                     basic.Reports.Subscribe((element) => WriteInfo(element));
                 }

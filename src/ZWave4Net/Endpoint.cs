@@ -8,27 +8,20 @@ namespace ZWave4Net
 {
     public class Endpoint : IEquatable<Endpoint>
     {
+        public readonly byte NodeID;
         public readonly byte EndpointID;
-        public readonly Node Node;
         public readonly ZWaveController Controller;
 
-        protected Endpoint(ZWaveController controller)
+        public Endpoint(ZWaveController controller, byte nodeID, byte endpointID)
         {
-            Node = (Node)this;
-            EndpointID = 0;
             Controller = controller;
-        }
-
-        public Endpoint(byte endpointID, Node node)
-        {
-            Node = node;
+            NodeID = nodeID;
             EndpointID = endpointID;
-            Controller = node.Controller;
         }
 
         public override string ToString()
         {
-            return $"{Node:D3}.{EndpointID:D3}";
+            return $"{NodeID:D3}.{EndpointID:D3}";
         }
 
         protected ZWaveChannel Channel
@@ -44,14 +37,14 @@ namespace ZWave4Net
         public bool Equals(Endpoint other)
         {
             return other != null &&
-                   Node == other.Node &&
+                   NodeID == other.NodeID &&
                    EndpointID == other.EndpointID;
         }
 
         public override int GetHashCode()
         {
             var hashCode = 1833194505;
-            hashCode = hashCode * -1521134295 + Node.GetHashCode();
+            hashCode = hashCode * -1521134295 + NodeID.GetHashCode();
             hashCode = hashCode * -1521134295 + EndpointID.GetHashCode();
             return hashCode;
         }

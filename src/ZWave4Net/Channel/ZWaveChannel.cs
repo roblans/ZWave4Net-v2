@@ -205,12 +205,12 @@ namespace ZWave4Net.Channel
         // NodeCommand, no return value. Request followed by:
         // 1) a response from the controller
         // 2) a event from the controller: command deliverd at node)  
-        public async Task Send(Endpoint endpoint, EndpointCommand command, CancellationToken cancellation = default(CancellationToken))
+        public async Task Send(byte nodeID, Command command, CancellationToken cancellation = default(CancellationToken))
         {
             // generate new callback
             var callbackID = GetNextCallbackID();
 
-            var nodeRequest = new NodeRequest(endpoint.Node.NodeID, command);
+            var nodeRequest = new NodeRequest(nodeID, command);
             var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize());
 
             var responsePipeline = Messages
@@ -246,12 +246,12 @@ namespace ZWave4Net.Channel
         // 1) a response from the controller
         // 2) a event from the controller: command deliverd at node)  
         // 3) a event from the node: return value
-        public async Task<T> Send<T>(Endpoint endpoint, EndpointCommand command, byte responseCommandID, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
+        public async Task<T> Send<T>(byte nodeID, Command command, byte responseCommandID, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
         {
             // generate new callback
             var callbackID = GetNextCallbackID();
 
-            var nodeRequest = new NodeRequest(endpoint.Node.NodeID, command);
+            var nodeRequest = new NodeRequest(nodeID, command);
             var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize());
 
             var responsePipeline = Messages
@@ -293,9 +293,9 @@ namespace ZWave4Net.Channel
                 // deserialize the received payload to a NodeResponse
                 .Select(@event => @event.Payload.Deserialize<NodeResponse>())
                 // verify if the responding node is the correct one
-                .Where(response => response.NodeID == endpoint.Node.NodeID)
+                .Where(response => response.NodeID == nodeID)
                 // deserialize the received payload to a NodeReply
-                .Select(response => response.Payload.Deserialize<EndpointReply>())
+                .Select(response => response.Payload.Deserialize<Reply>())
                 // verify if the response conmmand is the correct on
                 .Where(reply => reply.CommandID == responseCommandID)
                 // finally deserialize the payload
@@ -304,7 +304,7 @@ namespace ZWave4Net.Channel
             return await Send(Encode(controllerRequest, callbackID), pipeline, cancellation);
         }
 
-        public IObservable<T> ReceiveNodeEvents<T>(Endpoint endpoint, byte commandID) where T : IPayloadSerializable, new()
+        public IObservable<T> ReceiveNodeEvents<T>(byte nodeID, byte commandID) where T : IPayloadSerializable, new()
         {
             return Messages
             // decode the response
@@ -316,9 +316,9 @@ namespace ZWave4Net.Channel
             // deserialize the received payload to a NodeResponse
             .Select(@event => @event.Payload.Deserialize<NodeResponse>())
             // verify if the responding node is the correct one
-            .Where(response => response.NodeID == endpoint.Node.NodeID)
+            .Where(response => response.NodeID == nodeID)
             // deserialize the received payload to a NodeReply
-            .Select(response => response.Payload.Deserialize<EndpointReply>())
+            .Select(response => response.Payload.Deserialize<Reply>())
             // verify if the response conmmand is the correct on
             .Where(reply => reply.CommandID == commandID)
             // finally deserialize the payload

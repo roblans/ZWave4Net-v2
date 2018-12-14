@@ -12,7 +12,6 @@ namespace ZWave4Net
 {
     public class Node : Endpoint, IEquatable<Node>
     {
-        public byte NodeID { get; private set; }
         public BasicType BasicType { get; private set; }
         public GenericType GenericType { get; private set; }
         public SpecificType SpecificType { get; private set; }
@@ -20,9 +19,8 @@ namespace ZWave4Net
         public bool IsListening { get; private set; }
         public EndpointCollection Endpoints { get; private set; }
 
-        public Node(byte nodeID, ZWaveController controller) : base(controller)
+        public Node(ZWaveController controller, byte nodeID) : base(controller, nodeID, 0)
         {
-            NodeID = nodeID;
             Endpoints = new EndpointCollection(this);
         }
 
@@ -44,7 +42,7 @@ namespace ZWave4Net
 
         public Endpoint CreateEndpoint(byte endpointID)
         {
-            return EndpointFactory.CreateEndpoint(endpointID, this);
+            return EndpointFactory.CreateEndpoint(Controller, NodeID, endpointID);
         }
 
         public async Task<NodeInfo> GetNodeInfo(CancellationToken cancellationToken = default(CancellationToken))

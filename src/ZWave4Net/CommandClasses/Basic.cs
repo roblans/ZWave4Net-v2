@@ -16,19 +16,20 @@ namespace ZWave4Net.CommandClasses
             Report = 0x03
         }
 
-        public Basic() : base(CommandClass.Basic)
+        public Basic(ZWaveController controller, byte nodeID, byte endpointID)
+            : base(CommandClass.Basic, controller, nodeID, endpointID)
         {
         }
 
         public async Task<BasicReport> Get()
         {
-            var command = new EndpointCommand(CommandClass, Command.Get);
+            var command = new Channel.Command(CommandClass, Command.Get);
             return await Send<BasicReport>(command, Command.Report);
         }
 
         public Task Set(byte value)
         {
-            var command = new EndpointCommand(CommandClass, Command.Set, value);
+            var command = new Channel.Command(CommandClass, Command.Set, value);
             return Send(command); 
         }
 
