@@ -13,14 +13,14 @@ namespace ZWave4Net.Channel
 
     public class Command : ICommand
     {
-        public readonly CommandClass CommandClass;
-        public readonly Enum CommandID;
+        public readonly byte ClassID;
+        public readonly byte CommandID;
         public readonly byte[] Payload;
 
-        public Command(CommandClass commandClass, Enum commandID, params byte[] payload)
+        public Command(CommandClass @class, Enum command, params byte[] payload)
         {
-            CommandClass = commandClass;
-            CommandID = commandID;
+            ClassID = Convert.ToByte(@class);
+            CommandID = Convert.ToByte(command);
             Payload = payload;
         }
 
@@ -32,8 +32,8 @@ namespace ZWave4Net.Channel
         void IPayloadSerializable.Write(PayloadWriter writer)
         {
             writer.WriteByte((byte)(2 + Payload.Length));
-            writer.WriteByte(Convert.ToByte(CommandClass));
-            writer.WriteByte(Convert.ToByte(CommandID));
+            writer.WriteByte(ClassID);
+            writer.WriteByte(CommandID);
             writer.WriteBytes(Payload);
         }
     }

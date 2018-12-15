@@ -208,20 +208,26 @@ namespace ZWave4Net.Channel
         public async Task Send(byte nodeID, byte endpointID, Command command, CancellationToken cancellation = default(CancellationToken))
         {
             // generate new callback
-            var callbackID = (byte)0xAA;// GetNextCallbackID();
+            var callbackID = GetNextCallbackID();
 
+            // the request to send to the node
             var nodeRequest = default(NodeRequest);
 
+            // is our target an endpoint?
             if (endpointID != 0)
             {
+                // yes, so create (encasulated) endpoint command
                 var endpointCommand = new EndpointCommand(endpointID, command);
+                // and create the request
                 nodeRequest = new NodeRequest(nodeID, endpointCommand);
             }
             else
             {
+                // no, our target is a node
                 nodeRequest = new NodeRequest(nodeID, command);
             }
 
+            // create the request
             var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize());
 
             var responsePipeline = Messages
@@ -257,12 +263,29 @@ namespace ZWave4Net.Channel
         // 1) a response from the controller
         // 2) a event from the controller: command deliverd at node)  
         // 3) a event from the node: return value
-        public async Task<T> Send<T>(byte nodeID, Command command, byte responseCommandID, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
+        public async Task<T> Send<T>(byte nodeID, byte endpointID, Command command, byte responseCommandID, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
         {
             // generate new callback
             var callbackID = GetNextCallbackID();
 
-            var nodeRequest = new NodeRequest(nodeID, command);
+            // the request to send to the node
+            var nodeRequest = default(NodeRequest);
+
+            // is our target an endpoint?
+            if (endpointID != 0)
+            {
+                // yes, so create (encasulated) endpoint command
+                var endpointCommand = new EndpointCommand(endpointID, command);
+                // and create the request
+                nodeRequest = new NodeRequest(nodeID, endpointCommand);
+            }
+            else
+            {
+                // no, our target is a node
+                nodeRequest = new NodeRequest(nodeID, command);
+            }
+
+            // create the request
             var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize());
 
             var responsePipeline = Messages
@@ -308,7 +331,7 @@ namespace ZWave4Net.Channel
                 // deserialize the received payload to a NodeReply
                 .Select(response => response.Payload.Deserialize<NodeReply>())
                 // verify if the response conmmand is the correct on
-                .Where(reply => reply.CommandID == responseCommandID)
+                .Where(reply => reply.ClassID == command.ClassID && reply.CommandID == responseCommandID)
                 // finally deserialize the payload
                 .Select(reply => reply.Payload.Deserialize<T>());
 
