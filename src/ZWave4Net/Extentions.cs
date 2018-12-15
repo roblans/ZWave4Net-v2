@@ -32,7 +32,7 @@ namespace ZWave4Net
             using (var writer = new PayloadWriter())
             {
                 writer.WriteObject(serializable);
-                return writer.ToPayloadBytes();
+                return writer.ToPayload();
             }
         }
     }

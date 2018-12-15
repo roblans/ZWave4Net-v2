@@ -91,7 +91,7 @@ namespace ZWave4Net.Channel
                 }
 
                 // create a hostmessage, use the serialized payload  
-                return new RequestMessage(writer.ToPayloadBytes());
+                return new RequestMessage(writer.ToPayload());
             }
         }
 
@@ -205,29 +205,13 @@ namespace ZWave4Net.Channel
         // NodeCommand, no return value. Request followed by:
         // 1) a response from the controller
         // 2) a event from the controller: command deliverd at node)  
-        public async Task Send(byte nodeID, byte endpointID, Command command, CancellationToken cancellation = default(CancellationToken))
+        public async Task Send(byte nodeID, ICommand command, CancellationToken cancellation = default(CancellationToken))
         {
             // generate new callback
             var callbackID = GetNextCallbackID();
 
-            // the request to send to the node
-            var nodeRequest = default(NodeRequest);
-
-            // is our target an endpoint?
-            if (endpointID != 0)
-            {
-                // yes, so create (encasulated) endpoint command
-                var endpointCommand = new EndpointCommand(endpointID, command);
-                // and create the request
-                nodeRequest = new NodeRequest(nodeID, endpointCommand);
-            }
-            else
-            {
-                // no, our target is a node
-                nodeRequest = new NodeRequest(nodeID, command);
-            }
-
             // create the request
+            var nodeRequest = new NodeRequest(nodeID, command);
             var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize());
 
             var responsePipeline = Messages
@@ -263,29 +247,13 @@ namespace ZWave4Net.Channel
         // 1) a response from the controller
         // 2) a event from the controller: command deliverd at node)  
         // 3) a event from the node: return value
-        public async Task<T> Send<T>(byte nodeID, byte endpointID, Command command, byte responseCommandID, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
+        public async Task<T> Send<T>(byte nodeID, ICommand command, byte responseCommandID, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
         {
             // generate new callback
             var callbackID = GetNextCallbackID();
 
-            // the request to send to the node
-            var nodeRequest = default(NodeRequest);
-
-            // is our target an endpoint?
-            if (endpointID != 0)
-            {
-                // yes, so create (encasulated) endpoint command
-                var endpointCommand = new EndpointCommand(endpointID, command);
-                // and create the request
-                nodeRequest = new NodeRequest(nodeID, endpointCommand);
-            }
-            else
-            {
-                // no, our target is a node
-                nodeRequest = new NodeRequest(nodeID, command);
-            }
-
             // create the request
+            var nodeRequest = new NodeRequest(nodeID, command);
             var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize());
 
             var responsePipeline = Messages
@@ -313,7 +281,7 @@ namespace ZWave4Net.Channel
                 // verify the state
                 .Verify(completed => completed.TransmissionState == TransmissionState.CompleteOK, completed => new TransmissionException(completed.TransmissionState));
 
-            var pipeline = Messages
+            var replyPipeline = Messages
                 // wait until the response pipeline has finished
                 .SkipUntil(responsePipeline)
                 // wait until the event pipeline has finished
@@ -327,20 +295,43 @@ namespace ZWave4Net.Channel
                 // deserialize the received payload to a NodeResponse
                 .Select(@event => @event.Payload.Deserialize<NodeResponse>())
                 // verify if the responding node is the correct one
-                .Where(response => response.NodeID == nodeID)
-                // deserialize the received payload to a NodeReply
-                .Select(response => response.Payload.Deserialize<NodeReply>())
+                .Where(response => response.NodeID == nodeID);
+
+            var pipeline = default(IObservable<T>);
+
+            if (command is EncapsulatedCommand encapsulated)
+            {
+                pipeline = replyPipeline
+                // deserialize the received payload to a command
+                .Select(response => response.Payload.Deserialize<EncapsulatedCommand>())
+                // verify if the encapsulated conmmand is the correct on
+                .Where(reply => reply.ClassID == encapsulated.ClassID && reply.CommandID == encapsulated.CommandID)
+                // verify if the endpoint the correct on
+                .Where(reply => reply.SourceEndpointID == encapsulated.TargetEndpointID)
+                // select the inner command
+                .Select(response => response.Command)
+                // verify if the response command is the correct on
+                .Where(reply => reply.ClassID == encapsulated.Command.ClassID && reply.CommandID == responseCommandID)
+                // finally deserialize the payload
+                .Select(reply => new Payload(reply.Payload).Deserialize<T>());
+            }
+            else
+            {
+                pipeline = replyPipeline
+                // deserialize the received payload to a command
+                .Select(response => response.Payload.Deserialize<Command>())
                 // verify if the response conmmand is the correct on
                 .Where(reply => reply.ClassID == command.ClassID && reply.CommandID == responseCommandID)
                 // finally deserialize the payload
-                .Select(reply => reply.Payload.Deserialize<T>());
+                .Select(reply => new Payload(reply.Payload).Deserialize<T>());
+            }
 
             return await Send(Encode(controllerRequest, callbackID), pipeline, cancellation);
         }
 
-        public IObservable<T> ReceiveNodeEvents<T>(byte nodeID, byte commandID) where T : IPayloadSerializable, new()
+        public IObservable<T> ReceiveNodeEvents<T>(byte nodeID, ICommand command) where T : IPayloadSerializable, new()
         {
-            return Messages
+            var messages = Messages
             // decode the response
             .Select(message => Decode(message, hasCallbackID: false))
             // we only want events (no responses)
@@ -350,13 +341,33 @@ namespace ZWave4Net.Channel
             // deserialize the received payload to a NodeResponse
             .Select(@event => @event.Payload.Deserialize<NodeResponse>())
             // verify if the responding node is the correct one
-            .Where(response => response.NodeID == nodeID)
-            // deserialize the received payload to a NodeReply
-            .Select(response => response.Payload.Deserialize<NodeReply>())
-            // verify if the response conmmand is the correct on
-            .Where(reply => reply.CommandID == commandID)
-            // finally deserialize the payload
-            .Select(reply => reply.Payload.Deserialize<T>());
+            .Where(response => response.NodeID == nodeID);
+
+            if (command is EncapsulatedCommand encapsulated)
+            {
+                return messages
+                .Select(response => response.Payload.Deserialize<EncapsulatedCommand>())
+                // verify if the encapsulated conmmand is the correct on
+                .Where(reply => reply.ClassID == encapsulated.ClassID && reply.CommandID == encapsulated.CommandID)
+                // verify if the endpoint is the correct on
+                .Where(reply => reply.SourceEndpointID == encapsulated.SourceEndpointID)
+                // select the inner command
+                .Select(response => response.Command)
+                // verify if the response command is the correct on
+                .Where(reply => reply.ClassID == encapsulated.Command.ClassID && reply.CommandID == command.CommandID)
+                // finally deserialize the payload
+                .Select(reply => new Payload(reply.Payload).Deserialize<T>());
+            }
+            else
+            {
+                return messages
+                // deserialize the received payload to a command
+                .Select(response => response.Payload.Deserialize<Command>())
+                // verify if the response conmmand is the correct on
+                .Where(reply => reply.ClassID == command.ClassID && reply.CommandID == command.CommandID)
+                // finally deserialize the payload
+                .Select(reply => new Payload(reply.Payload).Deserialize<T>());
+            }
         }
 
         public IObservable<NodeUpdate> ReceiveNodeUpdates(byte nodeID)

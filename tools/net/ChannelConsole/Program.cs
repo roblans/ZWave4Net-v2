@@ -59,37 +59,37 @@ namespace ChannelConsole
             {
                 await controller.Open();
 
-                WriteInfo($"Controller Version: {controller.Version}");
-                WriteInfo($"Controller ChipType: {controller.ChipType}");
-                WriteInfo($"Controller HomeID: {controller.HomeID:X}");
-                WriteInfo($"Controller NodeID: {controller.NodeID}");
-                WriteLine();
+                //WriteInfo($"Controller Version: {controller.Version}");
+                //WriteInfo($"Controller ChipType: {controller.ChipType}");
+                //WriteInfo($"Controller HomeID: {controller.HomeID:X}");
+                //WriteInfo($"Controller NodeID: {controller.NodeID}");
+                //WriteLine();
 
-                foreach (var node in controller.Nodes)
-                {
-                    WriteInfo($"Node: {node}, Specific = {node.SpecificType}, Generic = {node.GenericType}, Basic = {node.BasicType}, Listening = {node.IsListening} ");
+                //foreach (var node in controller.Nodes)
+                //{
+                //    WriteInfo($"Node: {node}, Specific = {node.SpecificType}, Generic = {node.GenericType}, Basic = {node.BasicType}, Listening = {node.IsListening} ");
 
-                    if (!node.IsController && node.IsListening)
-                    {
+                //    if (!node.IsController && node.IsListening)
+                //    {
 
-                        try
-                        {
-                            var nodeInfo = await node.GetNodeInfo();
-                            WriteInfo($"Node: {node}, CommandClasses = {string.Join(", ", nodeInfo.SupportedCommandClasses)}");
-                        }
-                        catch (OperationFailedException ex)
-                        {
-                            WriteError($"Error: {ex.Message}");
-                        }
-                    }
+                //        try
+                //        {
+                //            var nodeInfo = await node.GetNodeInfo();
+                //            WriteInfo($"Node: {node}, CommandClasses = {string.Join(", ", nodeInfo.SupportedCommandClasses)}");
+                //        }
+                //        catch (OperationFailedException ex)
+                //        {
+                //            WriteError($"Error: {ex.Message}");
+                //        }
+                //    }
 
-                    var neighbours = await node.GetNeighbours();
-                    WriteInfo($"Node: {node}, Neighbours = {string.Join(", ", neighbours.Cast<object>().ToArray())}");
+                //    var neighbours = await node.GetNeighbours();
+                //    WriteInfo($"Node: {node}, Neighbours = {string.Join(", ", neighbours.Cast<object>().ToArray())}");
 
-                    WriteLine();
-                }
+                //    WriteLine();
+                //}
 
-                //foreach(var basic in controller.Nodes.Where(element => !element.IsController && element.IsListening).Cast<IBasic>())
+                //foreach (var basic in controller.Nodes.Where(element => !element.IsController && element.IsListening).Cast<IBasic>())
                 //{
                 //    var stopwatch = Stopwatch.StartNew();
 
@@ -99,11 +99,18 @@ namespace ChannelConsole
                 //    basic.Reports.Subscribe((element) => WriteInfo(element));
                 //}
 
+                foreach (var basic in controller.Nodes.Where(element => !element.IsController && element.IsListening).Cast<ISwitchBinary>())
+                {
+                    basic.Reports.Subscribe((r) => WriteError(r));
+                }
+
                 Console.Clear();
                 var switchBinary = (ISwitchBinary)controller.Nodes[25].Endpoints[1];
                 await switchBinary.Set(true);
-
-                await switchBinary.Set(true);
+                //var value = await switchBinary.Get();
+                //await Task.Delay(100);
+                //await Task.Delay(100);
+                //await switchBinary.Set(false);
 
                 Console.ReadLine();
 

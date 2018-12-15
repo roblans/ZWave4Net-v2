@@ -46,7 +46,7 @@ namespace ZWave4Net
         public bool ReadBoolean()
         {
             FillBuffer(1);
-            return _buffer[0] == 0xFF;
+            return _buffer[0] != 0x00;
         }
 
         public sbyte ReadSByte()

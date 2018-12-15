@@ -8,25 +8,44 @@ namespace ZWave4Net.Channel
 {
     public interface ICommand : IPayloadSerializable
     {
-
+        byte ClassID { get; }
+        byte CommandID { get; }
+        byte[] Payload { get; }
     }
 
     public class Command : ICommand
     {
-        public readonly byte ClassID;
-        public readonly byte CommandID;
-        public readonly byte[] Payload;
+        public byte ClassID { get; private set; }
+        public byte CommandID { get; private set; }
+        public byte[] Payload { get; private set; }
+
+        public Command()
+        {
+        }
 
         public Command(CommandClass @class, Enum command, params byte[] payload)
+            : this(Convert.ToByte(@class) , Convert.ToByte(command), payload)
         {
-            ClassID = Convert.ToByte(@class);
-            CommandID = Convert.ToByte(command);
+        }
+
+        public Command(byte classID, byte commandID, params byte[] payload)
+        {
+            ClassID = classID;
+            CommandID = commandID;
             Payload = payload;
+        }
+
+        public override string ToString()
+        {
+            return $"{ClassID}, {CommandID}, {BitConverter.ToString(Payload)}";
         }
 
         void IPayloadSerializable.Read(PayloadReader reader)
         {
-            throw new NotImplementedException();
+            var length = reader.ReadByte();
+            ClassID = reader.ReadByte();
+            CommandID = reader.ReadByte();
+            Payload = reader.ReadBytes(length - 2);
         }
 
         void IPayloadSerializable.Write(PayloadWriter writer)
