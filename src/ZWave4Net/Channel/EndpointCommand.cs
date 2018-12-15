@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using ZWave4Net.CommandClasses;
@@ -26,8 +27,8 @@ namespace ZWave4Net.Channel
             writer.WriteByte((byte)(6 + NodeCommand.Payload.Length));
 
             writer.WriteByte((byte)CommandClass.MultiChannel);
-            writer.WriteByte(0x0D);
-            writer.WriteByte(1);
+            writer.WriteByte(0x0D); // Endcap
+            writer.WriteByte(0);    // source endpoint
             writer.WriteByte(EndpointID);
             writer.WriteByte(Convert.ToByte(NodeCommand.CommandClass));
             writer.WriteByte(Convert.ToByte(NodeCommand.CommandID));
