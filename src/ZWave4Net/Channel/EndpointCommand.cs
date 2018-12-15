@@ -5,12 +5,12 @@ using ZWave4Net.CommandClasses;
 
 namespace ZWave4Net.Channel
 {
-    public class EncapsulatedCommand : ICommand
+    public class EndpointCommand : ICommand
     {
         public readonly byte EndpointID;
         public readonly Command NodeCommand;
 
-        public EncapsulatedCommand(byte endpointID, Command nodeCommand)
+        public EndpointCommand(byte endpointID, Command nodeCommand)
         {
             EndpointID = endpointID;
             NodeCommand = nodeCommand;

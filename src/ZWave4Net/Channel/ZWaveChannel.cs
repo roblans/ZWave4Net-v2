@@ -214,7 +214,7 @@ namespace ZWave4Net.Channel
 
             if (endpointID != 0)
             {
-                var endpointCommand = new EncapsulatedCommand(endpointID, command);
+                var endpointCommand = new EndpointCommand(endpointID, command);
                 nodeRequest = new NodeRequest(nodeID, endpointCommand);
             }
             else
