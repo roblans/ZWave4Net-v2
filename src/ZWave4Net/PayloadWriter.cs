@@ -84,6 +84,11 @@ namespace ZWave4Net
             _stream.Write(values, 0, values.Length);
         }
 
+        public void WritePayload(Payload value)
+        {
+            _stream.Write(value.ToArray(), 0, value.Length);
+        }
+
         public void WriteString(string value)
         {
             var bytes = Encoding.ASCII.GetBytes(value).Concat(new[] { (byte)0 }).ToArray();

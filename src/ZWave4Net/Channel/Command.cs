@@ -10,7 +10,7 @@ namespace ZWave4Net.Channel
     {
         public byte ClassID { get; protected set; }
         public byte CommandID { get; protected set; }
-        public byte[] Payload { get; protected set; }
+        public Payload Payload { get; protected set; }
 
         public Command()
         {
@@ -25,12 +25,19 @@ namespace ZWave4Net.Channel
         {
             ClassID = classID;
             CommandID = commandID;
+            Payload = payload != null ? new Payload(payload) : Payload.Empty;
+        }
+
+        public Command(byte classID, byte commandID, Payload payload)
+        {
+            ClassID = classID;
+            CommandID = commandID;
             Payload = payload;
         }
 
         public override string ToString()
         {
-            return $"{ClassID}, {CommandID}, {BitConverter.ToString(Payload)}";
+            return $"{ClassID}, {CommandID}, {Payload}";
         }
 
         protected virtual void Read(PayloadReader reader)
@@ -38,7 +45,7 @@ namespace ZWave4Net.Channel
             var length = reader.ReadByte();
             ClassID = reader.ReadByte();
             CommandID = reader.ReadByte();
-            Payload = reader.ReadBytes(length - 2);
+            Payload = reader.ReadObject<Payload>();
         }
 
         void IPayloadSerializable.Read(PayloadReader reader)
@@ -51,7 +58,7 @@ namespace ZWave4Net.Channel
             writer.WriteByte((byte)(2 + Payload.Length));
             writer.WriteByte(ClassID);
             writer.WriteByte(CommandID);
-            writer.WriteBytes(Payload);
+            writer.WriteObject(Payload);
         }
 
         void IPayloadSerializable.Write(PayloadWriter writer)

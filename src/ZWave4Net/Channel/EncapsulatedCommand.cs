@@ -23,13 +23,13 @@ namespace ZWave4Net.Channel
         {
             SourceEndpointID = sourceEndpointID;
             TargetEndpointID = targetEndpointID;
-            Payload = command.Serialize().ToArray().Skip(1).ToArray();
+            Payload = new Payload(command.Serialize().ToArray().Skip(1).ToArray());
             Command = command;
         }
 
         public override string ToString()
         {
-            return $"{SourceEndpointID}, {TargetEndpointID}, {BitConverter.ToString(Payload)}";
+            return $"{SourceEndpointID}, {TargetEndpointID}, {Payload}";
         }
 
         protected override void Read(PayloadReader reader)
@@ -39,18 +39,20 @@ namespace ZWave4Net.Channel
             CommandID = reader.ReadByte();
             SourceEndpointID = reader.ReadByte();
             TargetEndpointID = reader.ReadByte();
-            Payload = reader.ReadBytes(length - 4);
+            Payload = reader.ReadObject<Payload>();
             Command = new Command(Payload[0], Payload[1], Payload.Skip(2).ToArray());
         }
 
         protected override void Write(PayloadWriter writer)
         {
-            writer.WriteByte((byte)(4 + Payload.Length));
+            writer.WriteByte((byte)(6 + Command.Payload.Length));
             writer.WriteByte(ClassID);
             writer.WriteByte(CommandID);
             writer.WriteByte(SourceEndpointID);
             writer.WriteByte(TargetEndpointID);
-            writer.WriteBytes(Payload);
+            writer.WriteByte(Command.ClassID);
+            writer.WriteByte(Command.CommandID);
+            writer.WritePayload(Command.Payload);
         }
     }
 }
