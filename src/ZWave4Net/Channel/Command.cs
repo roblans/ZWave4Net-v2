@@ -21,6 +21,11 @@ namespace ZWave4Net.Channel
         {
         }
 
+        public Command(CommandClass @class, Enum command, IEnumerable<byte> payload)
+            : this(Convert.ToByte(@class), Convert.ToByte(command), payload)
+        {
+        }
+
         public Command(byte classID, byte commandID, params byte[] payload)
         {
             ClassID = classID;
@@ -33,6 +38,13 @@ namespace ZWave4Net.Channel
             ClassID = classID;
             CommandID = commandID;
             Payload = payload;
+        }
+
+        public Command(byte classID, byte commandID, IEnumerable<byte> payload)
+        {
+            ClassID = classID;
+            CommandID = commandID;
+            Payload = payload != null ? new Payload(payload) : Payload.Empty;
         }
 
         public override string ToString()

@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 
 namespace ZWave4Net.CommandClasses
 {
-    public interface ISwitchBinary
+    public interface IBinarySwitch
     {
-        Task<SwitchBinaryReport> Get();
+        Task<BinarySwitchReport> Get();
         Task Set(bool value);
-        IObservable<SwitchBinaryReport> Reports { get; }
+        IObservable<BinarySwitchReport> Reports { get; }
     }
 }

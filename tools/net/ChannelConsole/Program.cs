@@ -99,19 +99,19 @@ namespace ChannelConsole
                 //    basic.Reports.Subscribe((element) => WriteInfo(element));
                 //}
 
-                foreach (var basic in controller.Nodes.Where(element => !element.IsController && element.IsListening).Cast<ISwitchBinary>())
+                foreach (var basic in controller.Nodes.Where(element => !element.IsController && element.IsListening).Cast<IBinarySwitch>())
                 {
                     basic.Reports.Subscribe((r) => WriteError(r));
                 }
 
                 Console.Clear();
-                var switchBinary = (ISwitchBinary)controller.Nodes[25].Endpoints[1];
-                await switchBinary.Set(false);
-                var value = await switchBinary.Get();
-                //await Task.Delay(100);
-                //await Task.Delay(100);
-                //await switchBinary.Set(false);
+                var association = (IAssociation)controller.Nodes[25];
 
+                var groups = await association.GroupingsGet();
+                for(byte i=0; i< groups.SupportedGroupings ; i++)
+                {
+                    var report = await association.Get(i);
+                }
                 Console.ReadLine();
 
                 await controller.Close();

@@ -7,7 +7,7 @@ using System.Reactive.Linq;
 
 namespace ZWave4Net.CommandClasses
 {
-    public class SwitchBinary : CommandClassBase, ISwitchBinary
+    public class BinarySwitch : CommandClassBase, IBinarySwitch
     {
         enum Command : byte
         {
@@ -16,15 +16,15 @@ namespace ZWave4Net.CommandClasses
             Report = 0x03
         }
 
-        public SwitchBinary(ZWaveController controller, byte nodeID, byte endpointID)
+        public BinarySwitch(ZWaveController controller, byte nodeID, byte endpointID)
             : base(CommandClass.SwitchBinary, controller, nodeID, endpointID)
         {
         }
 
-        public async Task<SwitchBinaryReport> Get()
+        public async Task<BinarySwitchReport> Get()
         {
             var command = new Channel.Command(CommandClass, Command.Get);
-            return await Send<SwitchBinaryReport>(command, Command.Report);
+            return await Send<BinarySwitchReport>(command, Command.Report);
         }
 
         public Task Set(bool value)
@@ -33,9 +33,9 @@ namespace ZWave4Net.CommandClasses
             return Send(command); 
         }
 
-        public IObservable<SwitchBinaryReport> Reports
+        public IObservable<BinarySwitchReport> Reports
         {
-            get { return Reports<SwitchBinaryReport>(Command.Report); }
+            get { return Reports<BinarySwitchReport>(Command.Report); }
         }
     }
 }

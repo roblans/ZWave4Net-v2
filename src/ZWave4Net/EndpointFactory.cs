@@ -12,7 +12,8 @@ namespace ZWave4Net
             return new CommandClassBase[]
             {
                 new Basic(controller, nodeID, endpointID),
-                new SwitchBinary(controller, nodeID, endpointID),
+                new BinarySwitch(controller, nodeID, endpointID),
+                new Association(controller, nodeID, endpointID),
             };
         }
 

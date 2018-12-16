@@ -4,18 +4,18 @@ using System.Text;
 
 namespace ZWave4Net.CommandClasses
 {
-    public class SwitchBinaryReport : NodeReport
+    public class AssociationGroupingsReport : NodeReport
     {
-        public bool Value { get; private set; }
+        public byte SupportedGroupings  { get; private set; }
 
         protected override void Read(PayloadReader reader)
         {
-            Value = reader.ReadBoolean();
+            SupportedGroupings  = reader.ReadByte();
         }
 
         public override string ToString()
         {
-            return $"{base.ToString()}, Value: {Value}";
+            return $"SupportedGroupings: {SupportedGroupings }";
         }
     }
 }
