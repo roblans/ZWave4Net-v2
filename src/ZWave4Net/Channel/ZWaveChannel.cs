@@ -205,8 +205,15 @@ namespace ZWave4Net.Channel
         // NodeCommand, no return value. Request followed by:
         // 1) a response from the controller
         // 2) a event from the controller: command deliverd at node)  
-        public async Task Send(byte nodeID, ICommand command, CancellationToken cancellation = default(CancellationToken))
+        public async Task Send(byte nodeID, byte endpointID, Command command, CancellationToken cancellation = default(CancellationToken))
         {
+            // addressing an enpoint?
+            if (endpointID != 0)
+            {
+                // yes, so wrap command in a encapsulated command
+                command = new EncapsulatedCommand(0, endpointID, command);
+            }
+
             // generate new callback
             var callbackID = GetNextCallbackID();
 
@@ -247,8 +254,15 @@ namespace ZWave4Net.Channel
         // 1) a response from the controller
         // 2) a event from the controller: command deliverd at node)  
         // 3) a event from the node: return value
-        public async Task<T> Send<T>(byte nodeID, ICommand command, byte responseCommandID, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
+        public async Task<Command> Send(byte nodeID, byte endpointID, Command command, byte responseCommandID, CancellationToken cancellation = default(CancellationToken))
         {
+            // addressing an enpoint?
+            if (endpointID != 0)
+            {
+                // yes, so wrap command in a encapsulated command
+                command = new EncapsulatedCommand(0, endpointID, command);
+            }
+
             // generate new callback
             var callbackID = GetNextCallbackID();
 
@@ -297,7 +311,7 @@ namespace ZWave4Net.Channel
                 // verify if the responding node is the correct one
                 .Where(response => response.NodeID == nodeID);
 
-            var pipeline = default(IObservable<T>);
+            var pipeline = default(IObservable<Command>);
 
             if (command is EncapsulatedCommand encapsulated)
             {
@@ -311,9 +325,7 @@ namespace ZWave4Net.Channel
                 // select the inner command
                 .Select(response => response.Command)
                 // verify if the response command is the correct on
-                .Where(reply => reply.ClassID == encapsulated.Command.ClassID && reply.CommandID == responseCommandID)
-                // finally deserialize the payload
-                .Select(reply => new Payload(reply.Payload).Deserialize<T>());
+                .Where(reply => reply.ClassID == encapsulated.Command.ClassID && reply.CommandID == responseCommandID);
             }
             else
             {
@@ -321,16 +333,21 @@ namespace ZWave4Net.Channel
                 // deserialize the received payload to a command
                 .Select(response => response.Payload.Deserialize<Command>())
                 // verify if the response conmmand is the correct on
-                .Where(reply => reply.ClassID == command.ClassID && reply.CommandID == responseCommandID)
-                // finally deserialize the payload
-                .Select(reply => new Payload(reply.Payload).Deserialize<T>());
+                .Where(reply => reply.ClassID == command.ClassID && reply.CommandID == responseCommandID);
             }
 
             return await Send(Encode(controllerRequest, callbackID), pipeline, cancellation);
         }
 
-        public IObservable<T> ReceiveNodeEvents<T>(byte nodeID, ICommand command) where T : IPayloadSerializable, new()
+        public IObservable<T> ReceiveNodeEvents<T>(byte nodeID, byte endpointID, Command command) where T : IPayloadSerializable, new()
         {
+            // addressing an enpoint?
+            if (endpointID != 0)
+            {
+                // yes, so wrap command in a encapsulated command
+                command = new EncapsulatedCommand(0, endpointID, command);
+            }
+
             var messages = Messages
             // decode the response
             .Select(message => Decode(message, hasCallbackID: false))

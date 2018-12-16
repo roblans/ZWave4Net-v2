@@ -106,8 +106,8 @@ namespace ChannelConsole
 
                 Console.Clear();
                 var switchBinary = (ISwitchBinary)controller.Nodes[25].Endpoints[1];
-                await switchBinary.Set(true);
-                //var value = await switchBinary.Get();
+                await switchBinary.Set(false);
+                var value = await switchBinary.Get();
                 //await Task.Delay(100);
                 //await Task.Delay(100);
                 //await switchBinary.Set(false);

@@ -22,39 +22,25 @@ namespace ZWave4Net.CommandClasses
             EndpointID = endpointID;
         }
 
-        protected Task Send(ICommand command)
+        protected Task Send(Command command)
         {
-            if (EndpointID != 0)
-            {
-                command = new EncapsulatedCommand(0, EndpointID, command);
-            }
-
-            return Controller.Channel.Send(NodeID, command);
+            return Controller.Channel.Send(NodeID, EndpointID, command);
         }
 
-        protected async Task<T> Send<T>(ICommand command, Enum responseCommand) where T : NodeReport, new()
+        protected async Task<T> Send<T>(Command command, Enum responseCommand) where T : NodeReport, new()
         {
-            if (EndpointID != 0)
-            {
-                command = new EncapsulatedCommand(0, EndpointID, command);
-            }
-
-            var payload = await Controller.Channel.Send<Payload>(NodeID, command, Convert.ToByte(responseCommand));
+            var reply = await Controller.Channel.Send(NodeID, EndpointID, command, Convert.ToByte(responseCommand));
 
             // push NodeID and EndpointID in the payload so T has access to the node and the endpoint
-            return new Payload(new[] { NodeID, EndpointID }.Concat(payload))
+            return new Payload(new[] { NodeID, EndpointID }.Concat(reply.Payload))
                 .Deserialize<T>();
         }
 
         protected IObservable<T> Reports<T>(Enum command) where T : NodeReport, new()
         {
-            var reportCommand = (ICommand)new Command(CommandClass, command);
-            if (EndpointID != 0)
-            {
-                reportCommand = new EncapsulatedCommand(EndpointID, 0, reportCommand);
-            }
+            var reportCommand = new Command(CommandClass, command);
 
-            return Controller.Channel.ReceiveNodeEvents<Payload>(NodeID, reportCommand)
+            return Controller.Channel.ReceiveNodeEvents<Payload>(NodeID, EndpointID, reportCommand)
                 // push NodeID and EndpointID in the payload so T has access to the node and the endpoint
                 .Select(element => new Payload(new[] { NodeID, EndpointID }.Concat(element)))
                 .Select(element => element.Deserialize<T>()); 

@@ -6,14 +6,11 @@ using ZWave4Net.CommandClasses;
 
 namespace ZWave4Net.Channel
 {
-    public class EncapsulatedCommand : ICommand
+    public class EncapsulatedCommand : Command
     {
-        public byte ClassID { get; private set; }
-        public byte CommandID { get; private set; }
         public byte SourceEndpointID { get; private set; }
         public byte TargetEndpointID { get; private set; }
-        public byte[] Payload { get; private set; }
-        public ICommand Command { get; private set; }
+        public Command Command { get; private set; }
 
         public EncapsulatedCommand()
         {
@@ -21,7 +18,7 @@ namespace ZWave4Net.Channel
             CommandID = 0x0D;
         }
 
-        public EncapsulatedCommand(byte sourceEndpointID, byte targetEndpointID, ICommand command)
+        public EncapsulatedCommand(byte sourceEndpointID, byte targetEndpointID, Command command)
             : this()
         {
             SourceEndpointID = sourceEndpointID;
@@ -35,7 +32,7 @@ namespace ZWave4Net.Channel
             return $"{SourceEndpointID}, {TargetEndpointID}, {BitConverter.ToString(Payload)}";
         }
 
-        void IPayloadSerializable.Read(PayloadReader reader)
+        protected override void Read(PayloadReader reader)
         {
             var length = reader.ReadByte();
             ClassID = reader.ReadByte();
@@ -46,7 +43,7 @@ namespace ZWave4Net.Channel
             Command = new Command(Payload[0], Payload[1], Payload.Skip(2).ToArray());
         }
 
-        void IPayloadSerializable.Write(PayloadWriter writer)
+        protected override void Write(PayloadWriter writer)
         {
             writer.WriteByte((byte)(4 + Payload.Length));
             writer.WriteByte(ClassID);
