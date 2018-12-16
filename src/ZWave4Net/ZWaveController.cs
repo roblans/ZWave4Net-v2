@@ -26,9 +26,14 @@ namespace ZWave4Net
             Channel = new Channel.ZWaveChannel(port);
         }
 
-        public async Task Open()
+        public static string GetEndpointName(byte nodeID, byte endpointID)
         {
-            await Channel.Open();
+            return endpointID != 0 ? $"{nodeID:D3}.{endpointID:D3}" : $"{nodeID:D3}";
+        }
+
+        public async Task Open(bool softReset = true)
+        {
+            await Channel.Open(softReset);
 
             var getVersion = await Channel.Send<Payload>(new ControllerRequest(Function.GetVersion));
             using (var reader = new PayloadReader(getVersion))
@@ -56,7 +61,7 @@ namespace ZWave4Net
                 {
                     if (bits[i])
                     {
-                        var node = Factory.CreateNode(this, new Address((byte)(i + 1)));
+                        var node = Factory.CreateNode(this, (byte)(i + 1));
 
                         await node.Initialize();
 

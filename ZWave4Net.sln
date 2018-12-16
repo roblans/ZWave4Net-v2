@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChannelConsole", "tools\net
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZWave4Net.Tests", "test\ZWave4Net.Tests\ZWave4Net.Tests.csproj", "{71B5AABD-1A57-4AA5-9FAB-0015842FB9DC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZWaveDumper", "tools\net\ZWaveDumper\ZWaveDumper.csproj", "{F5D67A8A-DF61-469D-9617-FC0B478BF179}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,10 @@ Global
 		{71B5AABD-1A57-4AA5-9FAB-0015842FB9DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{71B5AABD-1A57-4AA5-9FAB-0015842FB9DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{71B5AABD-1A57-4AA5-9FAB-0015842FB9DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F5D67A8A-DF61-469D-9617-FC0B478BF179}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5D67A8A-DF61-469D-9617-FC0B478BF179}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5D67A8A-DF61-469D-9617-FC0B478BF179}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5D67A8A-DF61-469D-9617-FC0B478BF179}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -44,6 +50,7 @@ Global
 		{AF688601-6F6B-470A-8CF7-FF9CBA538A2F} = {C8386268-0724-469B-A598-3045D68947B6}
 		{B752A924-1B1B-4B08-BDC6-31103D9E0E36} = {AF688601-6F6B-470A-8CF7-FF9CBA538A2F}
 		{71B5AABD-1A57-4AA5-9FAB-0015842FB9DC} = {EE140F51-C71F-4F86-A136-7349F206A517}
+		{F5D67A8A-DF61-469D-9617-FC0B478BF179} = {AF688601-6F6B-470A-8CF7-FF9CBA538A2F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {292392AD-DCC6-460E-B745-ABE4E2BD4D0B}

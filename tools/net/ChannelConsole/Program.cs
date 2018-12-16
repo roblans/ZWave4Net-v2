@@ -17,37 +17,6 @@ namespace ChannelConsole
 {
     class Program
     {
-        public static async Task Main2(string[] args)
-        {
-            //Logging.Factory.Subscribe((message) => WriteConsole(message));
-
-            var port = new SerialPort(SerialPort.GetPortNames().Where(element => element != "COM1").First());
-            var controller = new ZWaveController(port);
-
-            try
-            {
-                await controller.Open();
-
-                WriteInfo($"Controller Version: {controller.Version}");
-                WriteInfo($"Controller ChipType: {controller.ChipType}");
-                WriteInfo($"Controller HomeID: {controller.HomeID:X}");
-                WriteInfo($"Controller NodeID: {controller.NodeID}");
-                WriteLine();
-
-                //var enpoint = EndpointFactory.CreateEndpoint(1, controller.Nodes[24]);
-                //var basic = enpoint as IBasic;
-                //await basic.Get();
-            }
-            catch (Exception ex)
-            {
-
-            }
-            finally
-            {
-                await controller.Close();
-            }
-        }
-
         public static async Task Main(string[] args)
         {
             //Logging.Factory.Subscribe((message) => WriteConsole(message));
@@ -64,68 +33,14 @@ namespace ChannelConsole
                 WriteInfo($"Controller HomeID: {controller.HomeID:X}");
                 WriteInfo($"Controller NodeID: {controller.NodeID}");
                 WriteLine();
-
-                foreach (var node in controller.Nodes)
-                {
-                    WriteInfo($"Node: {node}");
-
-                    WriteInfo($"ProtocolInfo: Specific={node.SpecificType}, Generic={node.GenericType}, Basic={node.BasicType}, Listening={node.IsListening} ");
-
-                    var neighbours = await node.GetNeighbours();
-                    WriteInfo($"Neighbours: {string.Join(", ", neighbours.Cast<object>().ToArray())}");
-
-                    if (!node.IsController && node.IsListening)
-                    {
-
-                        try
-                        {
-                            var nodeInfo = await node.GetNodeInfo();
-                            var commandClasses = nodeInfo.SupportedCommandClasses;
-
-                            WriteInfo($"CommandClasses: {string.Join(", ", commandClasses)}");
-
-                            var basic = (IBasic)node;
-                            var basicValue = await basic.Get();
-                            WriteInfo($"Basic value: {basicValue}");
-
-                            if (commandClasses.Contains(CommandClass.Association))
-                            {
-                                var association = (IAssociation)node;
-                                var groups = await association.GroupingsGet();
-                                WriteInfo($"Association: Groups={groups.SupportedGroupings}");
-                                for(byte group = 1; group <= groups.SupportedGroupings; group++)
-                                {
-                                    var nodes = await association.Get(group);
-                                    WriteInfo($"Association: {string.Join(", ", nodes)}");
-                                }
-                            }
-                        }
-                        catch (OperationFailedException ex)
-                        {
-                            WriteError($"Error: {ex.Message}");
-                        }
-                    }
-
-
-                    WriteLine();
-                }
-
-                //var association = (IAssociation)controller.Nodes[25];
-
-                //var groups = await association.GroupingsGet();
-                //for(byte i=1; i<= groups.SupportedGroupings ; i++)
-                //{
-                //    var report = await association.Get(i);
-                //}
-                Console.ReadLine();
-
-                await controller.Close();
+            }
+            catch (Exception ex)
+            {
 
             }
-            catch(Exception ex)
+            finally
             {
-                WriteError(ex);
-                Console.ReadLine();
+                await controller.Close();
             }
         }
 

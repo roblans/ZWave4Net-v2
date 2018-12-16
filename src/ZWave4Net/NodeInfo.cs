@@ -35,11 +35,12 @@ namespace ZWave4Net
                 SpecificType = (SpecificType)((int)GenericType << 16 | specificType);
             }
 
-            SupportedCommandClasses = reader
+            var commandClasses = reader
                 .ReadBytes(reader.Length - reader.Position)
                 .TakeWhile(x => x != 0xEF)
-                .Select(x => (CommandClass)x)
-                .ToArray();
+                .Select(x => (CommandClass)x);
+
+            SupportedCommandClasses = new[] { CommandClass.Basic }.Concat(commandClasses).OrderBy(element => element.ToString()).ToArray();
         }
 
         void IPayloadSerializable.Write(PayloadWriter writer)

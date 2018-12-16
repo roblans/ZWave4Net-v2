@@ -20,7 +20,7 @@ namespace ZWave4Net.Channel
         private readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
 
         public TimeSpan ResponseTimeout = TimeSpan.FromSeconds(5);
-        public int MaxRetryAttempts = 0;
+        public int MaxRetryAttempts = 2;
 
         public readonly ISerialPort Port;
 
@@ -60,11 +60,14 @@ namespace ZWave4Net.Channel
             await Task.Delay(1500);
         }
 
-        public async Task Open()
+        public async Task Open(bool softReset)
         {
             await Port.Open();
 
-            await SoftReset();
+            if (softReset)
+            {
+                await SoftReset();
+            }
 
             _broker.Run(_cancellationSource.Token);
         }
@@ -167,7 +170,7 @@ namespace ZWave4Net.Channel
                     _logger.LogWarning($"Timeout while waiting for a response on: {request}");
 
                     // throw exception when max retransmissions reached
-                    if (retransmissions >= ProtocolSettings.MaxRetryAttempts)
+                    if (retransmissions >= maxRetryAttempts)
                         throw new TimeoutException($"Timeout while waiting for a response on: {request}");
                 }
                 catch (TransmissionException ex)
@@ -176,7 +179,7 @@ namespace ZWave4Net.Channel
                     _logger.LogWarning(ex.Message);
 
                     // throw exception when max retransmissions reached
-                    if (retransmissions >= ProtocolSettings.MaxRetryAttempts)
+                    if (retransmissions >= maxRetryAttempts)
                         throw;
                 }
 
@@ -205,20 +208,20 @@ namespace ZWave4Net.Channel
         // NodeCommand, no return value. Request followed by:
         // 1) a response from the controller
         // 2) a event from the controller: command deliverd at node)  
-        public async Task Send(Address address, Command command, CancellationToken cancellation = default(CancellationToken))
+        public async Task Send(byte nodeID, byte endpointID, Command command, CancellationToken cancellation = default(CancellationToken))
         {
             // addressing an enpoint?
-            if (address.EndpointID != 0)
+            if (endpointID != 0)
             {
                 // yes, so wrap command in a encapsulated command
-                command = EncapsulatedCommand.Wrap(0, address.EndpointID, command);
+                command = EncapsulatedCommand.Wrap(0, endpointID, command);
             }
 
             // generate new callback
             var callbackID = GetNextCallbackID();
 
             // create the request
-            var nodeRequest = new NodeRequest(address.NodeID, command);
+            var nodeRequest = new NodeRequest(nodeID, command);
             var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize());
 
             var responsePipeline = Messages
@@ -254,20 +257,20 @@ namespace ZWave4Net.Channel
         // 1) a response from the controller
         // 2) a event from the controller: command deliverd at node)  
         // 3) a event from the node: return value
-        public async Task<Command> Send(Address address, Command command, byte responseCommandID, CancellationToken cancellation = default(CancellationToken))
+        public async Task<Command> Send(byte nodeID, byte endpointID, Command command, byte responseCommandID, CancellationToken cancellation = default(CancellationToken))
         {
             // addressing an enpoint?
-            if (address.EndpointID != 0)
+            if (endpointID != 0)
             {
                 // yes, so wrap command in a encapsulated command
-                command = EncapsulatedCommand.Wrap(0, address.EndpointID, command);
+                command = EncapsulatedCommand.Wrap(0, endpointID, command);
             }
 
             // generate new callback
             var callbackID = GetNextCallbackID();
 
             // create the request
-            var nodeRequest = new NodeRequest(address.NodeID, command);
+            var nodeRequest = new NodeRequest(nodeID, command);
             var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize());
 
             var responsePipeline = Messages
@@ -309,7 +312,7 @@ namespace ZWave4Net.Channel
                 // deserialize the received payload to a NodeResponse
                 .Select(@event => @event.Payload.Deserialize<NodeResponse>())
                 // verify if the responding node is the correct one
-                .Where(response => response.NodeID == address.NodeID);
+                .Where(response => response.NodeID ==  nodeID);
 
             var pipeline = default(IObservable<Command>);
 
@@ -339,13 +342,13 @@ namespace ZWave4Net.Channel
             return await Send(Encode(controllerRequest, callbackID), pipeline, cancellation);
         }
 
-        public IObservable<Command> ReceiveNodeEvents(Address address, Command command)
+        public IObservable<Command> ReceiveNodeEvents(byte nodeID, byte endpointID, Command command)
         {
             // addressing an enpoint?
-            if (address.EndpointID != 0)
+            if (endpointID != 0)
             {
                 // yes, so wrap command in a encapsulated command
-                command = EncapsulatedCommand.Wrap(0, address.EndpointID, command);
+                command = EncapsulatedCommand.Wrap(0, endpointID, command);
             }
 
             var messages = Messages
@@ -358,7 +361,7 @@ namespace ZWave4Net.Channel
             // deserialize the received payload to a NodeResponse
             .Select(@event => @event.Payload.Deserialize<NodeResponse>())
             // verify if the responding node is the correct one
-            .Where(response => response.NodeID == address.NodeID);
+            .Where(response => response.NodeID == nodeID);
 
             if (command is EncapsulatedCommand encapsulated)
             {

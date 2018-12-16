@@ -8,7 +8,7 @@ namespace ZWave4Net.CommandClasses
     {
         NoOperation = 0x00,
         Basic = 0x20,
-        SwitchBinary = 0x25,
+        BinarySwitch = 0x25,
         SwitchMultiLevel = 0x26,
         SwitchAll = 0x27,
         SceneActivation = 0x2B,

@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using ZWave4Net.Channel;
 using System.Reactive.Linq;
 
-namespace ZWave4Net.CommandClasses
+namespace ZWave4Net.CommandClasses.Services
 {
-    public class BinarySwitch : CommandClassBase, IBinarySwitch
+    public class BinarySwitchService : CommandClassService, IBinarySwitch
     {
         enum Command : byte
         {
@@ -16,8 +16,8 @@ namespace ZWave4Net.CommandClasses
             Report = 0x03
         }
 
-        public BinarySwitch(ZWaveController controller, Address address)
-            : base(CommandClass.SwitchBinary, controller, address)
+        public BinarySwitchService(ZWaveController controller, byte nodeID, byte endpointID)
+            : base(CommandClass.BinarySwitch, controller, nodeID, endpointID)
         {
         }
 

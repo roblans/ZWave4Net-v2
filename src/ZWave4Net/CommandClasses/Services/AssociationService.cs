@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ZWave4Net.CommandClasses
+namespace ZWave4Net.CommandClasses.Services
 {
-    public class Association : CommandClassBase, IAssociation
+    public class AssociationService : CommandClassService, IAssociation
     {
         enum Command
         {
@@ -18,8 +18,8 @@ namespace ZWave4Net.CommandClasses
             GroupingsReport = 0x06
         }
 
-        public Association(ZWaveController controller, Address address)
-            : base(CommandClass.Association, controller, address)
+        public AssociationService(ZWaveController controller, byte nodeID, byte endpointID)
+            : base(CommandClass.Association, controller, nodeID, endpointID)
         {
         }
 

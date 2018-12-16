@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using ZWave4Net.Channel;
 using System.Reactive.Linq;
 
-namespace ZWave4Net.CommandClasses
+namespace ZWave4Net.CommandClasses.Services
 {
-    public class Basic : CommandClassBase, IBasic
+    public class BasicServices : CommandClassService, IBasic
     {
         enum Command : byte
         {
@@ -16,8 +16,8 @@ namespace ZWave4Net.CommandClasses
             Report = 0x03
         }
 
-        public Basic(ZWaveController controller, Address address)
-            : base(CommandClass.Basic, controller, address)
+        public BasicServices(ZWaveController controller, byte nodeID, byte endpointID)
+            : base(CommandClass.Basic, controller, nodeID, endpointID)
         {
         }
 
