@@ -16,7 +16,7 @@ namespace ZWave4Net
 
         public override string ToString()
         {
-            return $"Node: {NodeID:D3}, BasicType = {BasicType}, GenericType = {GenericType}, SpecificType = {SpecificType}, CommandClasses = {string.Join(", ", SupportedCommandClasses)}";
+            return $"Node: {NodeID}, BasicType = {BasicType}, GenericType = {GenericType}, SpecificType = {SpecificType}, CommandClasses = {string.Join(", ", SupportedCommandClasses)}";
         }
 
         void IPayloadSerializable.Read(PayloadReader reader)

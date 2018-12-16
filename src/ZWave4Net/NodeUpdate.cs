@@ -26,7 +26,7 @@ namespace ZWave4Net
         }
         public override string ToString()
         {
-            return $"{State} {NodeID:D3} {Info}";
+            return $"{State} {NodeID} {Info}";
         }
 
         void IPayloadSerializable.Write(PayloadWriter writer)

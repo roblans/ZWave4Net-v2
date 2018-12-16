@@ -21,7 +21,7 @@ namespace ZWave4Net.CommandClasses
 
         public override string ToString()
         {
-            return $"GroupID:{GroupID}, Nodes:{string.Join(", ", Nodes)}";
+            return $"GroupID: {GroupID}, Nodes: {string.Join(", ", Nodes)}";
         }
     }
 }

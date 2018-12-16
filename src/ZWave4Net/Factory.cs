@@ -28,7 +28,7 @@ namespace ZWave4Net
                 options.AddMixinInstance(commandClass);
             }
 
-            return (Node)generator.CreateClassProxy(typeof(Node), options, new object[] { address });
+            return (Node)generator.CreateClassProxy(typeof(Node), options, new object[] { controller, address });
         }
 
         public static Endpoint CreateEndpoint(ZWaveController controller, Address address)

@@ -17,6 +17,16 @@ namespace ZWave4Net
             Address = address;
         }
 
+        public byte NodeID
+        {
+            get { return Address.NodeID; }
+        }
+
+        public byte EndpointID
+        {
+            get { return Address.EndpointID; }
+        }
+
         public override string ToString()
         {
             return $"{Address}";

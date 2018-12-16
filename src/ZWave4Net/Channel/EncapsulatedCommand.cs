@@ -10,21 +10,28 @@ namespace ZWave4Net.Channel
     {
         public byte SourceEndpointID { get; private set; }
         public byte TargetEndpointID { get; private set; }
-        public Command Command { get; private set; }
 
         public EncapsulatedCommand()
         {
-            ClassID = Convert.ToByte(CommandClass.MultiChannel);
-            CommandID = 0x0D;
         }
 
-        public EncapsulatedCommand(byte sourceEndpointID, byte targetEndpointID, Command command)
-            : this()
+        private EncapsulatedCommand(byte sourceEndpointID, byte targetEndpointID, Payload payload)
+            : base(Convert.ToByte(CommandClass.MultiChannel), 0x0D, payload)
         {
             SourceEndpointID = sourceEndpointID;
             TargetEndpointID = targetEndpointID;
-            Payload = new Payload(command.Serialize().ToArray().Skip(1).ToArray());
-            Command = command;
+            Payload = payload;
+        }
+
+        public static EncapsulatedCommand Wrap(byte sourceEndpointID, byte targetEndpointID, Command command)
+        {
+            var payload = new Payload(command.Serialize().ToArray().Skip(1).ToArray());
+            return new EncapsulatedCommand(sourceEndpointID, targetEndpointID, payload);
+        }
+
+        public Command Unwrap()
+        {
+            return new Command(Payload[0], Payload[1], Payload.Skip(2).ToArray());
         }
 
         public override string ToString()
@@ -40,19 +47,16 @@ namespace ZWave4Net.Channel
             SourceEndpointID = reader.ReadByte();
             TargetEndpointID = reader.ReadByte();
             Payload = reader.ReadObject<Payload>();
-            Command = new Command(Payload[0], Payload[1], Payload.Skip(2).ToArray());
         }
 
         protected override void Write(PayloadWriter writer)
         {
-            writer.WriteByte((byte)(6 + Command.Payload.Length));
+            writer.WriteByte((byte)(4 + Payload.Length));
             writer.WriteByte(ClassID);
             writer.WriteByte(CommandID);
             writer.WriteByte(SourceEndpointID);
             writer.WriteByte(TargetEndpointID);
-            writer.WriteByte(Command.ClassID);
-            writer.WriteByte(Command.CommandID);
-            writer.WritePayload(Command.Payload);
+            writer.WriteObject(Payload);
         }
     }
 }

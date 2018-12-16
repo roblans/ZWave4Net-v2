@@ -50,7 +50,7 @@ namespace ChannelConsole
 
         public static async Task Main(string[] args)
         {
-            Logging.Factory.Subscribe((message) => WriteConsole(message));
+            //Logging.Factory.Subscribe((message) => WriteConsole(message));
 
             var port = new SerialPort(SerialPort.GetPortNames().Where(element => element != "COM1").First());
             var controller = new ZWaveController(port);
@@ -59,59 +59,64 @@ namespace ChannelConsole
             {
                 await controller.Open();
 
-                //WriteInfo($"Controller Version: {controller.Version}");
-                //WriteInfo($"Controller ChipType: {controller.ChipType}");
-                //WriteInfo($"Controller HomeID: {controller.HomeID:X}");
-                //WriteInfo($"Controller NodeID: {controller.NodeID}");
-                //WriteLine();
+                WriteInfo($"Controller Version: {controller.Version}");
+                WriteInfo($"Controller ChipType: {controller.ChipType}");
+                WriteInfo($"Controller HomeID: {controller.HomeID:X}");
+                WriteInfo($"Controller NodeID: {controller.NodeID}");
+                WriteLine();
 
-                //foreach (var node in controller.Nodes)
-                //{
-                //    WriteInfo($"Node: {node}, Specific = {node.SpecificType}, Generic = {node.GenericType}, Basic = {node.BasicType}, Listening = {node.IsListening} ");
-
-                //    if (!node.IsController && node.IsListening)
-                //    {
-
-                //        try
-                //        {
-                //            var nodeInfo = await node.GetNodeInfo();
-                //            WriteInfo($"Node: {node}, CommandClasses = {string.Join(", ", nodeInfo.SupportedCommandClasses)}");
-                //        }
-                //        catch (OperationFailedException ex)
-                //        {
-                //            WriteError($"Error: {ex.Message}");
-                //        }
-                //    }
-
-                //    var neighbours = await node.GetNeighbours();
-                //    WriteInfo($"Node: {node}, Neighbours = {string.Join(", ", neighbours.Cast<object>().ToArray())}");
-
-                //    WriteLine();
-                //}
-
-                //foreach (var basic in controller.Nodes.Where(element => !element.IsController && element.IsListening).Cast<IBasic>())
-                //{
-                //    var stopwatch = Stopwatch.StartNew();
-
-                //    var report = await basic.Get();
-                //    Console.WriteLine($"{report} {stopwatch.Elapsed}");
-
-                //    basic.Reports.Subscribe((element) => WriteInfo(element));
-                //}
-
-                foreach (var basic in controller.Nodes.Where(element => !element.IsController && element.IsListening).Cast<IBinarySwitch>())
+                foreach (var node in controller.Nodes)
                 {
-                    basic.Reports.Subscribe((r) => WriteError(r));
+                    WriteInfo($"Node: {node}");
+
+                    WriteInfo($"ProtocolInfo: Specific={node.SpecificType}, Generic={node.GenericType}, Basic={node.BasicType}, Listening={node.IsListening} ");
+
+                    var neighbours = await node.GetNeighbours();
+                    WriteInfo($"Neighbours: {string.Join(", ", neighbours.Cast<object>().ToArray())}");
+
+                    if (!node.IsController && node.IsListening)
+                    {
+
+                        try
+                        {
+                            var nodeInfo = await node.GetNodeInfo();
+                            var commandClasses = nodeInfo.SupportedCommandClasses;
+
+                            WriteInfo($"CommandClasses: {string.Join(", ", commandClasses)}");
+
+                            var basic = (IBasic)node;
+                            var basicValue = await basic.Get();
+                            WriteInfo($"Basic value: {basicValue}");
+
+                            if (commandClasses.Contains(CommandClass.Association))
+                            {
+                                var association = (IAssociation)node;
+                                var groups = await association.GroupingsGet();
+                                WriteInfo($"Association: Groups={groups.SupportedGroupings}");
+                                for(byte group = 1; group <= groups.SupportedGroupings; group++)
+                                {
+                                    var nodes = await association.Get(group);
+                                    WriteInfo($"Association: {string.Join(", ", nodes)}");
+                                }
+                            }
+                        }
+                        catch (OperationFailedException ex)
+                        {
+                            WriteError($"Error: {ex.Message}");
+                        }
+                    }
+
+
+                    WriteLine();
                 }
 
-                Console.Clear();
-                var association = (IAssociation)controller.Nodes[25];
+                //var association = (IAssociation)controller.Nodes[25];
 
-                var groups = await association.GroupingsGet();
-                for(byte i=0; i< groups.SupportedGroupings ; i++)
-                {
-                    var report = await association.Get(i);
-                }
+                //var groups = await association.GroupingsGet();
+                //for(byte i=1; i<= groups.SupportedGroupings ; i++)
+                //{
+                //    var report = await association.Get(i);
+                //}
                 Console.ReadLine();
 
                 await controller.Close();

@@ -37,7 +37,7 @@ namespace ZWave4Net
 
         public override string ToString()
         {
-            return EndpointID != 0 ? $"{NodeID:D3}.{EndpointID:D3}" : $"{NodeID:D3}";
+            return EndpointID != 0 ? $"{NodeID}.{EndpointID}" : $"{NodeID}";
         }
 
         public static bool operator ==(Address address1, Address address2)

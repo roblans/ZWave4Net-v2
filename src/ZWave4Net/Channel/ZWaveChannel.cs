@@ -211,7 +211,7 @@ namespace ZWave4Net.Channel
             if (address.EndpointID != 0)
             {
                 // yes, so wrap command in a encapsulated command
-                command = new EncapsulatedCommand(0, address.EndpointID, command);
+                command = EncapsulatedCommand.Wrap(0, address.EndpointID, command);
             }
 
             // generate new callback
@@ -260,7 +260,7 @@ namespace ZWave4Net.Channel
             if (address.EndpointID != 0)
             {
                 // yes, so wrap command in a encapsulated command
-                command = new EncapsulatedCommand(0, address.EndpointID, command);
+                command = EncapsulatedCommand.Wrap(0, address.EndpointID, command);
             }
 
             // generate new callback
@@ -323,9 +323,9 @@ namespace ZWave4Net.Channel
                 // verify if the endpoint the correct on
                 .Where(reply => reply.SourceEndpointID == encapsulated.TargetEndpointID)
                 // select the inner command
-                .Select(response => response.Command)
+                .Select(reply => reply.Unwrap())
                 // verify if the response command is the correct on
-                .Where(reply => reply.ClassID == encapsulated.Command.ClassID && reply.CommandID == responseCommandID);
+                .Where(reply => reply.ClassID == encapsulated.Unwrap().ClassID && reply.CommandID == responseCommandID);
             }
             else
             {
@@ -345,7 +345,7 @@ namespace ZWave4Net.Channel
             if (address.EndpointID != 0)
             {
                 // yes, so wrap command in a encapsulated command
-                command = new EncapsulatedCommand(0, address.EndpointID, command);
+                command = EncapsulatedCommand.Wrap(0, address.EndpointID, command);
             }
 
             var messages = Messages
@@ -369,9 +369,9 @@ namespace ZWave4Net.Channel
                 // verify if the endpoint is the correct on
                 .Where(reply => reply.SourceEndpointID == encapsulated.SourceEndpointID)
                 // select the inner command
-                .Select(response => response.Command)
+                .Select(reply => reply.Unwrap())
                 // verify if the response command is the correct on
-                .Where(reply => reply.ClassID == encapsulated.Command.ClassID && reply.CommandID == command.CommandID);
+                .Where(reply => reply.ClassID == encapsulated.Unwrap().ClassID && reply.CommandID == command.CommandID);
             }
             else
             {
