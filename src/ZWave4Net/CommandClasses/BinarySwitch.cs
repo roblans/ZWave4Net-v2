@@ -16,8 +16,8 @@ namespace ZWave4Net.CommandClasses
             Report = 0x03
         }
 
-        public BinarySwitch(ZWaveController controller, byte nodeID, byte endpointID)
-            : base(CommandClass.SwitchBinary, controller, nodeID, endpointID)
+        public BinarySwitch(ZWaveController controller, Address address)
+            : base(CommandClass.SwitchBinary, controller, address)
         {
         }
 

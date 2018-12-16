@@ -205,20 +205,20 @@ namespace ZWave4Net.Channel
         // NodeCommand, no return value. Request followed by:
         // 1) a response from the controller
         // 2) a event from the controller: command deliverd at node)  
-        public async Task Send(byte nodeID, byte endpointID, Command command, CancellationToken cancellation = default(CancellationToken))
+        public async Task Send(Address address, Command command, CancellationToken cancellation = default(CancellationToken))
         {
             // addressing an enpoint?
-            if (endpointID != 0)
+            if (address.EndpointID != 0)
             {
                 // yes, so wrap command in a encapsulated command
-                command = new EncapsulatedCommand(0, endpointID, command);
+                command = new EncapsulatedCommand(0, address.EndpointID, command);
             }
 
             // generate new callback
             var callbackID = GetNextCallbackID();
 
             // create the request
-            var nodeRequest = new NodeRequest(nodeID, command);
+            var nodeRequest = new NodeRequest(address.NodeID, command);
             var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize());
 
             var responsePipeline = Messages
@@ -254,20 +254,20 @@ namespace ZWave4Net.Channel
         // 1) a response from the controller
         // 2) a event from the controller: command deliverd at node)  
         // 3) a event from the node: return value
-        public async Task<Command> Send(byte nodeID, byte endpointID, Command command, byte responseCommandID, CancellationToken cancellation = default(CancellationToken))
+        public async Task<Command> Send(Address address, Command command, byte responseCommandID, CancellationToken cancellation = default(CancellationToken))
         {
             // addressing an enpoint?
-            if (endpointID != 0)
+            if (address.EndpointID != 0)
             {
                 // yes, so wrap command in a encapsulated command
-                command = new EncapsulatedCommand(0, endpointID, command);
+                command = new EncapsulatedCommand(0, address.EndpointID, command);
             }
 
             // generate new callback
             var callbackID = GetNextCallbackID();
 
             // create the request
-            var nodeRequest = new NodeRequest(nodeID, command);
+            var nodeRequest = new NodeRequest(address.NodeID, command);
             var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize());
 
             var responsePipeline = Messages
@@ -309,7 +309,7 @@ namespace ZWave4Net.Channel
                 // deserialize the received payload to a NodeResponse
                 .Select(@event => @event.Payload.Deserialize<NodeResponse>())
                 // verify if the responding node is the correct one
-                .Where(response => response.NodeID == nodeID);
+                .Where(response => response.NodeID == address.NodeID);
 
             var pipeline = default(IObservable<Command>);
 
@@ -339,13 +339,13 @@ namespace ZWave4Net.Channel
             return await Send(Encode(controllerRequest, callbackID), pipeline, cancellation);
         }
 
-        public IObservable<Command> ReceiveNodeEvents(byte nodeID, byte endpointID, Command command)
+        public IObservable<Command> ReceiveNodeEvents(Address address, Command command)
         {
             // addressing an enpoint?
-            if (endpointID != 0)
+            if (address.EndpointID != 0)
             {
                 // yes, so wrap command in a encapsulated command
-                command = new EncapsulatedCommand(0, endpointID, command);
+                command = new EncapsulatedCommand(0, address.EndpointID, command);
             }
 
             var messages = Messages
@@ -358,7 +358,7 @@ namespace ZWave4Net.Channel
             // deserialize the received payload to a NodeResponse
             .Select(@event => @event.Payload.Deserialize<NodeResponse>())
             // verify if the responding node is the correct one
-            .Where(response => response.NodeID == nodeID);
+            .Where(response => response.NodeID == address.NodeID);
 
             if (command is EncapsulatedCommand encapsulated)
             {

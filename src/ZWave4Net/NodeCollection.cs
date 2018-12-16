@@ -27,7 +27,7 @@ namespace ZWave4Net
 
         public Node this[byte nodeID]
         {
-            get { return _nodes.FirstOrDefault(element => element.NodeID == nodeID); }
+            get { return _nodes.FirstOrDefault(element => element.Address.NodeID == nodeID); }
         }
 
     }

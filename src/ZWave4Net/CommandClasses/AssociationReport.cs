@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ZWave4Net.CommandClasses
 {
-    public class AssociationReport : NodeReport
+    public class AssociationReport : Report
     {
         public byte GroupID { get; private set; }
         public byte MaxNodesSupported { get; private set; }

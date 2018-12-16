@@ -9,33 +9,33 @@ namespace ZWave4Net.CommandClasses
 {
     public class Basic : CommandClassBase, IBasic
     {
-        enum command : byte
+        enum Command : byte
         {
             Set = 0x01,
             Get = 0x02,
             Report = 0x03
         }
 
-        public Basic(ZWaveController controller, byte nodeID, byte endpointID)
-            : base(CommandClass.Basic, controller, nodeID, endpointID)
+        public Basic(ZWaveController controller, Address address)
+            : base(CommandClass.Basic, controller, address)
         {
         }
 
         public Task<BasicReport> Get()
         {
-            var command = new Command(CommandClass, Basic.command.Get);
-            return Send<BasicReport>(command, Basic.command.Report);
+            var command = new Channel.Command(CommandClass, Command.Get);
+            return Send<BasicReport>(command, Command.Report);
         }
 
         public Task Set(byte value)
         {
-            var command = new Command(CommandClass, Basic.command.Set, value);
+            var command = new Channel.Command(CommandClass, Command.Set, value);
             return Send(command); 
         }
 
         public IObservable<BasicReport> Reports
         {
-            get { return Reports<BasicReport>(command.Report); }
+            get { return Reports<BasicReport>(Command.Report); }
         }
     }
 }

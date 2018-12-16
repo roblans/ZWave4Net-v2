@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ZWave4Net.CommandClasses
 {
-    public class BasicReport : NodeReport
+    public class BasicReport : Report
     {
         public byte Value { get; private set; }
 

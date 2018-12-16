@@ -4,22 +4,23 @@ using System.Text;
 
 namespace ZWave4Net.CommandClasses
 {
-    public abstract class NodeReport : IPayloadSerializable
+    public abstract class Report : IPayloadSerializable
     {
-        public byte NodeID { get; private set; }
-        public byte EndpointID { get; private set; }
+        public Address Source { get; private set; }
 
         protected abstract void Read(PayloadReader reader);
 
         public override string ToString()
         {
-            return $"{GetType().Name}: Node: {NodeID:D3} Endpoint: {EndpointID}";
+            return $"{GetType().Name}: Source: {Source}";
         }
 
         void IPayloadSerializable.Read(PayloadReader reader)
         {
-            NodeID = reader.ReadByte();
-            EndpointID = reader.ReadByte();
+            var nodeID = reader.ReadByte();
+            var endpointID = reader.ReadByte();
+            Source = new Address(nodeID, endpointID);
+
             Read(reader);
         }
 

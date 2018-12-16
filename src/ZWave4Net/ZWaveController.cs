@@ -56,7 +56,7 @@ namespace ZWave4Net
                 {
                     if (bits[i])
                     {
-                        var node = EndpointFactory.CreateNode(this, (byte)(i + 1));
+                        var node = Factory.CreateNode(this, new Address((byte)(i + 1)));
 
                         await node.Initialize();
 
@@ -66,13 +66,6 @@ namespace ZWave4Net
 
                 ChipType = (ZWaveChipType)reader.ReadUInt16();
             }
-        }
-
-        private async Task<Node> CreateNode(byte nodeID)
-        {
-            var node = new Node(this, nodeID);
-            await node.Initialize();
-            return node;
         }
 
         public async Task Close()

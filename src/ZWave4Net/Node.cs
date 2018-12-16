@@ -19,14 +19,14 @@ namespace ZWave4Net
         public bool IsListening { get; private set; }
         public EndpointCollection Endpoints { get; private set; }
 
-        public Node(ZWaveController controller, byte nodeID) : base(controller, nodeID, 0)
+        public Node(ZWaveController controller, Address address) : base(controller, address)
         {
             Endpoints = new EndpointCollection(this);
         }
 
         public async Task Initialize()
         {
-            var command = new ControllerRequest(Function.GetNodeProtocolInfo, new Payload(NodeID));
+            var command = new ControllerRequest(Function.GetNodeProtocolInfo, new Payload(Address.NodeID));
             var protocolInfo = await Channel.Send<NodeProtocolInfo>(command, CancellationToken.None);
             BasicType = protocolInfo.BasicType;
             GenericType = protocolInfo.GenericType;
@@ -37,24 +37,24 @@ namespace ZWave4Net
 
         public bool IsController
         {
-            get { return NodeID == Controller.NodeID; }
+            get { return Address.NodeID == Controller.NodeID; }
         }
 
         public Endpoint CreateEndpoint(byte endpointID)
         {
-            return EndpointFactory.CreateEndpoint(Controller, NodeID, endpointID);
+            return Factory.CreateEndpoint(Controller, new Address(Address.NodeID, endpointID));
         }
 
         public async Task<NodeInfo> GetNodeInfo(CancellationToken cancellationToken = default(CancellationToken))
         {
-            return await Channel.SendRequestNodeInfo(NodeID, cancellationToken);
+            return await Channel.SendRequestNodeInfo(Address.NodeID, cancellationToken);
         }
 
         public async Task<Node[]> GetNeighbours(CancellationToken cancellationToken = default(CancellationToken))
         {
             var results = new List<Node>();
 
-            var command = new ControllerRequest(Function.GetRoutingTableLine, new Payload(NodeID));
+            var command = new ControllerRequest(Function.GetRoutingTableLine, new Payload(Address.NodeID));
 
             // send request
             var response = await Channel.Send<Payload>(command, cancellationToken);
@@ -73,12 +73,12 @@ namespace ZWave4Net
 
         public async Task<NeighborUpdateStatus> RequestNeighborUpdate(IProgress<NeighborUpdateStatus> progress = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return await Channel.SendRequestNeighborUpdate(NodeID, progress, cancellationToken);
+            return await Channel.SendRequestNeighborUpdate(Address.NodeID, progress, cancellationToken);
         }
 
         public IObservable<NodeUpdate> Updates
         {
-            get { return Channel.ReceiveNodeUpdates(NodeID); }
+            get { return Channel.ReceiveNodeUpdates(Address.NodeID); }
         }
 
         public override bool Equals(object obj)
@@ -89,17 +89,17 @@ namespace ZWave4Net
         public bool Equals(Node other)
         {
             return other != null &&
-                   NodeID == other.NodeID;
+                   Address == other.Address;
         }
 
         public override int GetHashCode()
         {
-            return -1960697928 + NodeID.GetHashCode();
+            return -1960697928 + Address.GetHashCode();
         }
 
         public override string ToString()
         {
-            return $"{NodeID:D3}";
+            return $"{Address}";
         }
 
         public static bool operator ==(Node node1, Node node2)
