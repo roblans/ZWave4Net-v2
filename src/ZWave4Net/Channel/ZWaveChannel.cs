@@ -339,7 +339,7 @@ namespace ZWave4Net.Channel
             return await Send(Encode(controllerRequest, callbackID), pipeline, cancellation);
         }
 
-        public IObservable<T> ReceiveNodeEvents<T>(byte nodeID, byte endpointID, Command command) where T : IPayloadSerializable, new()
+        public IObservable<Command> ReceiveNodeEvents(byte nodeID, byte endpointID, Command command)
         {
             // addressing an enpoint?
             if (endpointID != 0)
@@ -371,9 +371,7 @@ namespace ZWave4Net.Channel
                 // select the inner command
                 .Select(response => response.Command)
                 // verify if the response command is the correct on
-                .Where(reply => reply.ClassID == encapsulated.Command.ClassID && reply.CommandID == command.CommandID)
-                // finally deserialize the payload
-                .Select(reply => new Payload(reply.Payload).Deserialize<T>());
+                .Where(reply => reply.ClassID == encapsulated.Command.ClassID && reply.CommandID == command.CommandID);
             }
             else
             {
@@ -381,9 +379,7 @@ namespace ZWave4Net.Channel
                 // deserialize the received payload to a command
                 .Select(response => response.Payload.Deserialize<Command>())
                 // verify if the response conmmand is the correct on
-                .Where(reply => reply.ClassID == command.ClassID && reply.CommandID == command.CommandID)
-                // finally deserialize the payload
-                .Select(reply => new Payload(reply.Payload).Deserialize<T>());
+                .Where(reply => reply.ClassID == command.ClassID && reply.CommandID == command.CommandID);
             }
         }
 

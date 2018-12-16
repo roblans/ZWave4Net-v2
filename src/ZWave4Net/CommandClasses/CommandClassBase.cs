@@ -40,9 +40,9 @@ namespace ZWave4Net.CommandClasses
         {
             var reportCommand = new Command(CommandClass, command);
 
-            return Controller.Channel.ReceiveNodeEvents<Payload>(NodeID, EndpointID, reportCommand)
+            return Controller.Channel.ReceiveNodeEvents(NodeID, EndpointID, reportCommand)
                 // push NodeID and EndpointID in the payload so T has access to the node and the endpoint
-                .Select(element => new Payload(new[] { NodeID, EndpointID }.Concat(element)))
+                .Select(element => new Payload(new[] { NodeID, EndpointID }.Concat(element.Payload)))
                 .Select(element => element.Deserialize<T>()); 
         }
     }
