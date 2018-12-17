@@ -19,8 +19,7 @@ namespace ZWave4Net.Channel
         private readonly MessageBroker _broker;
         private readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
 
-        public TimeSpan ResponseTimeout = TimeSpan.FromSeconds(10);
-        public int MaxRetryAttempts = 2;
+        public TimeSpan ResponseTimeout = TimeSpan.FromSeconds(30);
 
         public readonly ISerialPort Port;
 
@@ -124,66 +123,32 @@ namespace ZWave4Net.Channel
             }
         }
 
-        public Task<T> Send<T>(RequestMessage request, IObservable<T> pipeline, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
+        public async Task<T> Send<T>(RequestMessage request, IObservable<T> pipeline, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
         {
-            return Send(request, pipeline, ResponseTimeout, MaxRetryAttempts, cancellation);
-        }
+            // use timeout only when no cancellationtoken is passed
+            var timeout = cancellation == default(CancellationToken) ? ResponseTimeout : TimeSpan.MaxValue;
+            
+            // create a completionsource
+            var completion = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        public async Task<T> Send<T>(RequestMessage request, IObservable<T> pipeline, TimeSpan timeout, int maxRetryAttempts, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
-        {
-            // number of retransmissions
-            var retransmissions = 0;
-
-            while (true)
+            // set the completion cancelled when the token is cancelled
+            using (cancellation.Register(() => completion.TrySetCanceled()))
             {
-                // if cancelled then throw
-                cancellation.ThrowIfCancellationRequested();
-
-                try
+                // subscribe to response pipeline, with timout
+                using (pipeline.Timeout(timeout).Subscribe
+                (
+                    // OK, pipeline completed, set result
+                    (element) => completion.TrySetResult(element),
+                    // Exception, pipeline failed, set error
+                    (ex) => completion.TrySetException(ex)
+                ))
                 {
-                    // create a completionsource
-                    var completion = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+                    // send the request
+                    await _broker.Send(request, cancellation);
 
-                    // set the completion cancelled when the token is cancelled
-                    using (cancellation.Register(() => completion.TrySetCanceled()))
-                    {
-                        // subscribe to response pipeline, with timout
-                        using (pipeline.Timeout(timeout).Subscribe
-                        (
-                            // OK, pipeline completed, set result
-                            (element) => completion.TrySetResult(element),
-                            // Exception, pipeline failed, set error
-                            (ex) => completion.TrySetException(ex)
-                        ))
-                        {
-                            // send the request
-                            await _broker.Send(request, cancellation);
-
-                            // wait for response
-                            return await completion.Task;
-                        }
-                    }
+                    // wait for response
+                    return await completion.Task;
                 }
-                catch (TimeoutException)
-                {
-                    // operation timed-out
-                    _logger.LogWarning($"Timeout while waiting for a response on: {request}");
-
-                    // throw exception when max retransmissions reached
-                    if (retransmissions >= maxRetryAttempts)
-                        throw new TimeoutException($"Timeout while waiting for a response on: {request}");
-                }
-                catch (TransmissionException ex)
-                {
-                    // tranmission failure
-                    _logger.LogWarning(ex.Message);
-
-                    // throw exception when max retransmissions reached
-                    if (retransmissions >= maxRetryAttempts)
-                        throw;
-                }
-
-                retransmissions++;
             }
         }
 

@@ -30,6 +30,7 @@ namespace ZWave4Net.Channel
             _port.Open();
             _port.DiscardInBuffer();
             _port.DiscardOutBuffer();
+            _port.ReadTimeout = 500;
 
             IsOpen = true;
 
@@ -48,29 +49,38 @@ namespace ZWave4Net.Channel
             return Task.CompletedTask;
         }
 
-        public async Task<byte[]> Read(int lenght, CancellationToken cancellation)
+        public Task<byte[]> Read(int length, CancellationToken cancellation)
         {
-            var buffer = new byte[lenght];
-
-            var read = 0;
-            while (read < lenght)
+            return Task.Run(() =>
             {
-                try
-                {
-                    read += await _port.BaseStream.ReadAsync(buffer, read, lenght - read, cancellation);
-                }
-                catch (System.IO.IOException ex)
-                {
-                    throw new StreamClosedException(ex.Message, ex);
-                }
-            }
+                var buffer = new byte[length];
+                var read = 0;
 
-            return buffer;
+                while (read < length && !cancellation.IsCancellationRequested)
+                {
+                    try
+                    {
+                        read += _port.Read(buffer, read, length - read);
+                    }
+                    catch (System.IO.IOException ex)
+                    {
+                        throw new StreamClosedException(ex.Message, ex);
+                    }
+                    catch (TimeoutException)
+                    {
+                        continue;
+                    }
+                }
+                return buffer;
+            }, cancellation);
         }
 
         public Task Write(byte[] values, CancellationToken cancellation)
         {
-            return _port.BaseStream.WriteAsync(values, 0, values.Length, cancellation);
+            return Task.Run(() =>
+            {
+                _port.Write(values, 0, values.Length);
+            }, cancellation);
         }
     }
 #endif

@@ -35,7 +35,7 @@ namespace ZWave4Net.Channel
                 .Where(payload => (NeighborUpdateStatus)payload[0] == NeighborUpdateStatus.Done || (NeighborUpdateStatus)payload[0] == NeighborUpdateStatus.Failed);
 
             // send request
-            var response = await channel.Send(request, pipeline, responseTimeout, channel.MaxRetryAttempts, cancellationToken);
+            var response = await channel.Send(request, pipeline, cancellationToken);
 
             // return the status of the final response
             return (NeighborUpdateStatus)response[0];
