@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using ZWave4Net.Channel;
 using ZWave4Net.Channel.Protocol;
 using System.Reactive.Linq;
+using System.Threading;
 
 namespace ZWave4Net.CommandClasses.Services
 {
@@ -22,14 +23,14 @@ namespace ZWave4Net.CommandClasses.Services
             EndpointID = endpointID;
         }
 
-        protected Task Send(Command command)
+        protected Task Send(Command command, CancellationToken cancellation = default(CancellationToken))
         {
-            return Controller.Channel.Send(NodeID, EndpointID, command);
+            return Controller.Channel.Send(NodeID, EndpointID, command, cancellation);
         }
 
-        protected async Task<T> Send<T>(Command command, Enum responseCommand) where T : Report, new()
+        protected async Task<T> Send<T>(Command command, Enum responseCommand, CancellationToken cancellation = default(CancellationToken)) where T : Report, new()
         {
-            var reply = await Controller.Channel.Send(NodeID, EndpointID, command, Convert.ToByte(responseCommand));
+            var reply = await Controller.Channel.Send(NodeID, EndpointID, command, Convert.ToByte(responseCommand), cancellation);
 
             // push NodeID and EndpointID in the payload so T has access to the node and the endpoint
             return new Payload(new[] { NodeID, EndpointID }.Concat(reply.Payload))

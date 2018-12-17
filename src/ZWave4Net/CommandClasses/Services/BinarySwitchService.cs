@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ZWave4Net.Channel;
 using System.Reactive.Linq;
+using System.Threading;
 
 namespace ZWave4Net.CommandClasses.Services
 {
@@ -21,16 +22,16 @@ namespace ZWave4Net.CommandClasses.Services
         {
         }
 
-        public async Task<BinarySwitchReport> Get()
+        public async Task<BinarySwitchReport> Get(CancellationToken cancellation = default(CancellationToken))
         {
             var command = new Channel.Command(CommandClass, Command.Get);
-            return await Send<BinarySwitchReport>(command, Command.Report);
+            return await Send<BinarySwitchReport>(command, Command.Report, cancellation);
         }
 
-        public Task Set(bool value)
+        public Task Set(bool value, CancellationToken cancellation = default(CancellationToken))
         {
             var command = new Channel.Command(CommandClass, Command.Set, (byte)(value ? 0xFF : 0x00));
-            return Send(command); 
+            return Send(command, cancellation); 
         }
 
         public IObservable<BinarySwitchReport> Reports

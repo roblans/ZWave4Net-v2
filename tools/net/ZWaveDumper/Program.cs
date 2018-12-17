@@ -172,7 +172,7 @@ namespace ZWaveDumper
 
         private static void WriteSeparator()
         {
-            Console.WriteLine(new string('-', 250));
+            Console.WriteLine(new string('-', 200));
         }
 
         private static void WriteDebug(object state)

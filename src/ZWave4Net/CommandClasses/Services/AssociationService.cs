@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace ZWave4Net.CommandClasses.Services
 {
@@ -23,38 +24,40 @@ namespace ZWave4Net.CommandClasses.Services
         {
         }
 
-        public Task<AssociationReport> Get(byte groupID)
+        public Task<AssociationReport> Get(byte groupID, CancellationToken cancellation = default(CancellationToken))
         {
             if (groupID == 0)
-                throw new ArgumentOutOfRangeException(nameof(groupID), groupID, "GroupID must be greater than zero");
+                throw new ArgumentOutOfRangeException(nameof(groupID), groupID, "groupID must be greater than zero");
 
             var command = new Channel.Command(CommandClass, Command.Get, groupID);
-            return Send<AssociationReport>(command, Command.Report);
+            return Send<AssociationReport>(command, Command.Report, cancellation);
         }
 
-        public Task Set(byte groupID, params byte[] nodes)
+        public Task Set(byte groupID, byte[] nodes, CancellationToken cancellation = default(CancellationToken))
         {
             if (groupID == 0)
-                throw new ArgumentOutOfRangeException(nameof(groupID), groupID, "GroupID must be greater than zero");
+                throw new ArgumentOutOfRangeException(nameof(groupID), groupID, "groupID must be greater than zero");
 
             var command = new Channel.Command(CommandClass, Command.Set, (new[] { groupID }).Concat(nodes));
-            return Send(command);
+            return Send(command, cancellation);
         }
 
 
-        public Task Remove(byte groupID, params byte[] nodes)
+        public Task Remove(byte groupID, byte[] nodes, CancellationToken cancellation = default(CancellationToken))
         {
             if (groupID == 0)
-                throw new ArgumentOutOfRangeException(nameof(groupID), groupID, "GroupID must be greater than zero");
+                throw new ArgumentOutOfRangeException(nameof(groupID), groupID, "groupID must be greater than zero");
+            if (nodes.Length == 0)
+                throw new ArgumentOutOfRangeException(nameof(nodes), nodes, "nodes should contain at least one node");
 
             var command = new Channel.Command(CommandClass, Command.Remove, (new[] { groupID }).Concat(nodes));
-            return Send(command);
+            return Send(command, cancellation);
         }
 
-        public Task<AssociationGroupingsReport> GroupingsGet()
+        public Task<AssociationGroupingsReport> GroupingsGet(CancellationToken cancellation = default(CancellationToken))
         {
             var command = new Channel.Command(CommandClass, Command.GroupingsGet);
-            return Send<AssociationGroupingsReport>(command, Command.GroupingsReport);
+            return Send<AssociationGroupingsReport>(command, Command.GroupingsReport, cancellation);
         }
     }
 }

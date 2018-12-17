@@ -1,12 +1,13 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 
 namespace ZWave4Net.CommandClasses
 {
     public interface IAssociation
     {
-        Task<AssociationReport> Get(byte groupID);
-        Task<AssociationGroupingsReport> GroupingsGet();
-        Task Remove(byte groupID, params byte[] nodes);
-        Task Set(byte groupID, params byte[] nodes);
+        Task<AssociationReport> Get(byte groupID, CancellationToken cancellation = default(CancellationToken));
+        Task<AssociationGroupingsReport> GroupingsGet(CancellationToken cancellation = default(CancellationToken));
+        Task Remove(byte groupID, byte[] nodes, CancellationToken cancellation = default(CancellationToken));
+        Task Set(byte groupID, byte[] nodes, CancellationToken cancellation = default(CancellationToken));
     }
 }
