@@ -19,7 +19,7 @@ namespace ChannelConsole
     {
         public static async Task Main(string[] args)
         {
-            //Logging.Factory.Subscribe((message) => WriteConsole(message));
+            Logging.Factory.Subscribe((message) => WriteConsole(message));
 
             var port = new SerialPort(SerialPort.GetPortNames().Where(element => element != "COM1").First());
             var controller = new ZWaveController(port);
@@ -36,12 +36,13 @@ namespace ChannelConsole
             }
             catch (Exception ex)
             {
-
+                WriteError(ex);
             }
             finally
             {
                 await controller.Close();
             }
+            Console.ReadLine();
         }
 
         private static void WriteConsole(LogRecord record)

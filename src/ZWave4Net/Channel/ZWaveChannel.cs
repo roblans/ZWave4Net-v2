@@ -7,6 +7,7 @@ using ZWave4Net.Channel.Protocol;
 using ZWave4Net.Channel.Protocol.Frames;
 using ZWave4Net.Diagnostics;
 using System.Reactive.Linq;
+using ZWave4Net.Utilities;
 
 namespace ZWave4Net.Channel
 {
@@ -224,87 +225,87 @@ namespace ZWave4Net.Channel
         // 3) a event from the node: return value
         public async Task<Command> Send(byte nodeID, byte endpointID, Command command, byte responseCommandID, CancellationToken cancellation = default(CancellationToken))
         {
-            // addressing an enpoint?
-            if (endpointID != 0)
-            {
-                // yes, so wrap command in a encapsulated command
-                command = EncapsulatedCommand.Wrap(0, endpointID, command);
-            }
+                // addressing an enpoint?
+                if (endpointID != 0)
+                {
+                    // yes, so wrap command in a encapsulated command
+                    command = EncapsulatedCommand.Wrap(0, endpointID, command);
+                }
 
-            // generate new callback
-            var callbackID = GetNextCallbackID();
+                // generate new callback
+                var callbackID = GetNextCallbackID();
 
-            // create the request
-            var nodeRequest = new NodeRequest(nodeID, command);
-            var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize());
+                // create the request
+                var nodeRequest = new NodeRequest(nodeID, command);
+                var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize());
 
-            var responsePipeline = Messages
-                // decode the response
-                .Select(message => Decode(message, hasCallbackID: false))
-                // we only want responses (no events)
-                .OfType<ControllerResponse>()
-                // verify matching function
-                .Where(response => Equals(response.Function, controllerRequest.Function))
-                // unknown what the 0x01 byte means, probably: ready, finished, OK
-                .Where(response => response.Payload[0] == 0x01);
+                var responsePipeline = Messages
+                    // decode the response
+                    .Select(message => Decode(message, hasCallbackID: false))
+                    // we only want responses (no events)
+                    .OfType<ControllerResponse>()
+                    // verify matching function
+                    .Where(response => Equals(response.Function, controllerRequest.Function))
+                    // unknown what the 0x01 byte means, probably: ready, finished, OK
+                    .Where(response => response.Payload[0] == 0x01);
 
 
-            var eventPipeline = Messages
-                // decode the response
-                .Select(message => Decode(message, hasCallbackID: true))
-                // we only want events (no responses)
-                .OfType<ControllerEvent>()
-                // verify matching function
-                .Where(@event => Equals(@event.Function, controllerRequest.Function))
-                // verify matching callback
-                .Where(@event => Equals(@event.CallbackID, callbackID))
-                // deserialize the received payload to a NodeCommandCompleted
-                .Select(@event => @event.Payload.Deserialize<NodeCommandCompleted>())
-                // verify the state
-                .Verify(completed => completed.TransmissionState == TransmissionState.CompleteOK, completed => new TransmissionException(completed.TransmissionState));
+                var eventPipeline = Messages
+                    // decode the response
+                    .Select(message => Decode(message, hasCallbackID: true))
+                    // we only want events (no responses)
+                    .OfType<ControllerEvent>()
+                    // verify matching function
+                    .Where(@event => Equals(@event.Function, controllerRequest.Function))
+                    // verify matching callback
+                    .Where(@event => Equals(@event.CallbackID, callbackID))
+                    // deserialize the received payload to a NodeCommandCompleted
+                    .Select(@event => @event.Payload.Deserialize<NodeCommandCompleted>())
+                    // verify the state
+                    .Verify(completed => completed.TransmissionState == TransmissionState.CompleteOK, completed => new TransmissionException(completed.TransmissionState));
 
-            var replyPipeline = Messages
-                // wait until the response pipeline has finished
-                .SkipUntil(responsePipeline)
-                // wait until the event pipeline has finished
-                .SkipUntil(eventPipeline)
-                // decode the response
-                .Select(message => Decode(message, hasCallbackID: false))
-                // we only want events (no responses)
-                .OfType<ControllerEvent>()
-                // after SendData controler will respond with ApplicationCommandHandler
-                .Where(@event => Equals(@event.Function, Function.ApplicationCommandHandler))
-                // deserialize the received payload to a NodeResponse
-                .Select(@event => @event.Payload.Deserialize<NodeResponse>())
-                // verify if the responding node is the correct one
-                .Where(response => response.NodeID ==  nodeID);
+                var replyPipeline = Messages
+                    // wait until the response pipeline has finished
+                    .SkipUntil(responsePipeline)
+                    // wait until the event pipeline has finished
+                    .SkipUntil(eventPipeline)
+                    // decode the response
+                    .Select(message => Decode(message, hasCallbackID: false))
+                    // we only want events (no responses)
+                    .OfType<ControllerEvent>()
+                    // after SendData controler will respond with ApplicationCommandHandler
+                    .Where(@event => Equals(@event.Function, Function.ApplicationCommandHandler))
+                    // deserialize the received payload to a NodeResponse
+                    .Select(@event => @event.Payload.Deserialize<NodeResponse>())
+                    // verify if the responding node is the correct one
+                    .Where(response => response.NodeID == nodeID);
 
-            var pipeline = default(IObservable<Command>);
+                var pipeline = default(IObservable<Command>);
 
-            if (command is EncapsulatedCommand encapsulated)
-            {
-                pipeline = replyPipeline
-                // deserialize the received payload to a command
-                .Select(response => response.Payload.Deserialize<EncapsulatedCommand>())
-                // verify if the encapsulated conmmand is the correct on
-                .Where(reply => reply.ClassID == encapsulated.ClassID && reply.CommandID == encapsulated.CommandID)
-                // verify if the endpoint the correct on
-                .Where(reply => reply.SourceEndpointID == encapsulated.TargetEndpointID)
-                // select the inner command
-                .Select(reply => reply.Unwrap())
-                // verify if the response command is the correct on
-                .Where(reply => reply.ClassID == encapsulated.Unwrap().ClassID && reply.CommandID == responseCommandID);
-            }
-            else
-            {
-                pipeline = replyPipeline
-                // deserialize the received payload to a command
-                .Select(response => response.Payload.Deserialize<Command>())
-                // verify if the response conmmand is the correct on
-                .Where(reply => reply.ClassID == command.ClassID && reply.CommandID == responseCommandID);
-            }
+                if (command is EncapsulatedCommand encapsulated)
+                {
+                    pipeline = replyPipeline
+                    // deserialize the received payload to a command
+                    .Select(response => response.Payload.Deserialize<EncapsulatedCommand>())
+                    // verify if the encapsulated conmmand is the correct on
+                    .Where(reply => reply.ClassID == encapsulated.ClassID && reply.CommandID == encapsulated.CommandID)
+                    // verify if the endpoint the correct on
+                    .Where(reply => reply.SourceEndpointID == encapsulated.TargetEndpointID)
+                    // select the inner command
+                    .Select(reply => reply.Unwrap())
+                    // verify if the response command is the correct on
+                    .Where(reply => reply.ClassID == encapsulated.Unwrap().ClassID && reply.CommandID == responseCommandID);
+                }
+                else
+                {
+                    pipeline = replyPipeline
+                    // deserialize the received payload to a command
+                    .Select(response => response.Payload.Deserialize<Command>())
+                    // verify if the response conmmand is the correct on
+                    .Where(reply => reply.ClassID == command.ClassID && reply.CommandID == responseCommandID);
+                }
 
-            return await Send(Encode(controllerRequest, callbackID), pipeline, cancellation);
+                return await Send(Encode(controllerRequest, callbackID), pipeline, cancellation);
         }
 
         public IObservable<Command> ReceiveNodeEvents(byte nodeID, byte endpointID, Command command)
