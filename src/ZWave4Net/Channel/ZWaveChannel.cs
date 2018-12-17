@@ -19,7 +19,7 @@ namespace ZWave4Net.Channel
         private readonly MessageBroker _broker;
         private readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
 
-        public TimeSpan ResponseTimeout = TimeSpan.FromSeconds(5);
+        public TimeSpan ResponseTimeout = TimeSpan.FromSeconds(10);
         public int MaxRetryAttempts = 2;
 
         public readonly ISerialPort Port;
