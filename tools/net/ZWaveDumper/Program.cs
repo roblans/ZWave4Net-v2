@@ -7,6 +7,7 @@ using ZWave4Net;
 using ZWave4Net.Channel;
 using ZWave4Net.CommandClasses;
 using ZWave4Net.Diagnostics;
+using System.Reactive.Linq;
 
 namespace ZWaveDumper
 {
@@ -70,6 +71,8 @@ namespace ZWaveDumper
 
             var neighbours = await node.GetNeighbours();
             WriteInfo($"Neighbours: {string.Join(", ", neighbours.Cast<object>().ToArray())}");
+
+            node.Updates.Subscribe((update) => WriteWarning(update));
 
             if (!node.IsController && node.IsListening)
             {
