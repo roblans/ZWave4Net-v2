@@ -13,13 +13,14 @@ namespace ZWave4Net
 {
     public class ZWaveController
     {
-        internal readonly Channel.ZWaveChannel Channel;
+        internal readonly ZWaveChannel Channel;
 
         public uint HomeID { get; private set; }
         public byte NodeID { get; private set; }
         public string Version { get; private set; }
         public ZWaveChipType ChipType { get; private set; }
-        public NodeCollection Nodes { get; private set; } = new NodeCollection();
+
+        public readonly NodeCollection Nodes = new NodeCollection();
 
         public ZWaveController(ISerialPort port)
         {

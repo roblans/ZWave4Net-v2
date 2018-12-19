@@ -17,7 +17,8 @@ namespace ZWave4Net
         public SpecificType SpecificType { get; private set; }
         public Security Security { get; private set; }
         public bool IsListening { get; private set; }
-        public EndpointCollection Endpoints { get; private set; }
+
+        public readonly EndpointCollection Endpoints;
 
         internal Node(ZWaveController controller, byte nodeID) : base(controller, nodeID, 0)
         {
