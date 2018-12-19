@@ -23,8 +23,8 @@ namespace ZWaveDumper
                 }
             });
 
-            var port = new SerialPort(SerialPort.GetPortNames().Where(element => element != "COM1").First());
-            var controller = new ZWaveController(port);
+            var portName = SerialPort.GetPortNames().Where(element => element != "COM1").First();
+            var controller = new ZWaveController(portName);
 
             try
             {

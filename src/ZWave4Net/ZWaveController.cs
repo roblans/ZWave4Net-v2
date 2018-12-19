@@ -26,8 +26,19 @@ namespace ZWave4Net
             if (port == null)
                 throw new ArgumentNullException(nameof(port));
 
-            Channel = new Channel.ZWaveChannel(port);
+            Channel = new ZWaveChannel(port);
         }
+
+#if NET472
+        public ZWaveController(string portName)
+        {
+            if (portName == null)
+                throw new ArgumentNullException(nameof(portName));
+
+            var port = new SerialPort(portName);
+            Channel = new ZWaveChannel(port);
+        }
+#endif
 
         internal static string GetEndpointName(byte nodeID, byte endpointID)
         {
