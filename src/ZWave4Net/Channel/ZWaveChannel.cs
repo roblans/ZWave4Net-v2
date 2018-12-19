@@ -73,7 +73,7 @@ namespace ZWave4Net.Channel
             _broker.Run(_cancellationSource.Token);
         }
 
-        public RequestMessage Encode(ControllerRequest command, byte? callbackID)
+        internal RequestMessage Encode(ControllerRequest command, byte? callbackID)
         {
             if (command == null)
                 throw new ArgumentNullException(nameof(command));
@@ -102,7 +102,7 @@ namespace ZWave4Net.Channel
             }
         }
 
-        public ControllerMessage Decode(Message message, bool hasCallbackID)
+        internal ControllerMessage Decode(Message message, bool hasCallbackID)
         {
             if (message == null)
                 throw new ArgumentNullException(nameof(message));
@@ -131,7 +131,7 @@ namespace ZWave4Net.Channel
             }
         }
 
-        public async Task<T> Send<T>(RequestMessage request, IObservable<T> pipeline, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
+        internal async Task<T> Send<T>(RequestMessage request, IObservable<T> pipeline, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -196,7 +196,7 @@ namespace ZWave4Net.Channel
         }
 
         // ControllerRequest: request followed by one response from the controller
-        public async Task<T> Send<T>(ControllerRequest request, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
+        internal async Task<T> Send<T>(ControllerRequest request, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -219,7 +219,7 @@ namespace ZWave4Net.Channel
         // NodeCommand, no return value. Request followed by:
         // 1) a response from the controller
         // 2) a event from the controller: command deliverd at node)  
-        public async Task Send(byte nodeID, byte endpointID, Command command, CancellationToken cancellation = default(CancellationToken))
+        internal async Task Send(byte nodeID, byte endpointID, Command command, CancellationToken cancellation = default(CancellationToken))
         {
             if (nodeID == 0)
                 throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
@@ -273,7 +273,7 @@ namespace ZWave4Net.Channel
         // 1) a response from the controller
         // 2) a event from the controller: command deliverd at node)  
         // 3) a event from the node: return value
-        public async Task<Command> Send(byte nodeID, byte endpointID, Command command, byte responseCommandID, CancellationToken cancellation = default(CancellationToken))
+        internal async Task<Command> Send(byte nodeID, byte endpointID, Command command, byte responseCommandID, CancellationToken cancellation = default(CancellationToken))
         {
             if (nodeID == 0)
                 throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
@@ -365,7 +365,7 @@ namespace ZWave4Net.Channel
             return await Send(Encode(controllerRequest, callbackID), pipeline, cancellation);
         }
 
-        public IObservable<Command> ReceiveNodeEvents(byte nodeID, byte endpointID, Command command)
+        internal IObservable<Command> ReceiveNodeEvents(byte nodeID, byte endpointID, Command command)
         {
             if (nodeID == 0)
                 throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
@@ -414,7 +414,7 @@ namespace ZWave4Net.Channel
             }
         }
 
-        public IObservable<NodeUpdate> ReceiveNodeUpdates(byte nodeID)
+        internal IObservable<NodeUpdate> ReceiveNodeUpdates(byte nodeID)
         {
             if (nodeID == 0)
                 throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");

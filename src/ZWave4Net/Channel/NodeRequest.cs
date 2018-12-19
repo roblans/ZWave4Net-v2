@@ -5,7 +5,7 @@ using ZWave4Net.Channel.Protocol;
 
 namespace ZWave4Net.Channel
 {
-    public class NodeRequest : IPayloadSerializable
+    internal class NodeRequest : IPayloadSerializable
     {
         public readonly byte NodeID;
         public readonly Command Command;

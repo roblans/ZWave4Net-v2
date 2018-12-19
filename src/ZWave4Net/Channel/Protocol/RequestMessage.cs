@@ -7,7 +7,7 @@ namespace ZWave4Net.Channel.Protocol
     /// <summary>
     /// Message from host to controller
     /// </summary>
-    public class RequestMessage : Message
+    internal class RequestMessage : Message
     {
         public RequestMessage(Payload payload)
             : base(payload)

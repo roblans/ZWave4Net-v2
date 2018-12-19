@@ -6,7 +6,7 @@ using ZWave4Net.Diagnostics;
 
 namespace ZWave4Net.Channel.Protocol
 {
-    public abstract class Message : IEquatable<Message>
+    internal abstract class Message : IEquatable<Message>
     {
         public readonly Payload Payload;
 

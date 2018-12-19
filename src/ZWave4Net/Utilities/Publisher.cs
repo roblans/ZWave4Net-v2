@@ -6,7 +6,7 @@ using System.Threading;
 
 namespace ZWave4Net.Utilities
 {
-    public class Publisher
+    internal class Publisher
     {
         private object _lock = new object();
 

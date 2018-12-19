@@ -5,7 +5,7 @@ using ZWave4Net.Channel;
 
 namespace ZWave4Net
 {
-    public static partial class Extentions
+    internal static partial class Extentions
     {
         public static T ReadObject<T>(this PayloadReader reader) where T: IPayloadSerializable, new()
         {

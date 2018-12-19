@@ -7,7 +7,7 @@ namespace ZWave4Net.Channel.Protocol.Frames
     /// <summary>
     /// Base class for all frame types
     /// </summary>
-    public class Frame : IEquatable<Frame>
+    internal class Frame : IEquatable<Frame>
     {
         /// <summary>
         /// The ACK frame indicates that the receiving end received a valid Data frame

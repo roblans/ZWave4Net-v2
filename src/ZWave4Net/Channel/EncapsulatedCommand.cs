@@ -6,7 +6,7 @@ using ZWave4Net.CommandClasses;
 
 namespace ZWave4Net.Channel
 {
-    public class EncapsulatedCommand : Command
+    internal class EncapsulatedCommand : Command
     {
         public byte SourceEndpointID { get; private set; }
         public byte TargetEndpointID { get; private set; }

@@ -8,7 +8,7 @@ using System.IO;
 
 namespace ZWave4Net.Channel.Protocol.Frames
 {
-    public class FrameReader
+    internal class FrameReader
     {
         public readonly IDuplexStream Stream;
 

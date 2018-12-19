@@ -6,7 +6,7 @@ namespace ZWave4Net
 {
 
     [Serializable]
-    public class OperationFailedException : Exception
+    internal class OperationFailedException : Exception
     {
         public OperationFailedException() { }
         public OperationFailedException(string message) : base(message) { }

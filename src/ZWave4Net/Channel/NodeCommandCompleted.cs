@@ -5,7 +5,7 @@ using ZWave4Net.Channel.Protocol;
 
 namespace ZWave4Net.Channel
 {
-    public class NodeCommandCompleted : IPayloadSerializable
+    internal class NodeCommandCompleted : IPayloadSerializable
     {
         public TransmissionState TransmissionState { get; private set; }
         public byte Unknown1 { get; private set; }

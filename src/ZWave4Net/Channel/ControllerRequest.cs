@@ -5,7 +5,7 @@ using ZWave4Net.Channel.Protocol;
 
 namespace ZWave4Net.Channel
 {
-    public class ControllerRequest : ControllerMessage
+    internal class ControllerRequest : ControllerMessage
     {
 
         public ControllerRequest(Function function, Payload payload)

@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace ZWave4Net.CommandClasses.Services
 {
-    public class AssociationService : CommandClassService, IAssociation
+    internal class AssociationService : CommandClassService, IAssociation
     {
         enum Command
         {

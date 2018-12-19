@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace ZWave4Net.CommandClasses.Services
 {
-    public class BinarySwitchService : CommandClassService, IBinarySwitch
+    internal class BinarySwitchService : CommandClassService, IBinarySwitch
     {
         enum Command : byte
         {

@@ -7,7 +7,7 @@ using ZWave4Net.Diagnostics;
 
 namespace ZWave4Net.Channel.Protocol.Frames
 {
-    public class DataFrame : Frame, IEquatable<DataFrame>
+    internal class DataFrame : Frame, IEquatable<DataFrame>
     {
         public readonly DataFrameType Type;
         public readonly Payload Payload;

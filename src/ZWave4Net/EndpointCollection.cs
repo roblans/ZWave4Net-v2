@@ -12,7 +12,7 @@ namespace ZWave4Net
         private ConcurrentDictionary<byte, Endpoint> _endpoints = new ConcurrentDictionary<byte, Endpoint>();
         public readonly Node Node;
 
-        public EndpointCollection(Node node)
+        internal EndpointCollection(Node node)
         {
             Node = node ?? throw new ArgumentNullException(nameof(node));
 

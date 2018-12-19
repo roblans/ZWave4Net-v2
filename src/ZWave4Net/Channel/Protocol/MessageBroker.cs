@@ -15,7 +15,7 @@ using System.Reactive.Subjects;
 
 namespace ZWave4Net.Channel.Protocol
 {
-    public class MessageBroker
+    internal class MessageBroker
     {
         private readonly ILogger _logger = Logging.Factory.CreatLogger("Broker");
         private readonly FrameReader _reader;

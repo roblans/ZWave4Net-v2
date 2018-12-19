@@ -45,9 +45,9 @@ namespace ZWaveDumper
             }
             finally
             {
+                Console.ReadLine();
                 await controller.Close();
             }
-            Console.ReadLine();
         }
 
         private static Task Dump(ZWaveController controller)

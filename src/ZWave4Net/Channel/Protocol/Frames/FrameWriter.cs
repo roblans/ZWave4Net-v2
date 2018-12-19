@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ZWave4Net.Channel.Protocol.Frames
 {
-    public class FrameWriter
+    internal class FrameWriter
     {
         public readonly IDuplexStream Stream;
 

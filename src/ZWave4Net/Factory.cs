@@ -8,7 +8,7 @@ using ZWave4Net.CommandClasses.Services;
 
 namespace ZWave4Net
 {
-    public static class Factory
+    internal static class Factory
     {
         private static readonly Type[] _commandClasseServiceTypes;
 

@@ -6,7 +6,7 @@ using ZWave4Net.Channel.Protocol;
 namespace ZWave4Net.Channel
 {
 
-    public abstract class ControllerMessage : Message
+    internal abstract class ControllerMessage : Message
     {
         public readonly Function Function;
 

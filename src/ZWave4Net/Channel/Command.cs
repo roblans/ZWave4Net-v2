@@ -6,7 +6,7 @@ using ZWave4Net.CommandClasses;
 
 namespace ZWave4Net.Channel
 {
-    public class Command : IPayloadSerializable
+    internal class Command : IPayloadSerializable
     {
         public byte ClassID { get; protected set; }
         public byte CommandID { get; protected set; }

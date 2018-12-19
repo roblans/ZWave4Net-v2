@@ -6,7 +6,7 @@ using ZWave4Net.Utilities;
 
 namespace ZWave4Net.Diagnostics
 {
-    public class LogFactory : ILogFactory
+    internal class LogFactory : ILogFactory
     {
         private readonly Publisher _publisher = new Publisher();
 

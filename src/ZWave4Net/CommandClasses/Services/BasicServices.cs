@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace ZWave4Net.CommandClasses.Services
 {
-    public class BasicServices : CommandClassService, IBasic
+    internal class BasicServices : CommandClassService, IBasic
     {
         enum Command : byte
         {

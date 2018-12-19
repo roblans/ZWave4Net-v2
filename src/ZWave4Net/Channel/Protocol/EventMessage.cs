@@ -7,7 +7,7 @@ namespace ZWave4Net.Channel.Protocol
     /// <summary>
     /// Event from controller to host
     /// </summary>
-    public class EventMessage : Message
+    internal class EventMessage : Message
     {
         public EventMessage(Payload payload)
             : base(payload)

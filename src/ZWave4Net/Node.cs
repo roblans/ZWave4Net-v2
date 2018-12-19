@@ -19,7 +19,7 @@ namespace ZWave4Net
         public bool IsListening { get; private set; }
         public EndpointCollection Endpoints { get; private set; }
 
-        public Node(ZWaveController controller, byte nodeID) : base(controller, nodeID, 0)
+        internal Node(ZWaveController controller, byte nodeID) : base(controller, nodeID, 0)
         {
             if (controller == null)
                 throw new ArgumentNullException(nameof(controller));
@@ -29,7 +29,7 @@ namespace ZWave4Net
             Endpoints = new EndpointCollection(this);
         }
 
-        public async Task Initialize()
+        internal async Task Initialize()
         {
             var command = new ControllerRequest(Function.GetNodeProtocolInfo, new Payload(NodeID));
             var protocolInfo = await Channel.Send<NodeProtocolInfo>(command, CancellationToken.None);
@@ -45,7 +45,7 @@ namespace ZWave4Net
             get { return NodeID == Controller.NodeID; }
         }
 
-        public Endpoint CreateEndpoint(byte endpointID)
+        internal Endpoint CreateEndpoint(byte endpointID)
         {
             return Factory.CreateEndpoint(Controller, NodeID, endpointID);
         }

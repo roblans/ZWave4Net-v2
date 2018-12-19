@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ZWave4Net.Channel.Protocol
 {
-    public class ControllerResponse : ControllerMessage
+    internal class ControllerResponse : ControllerMessage
     {
         public readonly byte? CallbackID;
 
