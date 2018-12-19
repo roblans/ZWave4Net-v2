@@ -13,6 +13,9 @@ namespace ZWave4Net
 
         void IPayloadSerializable.Read(PayloadReader reader)
         {
+            if (reader == null)
+                throw new ArgumentNullException(nameof(reader));
+
             State = (NodeUpdateState)reader.ReadByte();
             NodeID = reader.ReadByte();
 

@@ -12,6 +12,9 @@ namespace ZWave4Net.CommandClasses
 
         public ReportSender(byte nodeID, byte endpointID)
         {
+            if (nodeID == 0)
+                throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
+
             NodeID = nodeID;
             EndpointID = endpointID;
             Name = ZWaveController.GetEndpointName(NodeID, EndpointID);

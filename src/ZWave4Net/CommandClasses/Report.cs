@@ -17,6 +17,9 @@ namespace ZWave4Net.CommandClasses
 
         void IPayloadSerializable.Read(PayloadReader reader)
         {
+            if (reader == null)
+                throw new ArgumentNullException(nameof(reader));
+
             var nodeID = reader.ReadByte();
             var endpointID = reader.ReadByte();
             Sender = new ReportSender(nodeID, endpointID);

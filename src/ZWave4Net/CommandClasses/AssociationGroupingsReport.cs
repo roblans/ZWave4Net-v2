@@ -10,7 +10,10 @@ namespace ZWave4Net.CommandClasses
 
         protected override void Read(PayloadReader reader)
         {
-            SupportedGroupings  = reader.ReadByte();
+            if (reader == null)
+                throw new ArgumentNullException(nameof(reader));
+
+            SupportedGroupings = reader.ReadByte();
         }
 
         public override string ToString()

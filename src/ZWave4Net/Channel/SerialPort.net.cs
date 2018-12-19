@@ -10,6 +10,7 @@ namespace ZWave4Net.Channel
     public class SerialPort : ISerialPort
     {
         private readonly System.IO.Ports.SerialPort _port;
+
         public bool IsOpen { get; private set; } = false;
 
         public static string[] GetPortNames()
@@ -19,6 +20,9 @@ namespace ZWave4Net.Channel
 
         public SerialPort(string portName)
         {
+            if (portName == null)
+                throw new ArgumentNullException(nameof(portName));
+
             _port = new System.IO.Ports.SerialPort(portName, 115200, System.IO.Ports.Parity.None, 8, System.IO.Ports.StopBits.One);
         }
 
@@ -49,15 +53,23 @@ namespace ZWave4Net.Channel
             return Task.CompletedTask;
         }
 
-        public Task<byte[]> Read(int length, CancellationToken cancellation)
+        [System.Diagnostics.DebuggerHidden()] // prevent debugger break on ThrowIfCancellationRequested
+        public Task<byte[]> Read(int length, CancellationToken cancellation = default(CancellationToken))
         {
+            if (length < 0)
+                throw new ArgumentOutOfRangeException(nameof(length), length, "length cannot be less than 0");
+            if (length == 0)
+                return Task.FromResult(new byte[0]);
+
             return Task.Run(() =>
             {
                 var buffer = new byte[length];
                 var read = 0;
 
-                while (read < length && !cancellation.IsCancellationRequested)
+                while (read < length)
                 {
+                    cancellation.ThrowIfCancellationRequested();
+
                     try
                     {
                         read += _port.Read(buffer, read, length - read);
@@ -75,8 +87,13 @@ namespace ZWave4Net.Channel
             }, cancellation);
         }
 
-        public Task Write(byte[] values, CancellationToken cancellation)
+        public Task Write(byte[] values, CancellationToken cancellation = default(CancellationToken))
         {
+            if (values == null)
+                throw new ArgumentNullException(nameof(values));
+            if (values.Length == 0)
+                return Task.CompletedTask;
+
             return Task.Run(() =>
             {
                 _port.Write(values, 0, values.Length);

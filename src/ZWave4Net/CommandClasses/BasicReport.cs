@@ -10,6 +10,9 @@ namespace ZWave4Net.CommandClasses
 
         protected override void Read(PayloadReader reader)
         {
+            if (reader == null)
+                throw new ArgumentNullException(nameof(reader));
+
             Value = reader.ReadByte();
         }
 

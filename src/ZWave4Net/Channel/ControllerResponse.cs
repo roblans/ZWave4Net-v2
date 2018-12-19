@@ -12,10 +12,6 @@ namespace ZWave4Net.Channel.Protocol
             : base(function, payload)
         {
             CallbackID = callbackID;
-            if (function == Function.SendData)
-            {
-
-            }
         }
     }
 }

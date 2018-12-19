@@ -14,11 +14,20 @@ namespace ZWave4Net
 
         public PayloadReader(Payload payload)
         {
+            if (payload == null)
+                throw new ArgumentNullException(nameof(payload));
+
             _stream = new MemoryStream(payload.ToArray());
         }
 
         private void FillBuffer(int length)
         {
+            if (length < 0)
+                throw new ArgumentOutOfRangeException(nameof(length), length, "length cannot be less than zero");
+
+            if (length == 0)
+                return;
+
             _stream.Read(_buffer, 0, length);
         }
 
@@ -34,6 +43,9 @@ namespace ZWave4Net
 
         public void SkipBytes(int count)
         {
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count), count, "count cannot be less than zero");
+
             _stream.Seek(count, SeekOrigin.Current);
         }
 

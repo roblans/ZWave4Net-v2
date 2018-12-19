@@ -33,7 +33,13 @@ namespace ZWave4Net
 
         public byte this[int index]
         {
-            get { return _values[index]; }
+            get
+            {
+                if (index < 0)
+                    throw new ArgumentOutOfRangeException(nameof(index), index, "index must be greater than 0");
+
+                return _values[index];
+            }
         }
 
         public byte[] ToArray()
@@ -48,11 +54,17 @@ namespace ZWave4Net
 
         void IPayloadSerializable.Read(PayloadReader reader)
         {
+            if (reader == null)
+                throw new ArgumentNullException(nameof(reader));
+
             _values = reader.ReadBytes(reader.Length - reader.Position);
         }
 
         void IPayloadSerializable.Write(PayloadWriter writer)
         {
+            if (writer == null)
+                throw new ArgumentNullException(nameof(writer));
+
             writer.WriteBytes(_values);
         }
 

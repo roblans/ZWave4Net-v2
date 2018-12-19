@@ -13,7 +13,8 @@ namespace ZWave4Net.Channel
         {
         }
 
-        public ControllerRequest(Function function) : this(function, Payload.Empty)
+        public ControllerRequest(Function function)
+            : this(function, Payload.Empty)
         {
         }
     }

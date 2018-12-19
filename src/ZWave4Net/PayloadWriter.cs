@@ -86,11 +86,17 @@ namespace ZWave4Net
 
         public void WritePayload(Payload value)
         {
+            if (value == null)
+                throw new ArgumentNullException(nameof(value));
+
             _stream.Write(value.ToArray(), 0, value.Length);
         }
 
         public void WriteString(string value)
         {
+            if (value == null)
+                throw new ArgumentNullException(nameof(value));
+
             var bytes = Encoding.ASCII.GetBytes(value).Concat(new[] { (byte)0 }).ToArray();
             _stream.Write(bytes, 0, bytes.Length);
         }

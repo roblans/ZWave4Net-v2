@@ -12,8 +12,11 @@ namespace ZWave4Net.Channel
 
         public NodeRequest(byte nodeID, Command command)
         {
+            if (nodeID == 0)
+                throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
+
             NodeID = nodeID;
-            Command = command;
+            Command = command ?? throw new ArgumentNullException(nameof(command));
         }
 
         void IPayloadSerializable.Read(PayloadReader reader)
@@ -23,6 +26,9 @@ namespace ZWave4Net.Channel
 
         void IPayloadSerializable.Write(PayloadWriter writer)
         {
+            if (writer == null)
+                throw new ArgumentNullException(nameof(writer));
+
             writer.WriteByte(NodeID);
             writer.WriteObject(Command);
             writer.WriteByte((byte)(TransmitOptions.Ack | TransmitOptions.AutoRoute | TransmitOptions.Explore));

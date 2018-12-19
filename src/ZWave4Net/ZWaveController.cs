@@ -23,6 +23,9 @@ namespace ZWave4Net
 
         public ZWaveController(ISerialPort port)
         {
+            if (port == null)
+                throw new ArgumentNullException(nameof(port));
+
             Channel = new Channel.ZWaveChannel(port);
         }
 

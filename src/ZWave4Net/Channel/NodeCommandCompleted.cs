@@ -13,6 +13,9 @@ namespace ZWave4Net.Channel
 
         void IPayloadSerializable.Read(PayloadReader reader)
         {
+            if (reader == null)
+                throw new ArgumentNullException(nameof(reader));
+
             TransmissionState = (TransmissionState)reader.ReadByte();
             Unknown1 = reader.ReadByte();
             Unknown2 = reader.ReadByte();

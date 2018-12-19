@@ -12,6 +12,9 @@ namespace ZWave4Net
 
         internal void Add(Node node)
         {
+            if (node == null)
+                throw new ArgumentNullException(nameof(node));
+
             _nodes.Add(node);
         }
 

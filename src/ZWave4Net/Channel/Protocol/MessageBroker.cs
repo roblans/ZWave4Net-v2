@@ -28,11 +28,14 @@ namespace ZWave4Net.Channel.Protocol
 
         public MessageBroker(IDuplexStream stream)
         {
+            if (stream == null)
+                throw new ArgumentNullException(nameof(stream));
+
             _reader = new FrameReader(stream);
             _writer = new FrameWriter(stream);
         }
 
-        public void Run(CancellationToken cancellation)
+        public void Run(CancellationToken cancellation = default(CancellationToken))
         {
             // create the Observable, use Publish so frame are all published to all subcribers 
             _observable = Observable.Create<Frame>(observer => Execute(observer, cancellation)).Publish();
@@ -47,8 +50,10 @@ namespace ZWave4Net.Channel.Protocol
             });
         }
 
-        private Task Execute(IObserver<Frame> observer, CancellationToken cancellation)
+        private Task Execute(IObserver<Frame> observer, CancellationToken cancellation = default(CancellationToken))
         {
+            if (observer == null)
+                throw new ArgumentNullException(nameof(observer));
 
             return _task = Task.Run(async () =>
             {
@@ -131,6 +136,9 @@ namespace ZWave4Net.Channel.Protocol
 
         public static Message Decode(DataFrame frame)
         {
+            if (frame == null)
+                throw new ArgumentNullException(nameof(frame));
+
             switch (frame.Type)
             {
                 // response on a request
@@ -154,16 +162,22 @@ namespace ZWave4Net.Channel.Protocol
 
         public static DataFrame Encode(RequestMessage message)
         {
+            if (message == null)
+                throw new ArgumentNullException(nameof(message));
+
             return new DataFrame(DataFrameType.REQ, message.Payload);
         }
 
-        public IObservable<Message> GetObservable()
+        public IObservable<Message> Messages
         {
-            return _observable.OfType<DataFrame>().Select(element => Decode(element));
+            get { return _observable.OfType<DataFrame>().Select(element => Decode(element)); }
         }
 
-        public async Task Send(RequestMessage message, CancellationToken cancellation)
+        public async Task Send(RequestMessage message, CancellationToken cancellation = default(CancellationToken))
         {
+            if (message == null)
+                throw new ArgumentNullException(nameof(message));
+
             var stopwatch = Stopwatch.StartNew();
 
             // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.5.2 Request/Response frame flow

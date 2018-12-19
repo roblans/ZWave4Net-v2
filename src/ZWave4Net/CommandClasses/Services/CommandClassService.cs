@@ -17,19 +17,28 @@ namespace ZWave4Net.CommandClasses.Services
 
         public CommandClassService(CommandClass commandClass, ZWaveController controller, byte nodeID, byte endpointID)
         {
+            if (nodeID == 0)
+                throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
+
             CommandClass = commandClass;
-            Controller = controller;
+            Controller = controller ?? throw new ArgumentNullException(nameof(controller));
             NodeID = nodeID;
             EndpointID = endpointID;
         }
 
         protected Task Send(Command command, CancellationToken cancellation = default(CancellationToken))
         {
+            if (command == null)
+                throw new ArgumentNullException(nameof(command));
+
             return Controller.Channel.Send(NodeID, EndpointID, command, cancellation);
         }
 
         protected async Task<T> Send<T>(Command command, Enum responseCommand, CancellationToken cancellation = default(CancellationToken)) where T : Report, new()
         {
+            if (command == null)
+                throw new ArgumentNullException(nameof(command));
+
             var reply = await Controller.Channel.Send(NodeID, EndpointID, command, Convert.ToByte(responseCommand), cancellation);
 
             // push NodeID and EndpointID in the payload so T has access to the node and the endpoint

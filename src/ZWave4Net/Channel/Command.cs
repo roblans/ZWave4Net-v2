@@ -54,6 +54,9 @@ namespace ZWave4Net.Channel
 
         protected virtual void Read(PayloadReader reader)
         {
+            if (reader == null)
+                throw new ArgumentNullException(nameof(reader));
+
             var length = reader.ReadByte();
             ClassID = reader.ReadByte();
             CommandID = reader.ReadByte();
@@ -62,11 +65,17 @@ namespace ZWave4Net.Channel
 
         void IPayloadSerializable.Read(PayloadReader reader)
         {
+            if (reader == null)
+                throw new ArgumentNullException(nameof(reader));
+
             Read(reader);
         }
 
         protected virtual void Write(PayloadWriter writer)
         {
+            if (writer == null)
+                throw new ArgumentNullException(nameof(writer));
+
             writer.WriteByte((byte)(2 + Payload.Length));
             writer.WriteByte(ClassID);
             writer.WriteByte(CommandID);
@@ -75,6 +84,9 @@ namespace ZWave4Net.Channel
 
         void IPayloadSerializable.Write(PayloadWriter writer)
         {
+            if (writer == null)
+                throw new ArgumentNullException(nameof(writer));
+
             Write(writer);
         }
     }

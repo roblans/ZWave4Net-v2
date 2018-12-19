@@ -15,7 +15,10 @@ namespace ZWave4Net
 
         public Endpoint(ZWaveController controller, byte nodeID, byte endpointID)
         {
-            Controller = controller;
+            if (nodeID == 0)
+                throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
+
+            Controller = controller ?? throw new ArgumentNullException(nameof(controller));
             NodeID = nodeID;
             EndpointID = endpointID;
             Name = ZWaveController.GetEndpointName(NodeID, EndpointID);

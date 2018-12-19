@@ -14,7 +14,7 @@ namespace ZWave4Net
 
         public EndpointCollection(Node node)
         {
-            Node = node;
+            Node = node ?? throw new ArgumentNullException(nameof(node));
 
             _endpoints.TryAdd(0, Node);
         }

@@ -9,6 +9,9 @@ namespace ZWave4Net
     {
         public static T ReadObject<T>(this PayloadReader reader) where T: IPayloadSerializable, new()
         {
+            if (reader == null)
+                throw new ArgumentNullException(nameof(reader));
+
             var instance = new T();
             instance.Read(reader);
             return instance;
@@ -16,11 +19,19 @@ namespace ZWave4Net
 
         public static void WriteObject<T>(this PayloadWriter writer, T value) where T : IPayloadSerializable
         {
+            if (writer == null)
+                throw new ArgumentNullException(nameof(writer));
+            if (value == null)
+                throw new ArgumentNullException(nameof(value));
+
             value.Write(writer);
         }
 
         public static T Deserialize<T>(this Payload payload) where T : IPayloadSerializable, new()
         {
+            if (payload == null)
+                throw new ArgumentNullException(nameof(payload));
+
             using (var reader = new PayloadReader(payload))
             {
                 return reader.ReadObject<T>();
@@ -29,6 +40,9 @@ namespace ZWave4Net
 
         public static Payload Serialize(this IPayloadSerializable serializable)
         {
+            if (serializable == null)
+                throw new ArgumentNullException(nameof(serializable));
+
             using (var writer = new PayloadWriter())
             {
                 writer.WriteObject(serializable);

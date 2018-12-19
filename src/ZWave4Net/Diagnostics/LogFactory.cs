@@ -12,6 +12,9 @@ namespace ZWave4Net.Diagnostics
 
         public IDisposable Subscribe(Action<LogRecord> action)
         {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
             return _publisher.Subcribe(action);
         }
 
@@ -23,6 +26,9 @@ namespace ZWave4Net.Diagnostics
 
         public ILogger CreatLogger(string name)
         {
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
+
             return new Logger(name, Log);
         }
 
@@ -33,8 +39,8 @@ namespace ZWave4Net.Diagnostics
 
             public Logger(string name, Action<(string Category, LogLevel Level, object State)> onLog)
             {
-                Name = name;
-                _onLog = onLog;
+                Name = name ?? throw new ArgumentNullException(nameof(name));
+                _onLog = onLog ?? throw new ArgumentNullException(nameof(onLog));
             }
 
             public void Log(LogLevel level, object state)

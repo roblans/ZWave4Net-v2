@@ -12,7 +12,7 @@ namespace ZWave4Net.Channel.Protocol
 
         protected Message(Payload payload)
         {
-            Payload = payload;
+            Payload = payload ?? throw new ArgumentNullException(nameof(Payload));
         }
 
         public override string ToString()

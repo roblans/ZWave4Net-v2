@@ -20,7 +20,8 @@ namespace ZWave4Net.Channel
         private readonly MessageBroker _broker;
         private readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
 
-        public TimeSpan ResponseTimeout = TimeSpan.FromSeconds(30);
+        public TimeSpan ResponseTimeout = TimeSpan.FromSeconds(10);
+        public int MaxRetryAttempts = 2;
 
         public readonly ISerialPort Port;
 
@@ -38,7 +39,7 @@ namespace ZWave4Net.Channel
 
         internal IObservable<Message> Messages
         {
-            get { return _broker.GetObservable(); }
+            get { return _broker.Messages; }
         }
 
         private async Task SoftReset()
@@ -74,6 +75,9 @@ namespace ZWave4Net.Channel
 
         public RequestMessage Encode(ControllerRequest command, byte? callbackID)
         {
+            if (command == null)
+                throw new ArgumentNullException(nameof(command));
+
             // create writer to serialize te request
             using (var writer = new PayloadWriter())
             {
@@ -100,6 +104,9 @@ namespace ZWave4Net.Channel
 
         public ControllerMessage Decode(Message message, bool hasCallbackID)
         {
+            if (message == null)
+                throw new ArgumentNullException(nameof(message));
+
             // create reader to deserialize the request
             using (var reader = new PayloadReader(message.Payload))
             {
@@ -126,36 +133,74 @@ namespace ZWave4Net.Channel
 
         public async Task<T> Send<T>(RequestMessage request, IObservable<T> pipeline, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
         {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+            if (pipeline == null)
+                throw new ArgumentNullException(nameof(pipeline));
+
             // use timeout only when no cancellationtoken is passed
             var timeout = cancellation == default(CancellationToken) ? ResponseTimeout : TimeSpan.MaxValue;
-            
-            // create a completionsource
-            var completion = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            // set the completion cancelled when the token is cancelled
-            using (cancellation.Register(() => completion.TrySetCanceled()))
+            // number of retransmissions
+            var retransmissions = 0;
+
+            while (true)
             {
-                // subscribe to response pipeline, with timout
-                using (pipeline.Timeout(timeout).Subscribe
-                (
-                    // OK, pipeline completed, set result
-                    (element) => completion.TrySetResult(element),
-                    // Exception, pipeline failed, set error
-                    (ex) => completion.TrySetException(ex)
-                ))
-                {
-                    // send the request
-                    await _broker.Send(request, cancellation);
+                // if cancelled then throw
+                cancellation.ThrowIfCancellationRequested();
 
-                    // wait for response
-                    return await completion.Task;
+                // create a completionsource
+                var completion = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+                try
+                {
+                    // set the completion cancelled when the token is cancelled
+                    using (cancellation.Register(() => completion.TrySetCanceled()))
+                    {
+                        // subscribe to response pipeline, with timout
+                        using (pipeline.Timeout(timeout).Subscribe
+                        (
+                            // OK, pipeline completed, set result
+                            (element) => completion.TrySetResult(element),
+                            // Exception, pipeline failed, set error
+                            (ex) => completion.TrySetException(ex)
+                        ))
+                        {
+                            // send the request
+                            await _broker.Send(request, cancellation);
+
+                            // wait for response
+                            return await completion.Task;
+                        }
+                    }
                 }
+                catch (TimeoutException)
+                {
+                    // operation timed-out
+                    _logger.LogWarning($"Timeout while waiting for a response on: {request}");
+
+                    // throw exception when max retransmissions reached
+                    if (retransmissions >= ProtocolSettings.MaxRetryAttempts)
+                        throw new TimeoutException($"Timeout while waiting for a response on: {request}");
+                }
+                catch (TransmissionException ex)
+                {
+                    // tranmission failure
+                    _logger.LogWarning(ex.Message);
+
+                    // throw exception when max retransmissions reached
+                    if (retransmissions >= ProtocolSettings.MaxRetryAttempts)
+                        throw;
+                }
+                retransmissions++;
             }
         }
 
         // ControllerRequest: request followed by one response from the controller
         public async Task<T> Send<T>(ControllerRequest request, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
         {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
             // create the response pipeline
             var pipeline = Messages
                 // decode the response
@@ -176,6 +221,11 @@ namespace ZWave4Net.Channel
         // 2) a event from the controller: command deliverd at node)  
         public async Task Send(byte nodeID, byte endpointID, Command command, CancellationToken cancellation = default(CancellationToken))
         {
+            if (nodeID == 0)
+                throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
+            if (command == null)
+                throw new ArgumentNullException(nameof(command));
+
             // addressing an enpoint?
             if (endpointID != 0)
             {
@@ -225,91 +275,103 @@ namespace ZWave4Net.Channel
         // 3) a event from the node: return value
         public async Task<Command> Send(byte nodeID, byte endpointID, Command command, byte responseCommandID, CancellationToken cancellation = default(CancellationToken))
         {
-                // addressing an enpoint?
-                if (endpointID != 0)
-                {
-                    // yes, so wrap command in a encapsulated command
-                    command = EncapsulatedCommand.Wrap(0, endpointID, command);
-                }
+            if (nodeID == 0)
+                throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
+            if (command == null)
+                throw new ArgumentNullException(nameof(command));
+            if (responseCommandID == 0)
+                throw new ArgumentOutOfRangeException(nameof(responseCommandID), responseCommandID, "responseCommandID must be greater than 0");
 
-                // generate new callback
-                var callbackID = GetNextCallbackID();
+            // addressing an enpoint?
+            if (endpointID != 0)
+            {
+                // yes, so wrap command in a encapsulated command
+                command = EncapsulatedCommand.Wrap(0, endpointID, command);
+            }
 
-                // create the request
-                var nodeRequest = new NodeRequest(nodeID, command);
-                var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize());
+            // generate new callback
+            var callbackID = GetNextCallbackID();
 
-                var responsePipeline = Messages
-                    // decode the response
-                    .Select(message => Decode(message, hasCallbackID: false))
-                    // we only want responses (no events)
-                    .OfType<ControllerResponse>()
-                    // verify matching function
-                    .Where(response => Equals(response.Function, controllerRequest.Function))
-                    // unknown what the 0x01 byte means, probably: ready, finished, OK
-                    .Where(response => response.Payload[0] == 0x01);
+            // create the request
+            var nodeRequest = new NodeRequest(nodeID, command);
+            var controllerRequest = new ControllerRequest(Function.SendData, nodeRequest.Serialize());
+
+            var responsePipeline = Messages
+                // decode the response
+                .Select(message => Decode(message, hasCallbackID: false))
+                // we only want responses (no events)
+                .OfType<ControllerResponse>()
+                // verify matching function
+                .Where(response => Equals(response.Function, controllerRequest.Function))
+                // unknown what the 0x01 byte means, probably: ready, finished, OK
+                .Where(response => response.Payload[0] == 0x01);
 
 
-                var eventPipeline = Messages
-                    // decode the response
-                    .Select(message => Decode(message, hasCallbackID: true))
-                    // we only want events (no responses)
-                    .OfType<ControllerEvent>()
-                    // verify matching function
-                    .Where(@event => Equals(@event.Function, controllerRequest.Function))
-                    // verify matching callback
-                    .Where(@event => Equals(@event.CallbackID, callbackID))
-                    // deserialize the received payload to a NodeCommandCompleted
-                    .Select(@event => @event.Payload.Deserialize<NodeCommandCompleted>())
-                    // verify the state
-                    .Verify(completed => completed.TransmissionState == TransmissionState.CompleteOK, completed => new TransmissionException(completed.TransmissionState));
+            var eventPipeline = Messages
+                // decode the response
+                .Select(message => Decode(message, hasCallbackID: true))
+                // we only want events (no responses)
+                .OfType<ControllerEvent>()
+                // verify matching function
+                .Where(@event => Equals(@event.Function, controllerRequest.Function))
+                // verify matching callback
+                .Where(@event => Equals(@event.CallbackID, callbackID))
+                // deserialize the received payload to a NodeCommandCompleted
+                .Select(@event => @event.Payload.Deserialize<NodeCommandCompleted>())
+                // verify the state
+                .Verify(completed => completed.TransmissionState == TransmissionState.CompleteOK, completed => new TransmissionException(completed.TransmissionState));
 
-                var replyPipeline = Messages
-                    // wait until the response pipeline has finished
-                    .SkipUntil(responsePipeline)
-                    // wait until the event pipeline has finished
-                    .SkipUntil(eventPipeline)
-                    // decode the response
-                    .Select(message => Decode(message, hasCallbackID: false))
-                    // we only want events (no responses)
-                    .OfType<ControllerEvent>()
-                    // after SendData controler will respond with ApplicationCommandHandler
-                    .Where(@event => Equals(@event.Function, Function.ApplicationCommandHandler))
-                    // deserialize the received payload to a NodeResponse
-                    .Select(@event => @event.Payload.Deserialize<NodeResponse>())
-                    // verify if the responding node is the correct one
-                    .Where(response => response.NodeID == nodeID);
+            var replyPipeline = Messages
+                // wait until the response pipeline has finished
+                .SkipUntil(responsePipeline)
+                // wait until the event pipeline has finished
+                .SkipUntil(eventPipeline)
+                // decode the response
+                .Select(message => Decode(message, hasCallbackID: false))
+                // we only want events (no responses)
+                .OfType<ControllerEvent>()
+                // after SendData controler will respond with ApplicationCommandHandler
+                .Where(@event => Equals(@event.Function, Function.ApplicationCommandHandler))
+                // deserialize the received payload to a NodeResponse
+                .Select(@event => @event.Payload.Deserialize<NodeResponse>())
+                // verify if the responding node is the correct one
+                .Where(response => response.NodeID == nodeID);
 
-                var pipeline = default(IObservable<Command>);
+            var pipeline = default(IObservable<Command>);
 
-                if (command is EncapsulatedCommand encapsulated)
-                {
-                    pipeline = replyPipeline
-                    // deserialize the received payload to a command
-                    .Select(response => response.Payload.Deserialize<EncapsulatedCommand>())
-                    // verify if the encapsulated conmmand is the correct on
-                    .Where(reply => reply.ClassID == encapsulated.ClassID && reply.CommandID == encapsulated.CommandID)
-                    // verify if the endpoint the correct on
-                    .Where(reply => reply.SourceEndpointID == encapsulated.TargetEndpointID)
-                    // select the inner command
-                    .Select(reply => reply.Unwrap())
-                    // verify if the response command is the correct on
-                    .Where(reply => reply.ClassID == encapsulated.Unwrap().ClassID && reply.CommandID == responseCommandID);
-                }
-                else
-                {
-                    pipeline = replyPipeline
-                    // deserialize the received payload to a command
-                    .Select(response => response.Payload.Deserialize<Command>())
-                    // verify if the response conmmand is the correct on
-                    .Where(reply => reply.ClassID == command.ClassID && reply.CommandID == responseCommandID);
-                }
+            if (command is EncapsulatedCommand encapsulated)
+            {
+                pipeline = replyPipeline
+                // deserialize the received payload to a command
+                .Select(response => response.Payload.Deserialize<EncapsulatedCommand>())
+                // verify if the encapsulated conmmand is the correct on
+                .Where(reply => reply.ClassID == encapsulated.ClassID && reply.CommandID == encapsulated.CommandID)
+                // verify if the endpoint the correct on
+                .Where(reply => reply.SourceEndpointID == encapsulated.TargetEndpointID)
+                // select the inner command
+                .Select(reply => reply.Unwrap())
+                // verify if the response command is the correct on
+                .Where(reply => reply.ClassID == encapsulated.Unwrap().ClassID && reply.CommandID == responseCommandID);
+            }
+            else
+            {
+                pipeline = replyPipeline
+                // deserialize the received payload to a command
+                .Select(response => response.Payload.Deserialize<Command>())
+                // verify if the response conmmand is the correct on
+                .Where(reply => reply.ClassID == command.ClassID && reply.CommandID == responseCommandID);
+            }
 
-                return await Send(Encode(controllerRequest, callbackID), pipeline, cancellation);
+            return await Send(Encode(controllerRequest, callbackID), pipeline, cancellation);
         }
 
         public IObservable<Command> ReceiveNodeEvents(byte nodeID, byte endpointID, Command command)
         {
+            if (nodeID == 0)
+                throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
+            if (command == null)
+                throw new ArgumentNullException(nameof(command));
+
             // addressing an enpoint?
             if (endpointID != 0)
             {
@@ -354,6 +416,9 @@ namespace ZWave4Net.Channel
 
         public IObservable<NodeUpdate> ReceiveNodeUpdates(byte nodeID)
         {
+            if (nodeID == 0)
+                throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
+
             return Messages
             // decode the response
             .Select(message => Decode(message, hasCallbackID: false))

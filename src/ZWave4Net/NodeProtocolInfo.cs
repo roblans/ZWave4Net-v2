@@ -15,6 +15,9 @@ namespace ZWave4Net
 
         void IPayloadSerializable.Read(PayloadReader reader)
         {
+            if (reader == null)
+                throw new ArgumentNullException(nameof(reader));
+
             Capability = reader.ReadByte();
             Security = (Security)reader.ReadByte();
             Reserved = reader.ReadByte();

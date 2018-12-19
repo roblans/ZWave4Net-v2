@@ -21,6 +21,11 @@ namespace ZWave4Net
 
         public Node(ZWaveController controller, byte nodeID) : base(controller, nodeID, 0)
         {
+            if (controller == null)
+                throw new ArgumentNullException(nameof(controller));
+            if (nodeID == 0)
+                throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
+
             Endpoints = new EndpointCollection(this);
         }
 

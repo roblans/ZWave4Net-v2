@@ -22,7 +22,12 @@ namespace ZWave4Net
 
         private static IEnumerable<CommandClassService> CreateCommandClasseServices(ZWaveController controller, byte nodeID, byte endpointID)
         {
-            foreach(var commandClasseServiceType in _commandClasseServiceTypes)
+            if (controller == null)
+                throw new ArgumentNullException(nameof(controller));
+            if (nodeID == 0)
+                throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
+
+            foreach (var commandClasseServiceType in _commandClasseServiceTypes)
             {
                 yield return (CommandClassService)Activator.CreateInstance(commandClasseServiceType, controller, nodeID, endpointID);
             }
@@ -31,6 +36,10 @@ namespace ZWave4Net
 
         public static Node CreateNode(ZWaveController controller, byte nodeID)
         {
+            if (controller == null)
+                throw new ArgumentNullException(nameof(controller));
+            if (nodeID == 0)
+                throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
 
             var generator = new ProxyGenerator();
             var options = new ProxyGenerationOptions();
@@ -44,6 +53,11 @@ namespace ZWave4Net
 
         public static Endpoint CreateEndpoint(ZWaveController controller, byte nodeID, byte endpointID)
         {
+            if (controller == null)
+                throw new ArgumentNullException(nameof(controller));
+            if (nodeID == 0)
+                throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
+
             var generator = new ProxyGenerator();
 
             var options = new ProxyGenerationOptions();

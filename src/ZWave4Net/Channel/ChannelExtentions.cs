@@ -12,6 +12,11 @@ namespace ZWave4Net.Channel
     {
         public static async Task<NeighborUpdateStatus> SendRequestNeighborUpdate(this ZWaveChannel channel, byte nodeID, IProgress<NeighborUpdateStatus> progress, CancellationToken cancellationToken = default(CancellationToken))
         {
+            if (channel == null)
+                throw new ArgumentNullException(nameof(channel));
+            if (nodeID == 0)
+                throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
+
             var responseTimeout = TimeSpan.FromSeconds(5);
             var callbackID = ZWaveChannel.GetNextCallbackID();
 
@@ -43,6 +48,11 @@ namespace ZWave4Net.Channel
 
         public static async Task<NodeInfo> SendRequestNodeInfo(this ZWaveChannel channel, byte nodeID, CancellationToken cancellationToken = default(CancellationToken))
         {
+            if (channel == null)
+                throw new ArgumentNullException(nameof(channel));
+            if (nodeID == 0)
+                throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
+
             var command = new ControllerRequest(Function.RequestNodeInfo, new Payload(nodeID));
             var request = channel.Encode(command, null);
 

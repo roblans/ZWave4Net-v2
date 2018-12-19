@@ -40,7 +40,10 @@ namespace ZWave4Net
                 .TakeWhile(x => x != 0xEF)
                 .Select(x => (CommandClass)x);
 
-            SupportedCommandClasses = new[] { CommandClass.Basic }.Concat(commandClasses).OrderBy(element => element.ToString()).ToArray();
+            SupportedCommandClasses = new[] { CommandClass.Basic }.Concat(commandClasses)
+                .Distinct()
+                .OrderBy(element => element.ToString())
+                .ToArray();
         }
 
         void IPayloadSerializable.Write(PayloadWriter writer)
