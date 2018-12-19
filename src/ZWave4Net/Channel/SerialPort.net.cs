@@ -53,7 +53,6 @@ namespace ZWave4Net.Channel
             return Task.CompletedTask;
         }
 
-        [System.Diagnostics.DebuggerHidden()] // prevent debugger break on ThrowIfCancellationRequested
         public Task<byte[]> Read(int length, CancellationToken cancellation = default(CancellationToken))
         {
             if (length < 0)

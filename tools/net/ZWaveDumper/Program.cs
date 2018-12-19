@@ -17,7 +17,7 @@ namespace ZWaveDumper
         {
             Logging.Factory.Subscribe((message) =>
             {
-                if (message.Level > LogLevel.Warning)
+                if (message.Level >= LogLevel.Warning)
                 {
                     WriteLogRecord(message);
                 }
