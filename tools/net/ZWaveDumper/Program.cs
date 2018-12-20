@@ -67,7 +67,8 @@ namespace ZWaveDumper
             WriteInfo($"node {node}");
             WriteSeparator();
 
-            WriteInfo($"ProtocolInfo: Specific = {node.SpecificType}, Generic = {node.GenericType}, Basic = {node.BasicType}, Listening = {node.IsListening} ");
+            WriteInfo($"Type: {node.NodeType}");
+            WriteInfo($"Listening: {node.IsListening}");
 
             var neighbours = await node.GetNeighbours();
             WriteInfo($"Neighbours: {string.Join(", ", neighbours.Cast<object>().ToArray())}");
@@ -82,10 +83,7 @@ namespace ZWaveDumper
                     var commandClasses = nodeInfo.SupportedCommandClasses;
                     WriteInfo($"Supported CommandClasses: {string.Join(", ", commandClasses)}");
 
-                    if (commandClasses.Contains(CommandClass.Basic))
-                    {
-                        await Dump(node as IBasic);
-                    }
+                    await Dump(node as IBasic);
 
                     if (commandClasses.Contains(CommandClass.Association))
                     {

@@ -17,6 +17,21 @@ namespace ZWave4Net
             return instance;
         }
 
+        internal static SpecificType ReadSpecificType(this PayloadReader reader, GenericType genericType)
+        {
+            if (reader == null)
+                throw new ArgumentNullException(nameof(reader));
+
+            var specificType = reader.ReadByte();
+            if (specificType == 0)
+            {
+                return SpecificType.NotUsed;
+            }
+            else
+            {
+                return (SpecificType)((int)genericType << 16 | specificType);
+            }
+        }
         public static void WriteObject<T>(this PayloadWriter writer, T value) where T : IPayloadSerializable
         {
             if (writer == null)

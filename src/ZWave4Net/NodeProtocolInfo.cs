@@ -23,17 +23,7 @@ namespace ZWave4Net
             Reserved = reader.ReadByte();
             BasicType = (BasicType)reader.ReadByte();
             GenericType = (GenericType)reader.ReadByte();
-
-            var specificType = reader.ReadByte();
-            if (specificType == 0)
-            {
-                SpecificType = SpecificType.NotUsed;
-            }
-            else
-            {
-                SpecificType = (SpecificType)((int)GenericType << 16 | specificType);
-            }
-
+            SpecificType = reader.ReadSpecificType(GenericType);
         }
 
         void IPayloadSerializable.Write(PayloadWriter writer)

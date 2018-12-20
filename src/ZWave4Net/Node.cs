@@ -12,9 +12,7 @@ namespace ZWave4Net
 {
     public class Node : Endpoint, IEquatable<Node>
     {
-        public BasicType BasicType { get; private set; }
-        public GenericType GenericType { get; private set; }
-        public SpecificType SpecificType { get; private set; }
+        public NodeType NodeType { get; private set; }
         public Security Security { get; private set; }
         public bool IsListening { get; private set; }
 
@@ -34,9 +32,8 @@ namespace ZWave4Net
         {
             var command = new ControllerRequest(Function.GetNodeProtocolInfo, new Payload(NodeID));
             var protocolInfo = await Channel.Send<NodeProtocolInfo>(command, CancellationToken.None);
-            BasicType = protocolInfo.BasicType;
-            GenericType = protocolInfo.GenericType;
-            SpecificType = protocolInfo.SpecificType;
+
+            NodeType = new NodeType(protocolInfo.BasicType, protocolInfo.GenericType, protocolInfo.SpecificType);
             Security = protocolInfo.Security;
             IsListening = protocolInfo.IsListening;
         }
