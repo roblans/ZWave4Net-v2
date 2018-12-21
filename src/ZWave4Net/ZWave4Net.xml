@@ -1,0 +1,204 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ZWave4Net</name>
+    </assembly>
+    <members>
+        <member name="T:ZWave4Net.Channel.Protocol.EventMessage">
+            <summary>
+            Event from controller to host
+            </summary>
+        </member>
+        <member name="F:ZWave4Net.Channel.Protocol.Frames.DataFrameType.REQ">
+            <summary>
+            Request. This type MUST be used for unsolicited messages. API callback messages MUST use the Request type.
+            </summary>
+        </member>
+        <member name="F:ZWave4Net.Channel.Protocol.Frames.DataFrameType.RES">
+            <summary>
+            Response. This type MUST be used for messages that are responses to Requests.
+            </summary>
+        </member>
+        <member name="T:ZWave4Net.Channel.Protocol.Frames.Frame">
+            <summary>
+            Base class for all frame types
+            </summary>
+        </member>
+        <member name="F:ZWave4Net.Channel.Protocol.Frames.Frame.ACK">
+            <summary>
+            The ACK frame indicates that the receiving end received a valid Data frame
+            </summary>
+        </member>
+        <member name="F:ZWave4Net.Channel.Protocol.Frames.Frame.NAK">
+            <summary>
+            The NAK frame indicates that the receiving end received a Data frame with errors
+            </summary>
+        </member>
+        <member name="F:ZWave4Net.Channel.Protocol.Frames.Frame.CAN">
+            <summary>
+            The CAN frame indicates that the receiving end discarded an otherwise valid Data frame. 
+            The CAN frame is used to resolve race conditions, where both ends send a Data frame and subsequently expects an ACK frame from the other end
+            </summary>
+        </member>
+        <member name="F:ZWave4Net.Channel.Protocol.Frames.Frame.SOF">
+            <summary>
+            The SOF frame contains the Serial API command including parameters for the command in question
+            </summary>
+        </member>
+        <member name="F:ZWave4Net.Channel.Protocol.Frames.Frame.Header">
+            <summary>
+            The header of the frame
+            </summary>
+        </member>
+        <member name="F:ZWave4Net.Channel.Protocol.Frames.FrameHeader.SOF">
+            <summary>
+            The SOF frame contains the Serial API command including parameters for the command in question
+            </summary>
+        </member>
+        <member name="F:ZWave4Net.Channel.Protocol.Frames.FrameHeader.ACK">
+            <summary>
+            The ACK frame indicates that the receiving end received a valid Data frame
+            </summary>
+        </member>
+        <member name="F:ZWave4Net.Channel.Protocol.Frames.FrameHeader.NAK">
+            <summary>
+            The NAK frame indicates that the receiving end received a Data frame with errors
+            </summary>
+        </member>
+        <member name="F:ZWave4Net.Channel.Protocol.Frames.FrameHeader.CAN">
+            <summary>
+            The CAN frame indicates that the receiving end discarded an otherwise valid Data frame. 
+            The CAN frame is used to resolve race conditions, where both ends send a Data frame and subsequently expects an ACK frame from the other end
+            </summary>
+        </member>
+        <member name="T:ZWave4Net.Channel.Protocol.RequestMessage">
+            <summary>
+            Message from host to controller
+            </summary>
+        </member>
+        <member name="T:ZWave4Net.Channel.Protocol.ResponseMessage">
+            <summary>
+            Response from controller to host
+            </summary>
+        </member>
+        <member name="F:ZWave4Net.Channel.Protocol.TransmissionState.CompleteOK">
+            <summary> 
+            Successfully 
+            </summary> 
+        </member>
+        <member name="F:ZWave4Net.Channel.Protocol.TransmissionState.CompleteNoAcknowledge">
+            <summary> 
+            No acknowledge is received before timeout from the destination node.  
+            Acknowledge is discarded in case it is received after the timeout. 
+            </summary> 
+        </member>
+        <member name="F:ZWave4Net.Channel.Protocol.TransmissionState.CompleteFail">
+            <summary> 
+            Not possible to transmit data because the Z-Wave network is busy (jammed). 
+            </summary> 
+        </member>
+        <member name="F:ZWave4Net.Channel.Protocol.TransmissionState.CompleteNoRoute">
+            <summary> 
+            no route found in Assign Route  
+            </summary> 
+        </member>
+        <member name="F:ZWave4Net.Channel.Protocol.TransmissionState.NoAcknowledge">
+            <summary> 
+            No Communication ACK received 
+            </summary> 
+        </member>
+        <member name="F:ZWave4Net.Channel.Protocol.TransmissionState.ResMissing">
+            <summary> 
+            No response received 
+            </summary> 
+        </member>
+        <member name="T:ZWave4Net.CommandClasses.IAssociation">
+            <summary>
+            The Association interface is used to manage associations to NodeID destinations. A NodeID destination may be a simple device or the Root Device of a Multi Channel device.
+            </summary>
+        </member>
+        <member name="M:ZWave4Net.CommandClasses.IAssociation.Get(System.Byte,System.Threading.CancellationToken)">
+            <summary>
+            Request the current destinations of a given association group.
+            </summary>
+            <param name="groupID">This field is used to specify the actual association group. Grouping Identifiers MUST be assigned in a consecutive range starting from 1.</param>
+            <param name="cancellation">The token to monitor for cancellation requests. The default value is None.</param>
+            <returns>A task that represents the asynchronous read operation</returns>
+        </member>
+        <member name="M:ZWave4Net.CommandClasses.IAssociation.GetGroupings(System.Threading.CancellationToken)">
+            <summary>
+            This command is used to request the number of association groups that this node supports.
+            </summary>
+            <param name="cancellation">The token to monitor for cancellation requests. The default value is None.</param>
+            <returns>A task that represents the asynchronous read operation</returns>
+        </member>
+        <member name="M:ZWave4Net.CommandClasses.IAssociation.Remove(System.Byte,System.Byte[],System.Threading.CancellationToken)">
+            <summary>
+            This command is used to remove destinations from a given association group.
+            </summary>
+            <param name="groupID">This field is used to specify from which association group the specified NodeID destinations should be removed.</param>
+            <param name="nodes">This field is used to specify from which association group the specified NodeID destinations should be removed.</param>
+            <param name="cancellation">The token to monitor for cancellation requests. The default value is None.</param>
+            <returns>A task that represents the asynchronous read operation</returns>
+        </member>
+        <member name="M:ZWave4Net.CommandClasses.IAssociation.Set(System.Byte,System.Byte[],System.Threading.CancellationToken)">
+            <summary>
+            This command is used to add destinations to a given association group.
+            </summary>
+            <param name="groupID">This field is used to specify the actual association group. Grouping Identifiers MUST be assigned in a consecutive range starting from 1.</param>
+            <param name="nodes">This field specifies a list of NodeIDs that are to be added to the specified association group</param>
+            <param name="cancellation">The token to monitor for cancellation requests. The default value is None.</param>
+            <returns>A task that represents the asynchronous read operation</returns>
+        </member>
+        <member name="T:ZWave4Net.CommandClasses.IBasic">
+            <summary>
+            The IBasic interface allows a controlling device to operate the primary functionality of a supporting device without any further knowledge.
+            </summary>
+        </member>
+        <member name="M:ZWave4Net.CommandClasses.IBasic.Get(System.Threading.CancellationToken)">
+            <summary>
+            Request the status of a supporting device
+            </summary>
+            <param name="cancellation">The token to monitor for cancellation requests. The default value is None.</param>
+            <returns>A task that represents the asynchronous read operation</returns>
+        </member>
+        <member name="M:ZWave4Net.CommandClasses.IBasic.Set(System.Byte,System.Threading.CancellationToken)">
+            <summary>
+            Set a value in a supporting device.
+            </summary>
+            <param name="value">The value</param>
+            <param name="cancellation">The token to monitor for cancellation requests. The default value is None.</param>
+            <returns>A task that represents the asynchronous read operation</returns>
+        </member>
+        <member name="P:ZWave4Net.CommandClasses.IBasic.Reports">
+            <summary>
+            Advertises the status of the primary functionality of the device
+            </summary>
+        </member>
+        <member name="T:ZWave4Net.CommandClasses.ISwitchBinary">
+            <summary>
+            The Binary Switch interface is used to control devices with On/Off or Enable/Disable capability
+            </summary>
+        </member>
+        <member name="M:ZWave4Net.CommandClasses.ISwitchBinary.Get(System.Threading.CancellationToken)">
+            <summary>
+            The Get command is used to request the status of a device with On/Off or Enable/Disable capability
+            </summary>
+            <param name="cancellation">The token to monitor for cancellation requests. The default value is None.</param>
+            <returns>A task that represents the asynchronous read operation</returns>
+        </member>
+        <member name="M:ZWave4Net.CommandClasses.ISwitchBinary.Set(System.Boolean,System.Threading.CancellationToken)">
+            <summary>
+            The Set command is used to set a value
+            </summary>
+            <param name="value">The value</param>
+            <param name="cancellation">The token to monitor for cancellation requests. The default value is None.</param>
+            <returns>A task that represents the asynchronous read operation</returns>
+        </member>
+        <member name="P:ZWave4Net.CommandClasses.ISwitchBinary.Reports">
+            <summary>
+            Advertises the status of a device with On/Off or Enable/Disable capability.
+            </summary>
+        </member>
+    </members>
+</doc>

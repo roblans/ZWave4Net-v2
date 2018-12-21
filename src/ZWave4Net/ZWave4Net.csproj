@@ -4,6 +4,11 @@
     <TargetFrameworks>netstandard2.0;netcoreapp2.0;net472</TargetFrameworks>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
+    <DocumentationFile>d:\Workspaces\GitHub\ZWave4Net-v2\src\ZWave4Net\ZWave4Net.xml</DocumentationFile>
+    <NoWarn>1701;1702;1591</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Castle.Core" Version="4.3.1" />
     <PackageReference Include="System.Reactive" Version="4.1.2" />
