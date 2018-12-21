@@ -54,7 +54,7 @@ namespace ZWave4Net.CommandClasses.Services
             return Send(command, cancellation);
         }
 
-        public Task<AssociationGroupingsReport> GroupingsGet(CancellationToken cancellation = default(CancellationToken))
+        public Task<AssociationGroupingsReport> GetGroupings(CancellationToken cancellation = default(CancellationToken))
         {
             var command = new Channel.Command(CommandClass, Command.GroupingsGet);
             return Send<AssociationGroupingsReport>(command, Command.GroupingsReport, cancellation);

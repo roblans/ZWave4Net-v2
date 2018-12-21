@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ZWave4Net.CommandClasses
 {
-    public class BinarySwitchReport : Report
+    public class SwitchBinaryReport : Report
     {
         public bool Value { get; private set; }
 

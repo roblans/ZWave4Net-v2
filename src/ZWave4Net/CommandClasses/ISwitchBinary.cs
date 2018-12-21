@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace ZWave4Net.CommandClasses
 {
-    public interface IBinarySwitch
+    public interface ISwitchBinary
     {
-        Task<BinarySwitchReport> Get(CancellationToken cancellation = default(CancellationToken));
+        Task<SwitchBinaryReport> Get(CancellationToken cancellation = default(CancellationToken));
         Task Set(bool value, CancellationToken cancellation = default(CancellationToken));
-        IObservable<BinarySwitchReport> Reports { get; }
+        IObservable<SwitchBinaryReport> Reports { get; }
     }
 }

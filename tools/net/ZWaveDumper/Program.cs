@@ -90,9 +90,9 @@ namespace ZWaveDumper
                         await Dump(node as IAssociation);
                     }
 
-                    if (commandClasses.Contains(CommandClass.BinarySwitch))
+                    if (commandClasses.Contains(CommandClass.SwitchBinary))
                     {
-                        await Dump(node as IBinarySwitch);
+                        await Dump(node as ISwitchBinary);
                     }
                 }
                 catch (Exception ex)
@@ -119,7 +119,7 @@ namespace ZWaveDumper
         {
             try
             {
-                var groups = await association.GroupingsGet();
+                var groups = await association.GetGroupings();
                 WriteInfo($"Association: Groups = {groups.SupportedGroupings}");
 
                 for (byte group = 1; group <= groups.SupportedGroupings; group++)
@@ -134,7 +134,7 @@ namespace ZWaveDumper
             }
         }
 
-        private static async Task Dump(IBinarySwitch binarySwitch)
+        private static async Task Dump(ISwitchBinary binarySwitch)
         {
             try
             {

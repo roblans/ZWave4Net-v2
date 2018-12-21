@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace ZWave4Net.CommandClasses.Services
 {
-    internal class BinarySwitchService : CommandClassService, IBinarySwitch
+    internal class SwitchBinaryService : CommandClassService, ISwitchBinary
     {
         enum Command : byte
         {
@@ -17,15 +17,15 @@ namespace ZWave4Net.CommandClasses.Services
             Report = 0x03
         }
 
-        public BinarySwitchService(ZWaveController controller, byte nodeID, byte endpointID)
-            : base(CommandClass.BinarySwitch, controller, nodeID, endpointID)
+        public SwitchBinaryService(ZWaveController controller, byte nodeID, byte endpointID)
+            : base(CommandClass.SwitchBinary, controller, nodeID, endpointID)
         {
         }
 
-        public async Task<BinarySwitchReport> Get(CancellationToken cancellation = default(CancellationToken))
+        public async Task<SwitchBinaryReport> Get(CancellationToken cancellation = default(CancellationToken))
         {
             var command = new Channel.Command(CommandClass, Command.Get);
-            return await Send<BinarySwitchReport>(command, Command.Report, cancellation);
+            return await Send<SwitchBinaryReport>(command, Command.Report, cancellation);
         }
 
         public Task Set(bool value, CancellationToken cancellation = default(CancellationToken))
@@ -34,9 +34,9 @@ namespace ZWave4Net.CommandClasses.Services
             return Send(command, cancellation); 
         }
 
-        public IObservable<BinarySwitchReport> Reports
+        public IObservable<SwitchBinaryReport> Reports
         {
-            get { return Reports<BinarySwitchReport>(Command.Report); }
+            get { return Reports<SwitchBinaryReport>(Command.Report); }
         }
     }
 }
