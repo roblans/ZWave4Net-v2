@@ -34,7 +34,6 @@ namespace ZWave4Net.Channel
             _port.Open();
             _port.DiscardInBuffer();
             _port.DiscardOutBuffer();
-            _port.ReadTimeout = 500;
 
             IsOpen = true;
 
@@ -71,7 +70,7 @@ namespace ZWave4Net.Channel
 
                     try
                     {
-                        read += _port.Read(buffer, read, length - read);
+                        read += _port.Read(buffer, read, Math.Min(_port.BytesToRead, length - read));
                     }
                     catch (System.IO.IOException ex)
                     {
