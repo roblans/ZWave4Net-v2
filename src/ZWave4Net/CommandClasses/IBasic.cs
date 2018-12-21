@@ -6,10 +6,29 @@ using System.Threading.Tasks;
 
 namespace ZWave4Net.CommandClasses
 {
+    /// <summary>
+    /// The IBasic interface allows a controlling device to operate the primary functionality of a supporting device without any further knowledge.
+    /// </summary>
     public interface IBasic
     {
+        /// <summary>
+        /// Request the status of a supporting device
+        /// </summary>
+        /// <param name="cancellation">The token to monitor for cancellation requests. The default value is None.</param>
+        /// <returns>A task that represents the asynchronous read operation</returns>
         Task<BasicReport> Get(CancellationToken cancellation = default(CancellationToken));
+
+        /// <summary>
+        /// Set a value in a supporting device.
+        /// </summary>
+        /// <param name="value">The value</param>
+        /// <param name="cancellation">The token to monitor for cancellation requests. The default value is None.</param>
+        /// <returns>A task that represents the asynchronous read operation</returns>
         Task Set(byte value, CancellationToken cancellation = default(CancellationToken));
+
+        /// <summary>
+        /// Advertises the status of the primary functionality of the device
+        /// </summary>
         IObservable<BasicReport> Reports { get; }
     }
 }
