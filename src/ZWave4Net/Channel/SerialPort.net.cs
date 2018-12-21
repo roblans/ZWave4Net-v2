@@ -76,10 +76,6 @@ namespace ZWave4Net.Channel
                     {
                         throw new StreamClosedException(ex.Message, ex);
                     }
-                    catch (TimeoutException)
-                    {
-                        continue;
-                    }
                 }
                 return buffer;
             }, cancellation);
