@@ -6,10 +6,24 @@ using ZWave4Net.CommandClasses;
 
 namespace ZWave4Net
 {
+    /// <summary>
+    /// Represents a Node Information Frame
+    /// </summary>
     public class NodeInfo : IPayloadSerializable
     {
+        /// <summary>
+        /// The NodeID of the node
+        /// </summary>
         public byte NodeID { get; private set; }
+
+        /// <summary>
+        /// The type of the node
+        /// </summary>
         public NodeType NodeType { get; private set; }
+
+        /// <summary>
+        /// Command Classes implemented by the node
+        /// </summary>
         public CommandClass[] SupportedCommandClasses { get; private set; } = new CommandClass[0];
 
         public override string ToString()

@@ -6,6 +6,9 @@ using System.Collections;
 
 namespace ZWave4Net
 {
+    /// <summary>
+    ///  Collection of nodes for a controller
+    /// </summary>
     public class NodeCollection : IEnumerable<Node>
     {
         private readonly List<Node> _nodes = new List<Node>();
@@ -28,6 +31,11 @@ namespace ZWave4Net
             return GetEnumerator();
         }
 
+        /// <summary>
+        /// Gets the Node for the specified ID.
+        /// </summary>
+        /// <param name="nodeID">The ID of the node to get</param>
+        /// <returns>The node, or NULL if the Node doesn't exists</returns>
         public Node this[byte nodeID]
         {
             get { return _nodes.FirstOrDefault(element => element.NodeID == nodeID); }

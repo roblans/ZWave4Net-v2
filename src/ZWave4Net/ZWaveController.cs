@@ -11,17 +11,42 @@ using ZWave4Net.Channel.Protocol.Frames;
 
 namespace ZWave4Net
 {
+    /// <summary>
+    /// A controller is a Z-Wave device that has a full routing table and is therefore able to communicate with all nodes in the Z-Wave network
+    /// </summary>
     public class ZWaveController
     {
         internal readonly ZWaveChannel Channel;
 
+        /// <summary>
+        /// An unique identifier to separate networks from each other
+        /// </summary>
         public uint HomeID { get; private set; }
+
+        /// <summary>
+        /// The NodeID of the controller
+        /// </summary>
         public byte NodeID { get; private set; }
+
+        /// <summary>
+        /// The version of the controller
+        /// </summary>
         public string Version { get; private set; }
+
+        /// <summary>
+        /// The ChipType of the controller
+        /// </summary>
         public ZWaveChipType ChipType { get; private set; }
 
+        /// <summary>
+        /// The collection of nodes
+        /// </summary>
         public readonly NodeCollection Nodes = new NodeCollection();
 
+        /// <summary>
+        /// Initializes an new instance of the ZWaveController
+        /// </summary>
+        /// <param name="port">The serial port to use</param>
         public ZWaveController(ISerialPort port)
         {
             if (port == null)
@@ -31,6 +56,11 @@ namespace ZWave4Net
         }
 
 #if NET472
+
+        /// <summary>
+        /// Initializes an new instance of the ZWaveController
+        /// </summary>
+        /// <param name="portName">The name of the serial port to use</param>
         public ZWaveController(string portName)
         {
             if (portName == null)
@@ -46,6 +76,11 @@ namespace ZWave4Net
             return endpointID != 0 ? $"{nodeID:D3}.{endpointID:D3}" : $"{nodeID:D3}";
         }
 
+        /// <summary>
+        /// Opens the controller
+        /// </summary>
+        /// <param name="softReset">True to perform a sofreset, False otherwise</param>
+        /// <returns>A task that represents the asynchronous operation</returns>
         public async Task Open(bool softReset = true)
         {
             await Channel.Open(softReset);
@@ -88,6 +123,10 @@ namespace ZWave4Net
             }
         }
 
+        /// <summary>
+        /// Closes the controller
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation</returns>
         public async Task Close()
         {
             await Channel.Close();

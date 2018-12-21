@@ -10,12 +10,29 @@ using System.Reactive.Linq;
 
 namespace ZWave4Net
 {
+    /// <summary>
+    /// An individual node in a network
+    /// </summary>
     public class Node : Endpoint, IEquatable<Node>
     {
+        /// <summary>
+        /// The type of the node
+        /// </summary>
         public NodeType NodeType { get; private set; }
+        
+        /// <summary>
+        /// The security of the node
+        /// </summary>
         public Security Security { get; private set; }
+
+        /// <summary>
+        /// Z-Wave devices that are plugged in to power and keep their receiver on all the time. Listening devices act as repeaters and therefore extend the Z-Wave mesh network
+        /// </summary>
         public bool IsListening { get; private set; }
 
+        /// <summary>
+        /// The collection of endpoints for this node
+        /// </summary>
         public readonly EndpointCollection Endpoints;
 
         internal Node(ZWaveController controller, byte nodeID) : base(controller, nodeID, 0)

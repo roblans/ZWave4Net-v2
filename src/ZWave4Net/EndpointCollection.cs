@@ -7,6 +7,9 @@ using System.Collections.Concurrent;
 
 namespace ZWave4Net
 {
+    /// <summary>
+    ///  Collection of endpoints for a node
+    /// </summary>
     public class EndpointCollection : IEnumerable<Endpoint>
     {
         private ConcurrentDictionary<byte, Endpoint> _endpoints = new ConcurrentDictionary<byte, Endpoint>();
@@ -32,6 +35,11 @@ namespace ZWave4Net
             return GetEnumerator();
         }
 
+        /// <summary>
+        /// Gets the Endpoint for the specified ID.
+        /// </summary>
+        /// <param name="endpointID">The ID of the Endpoint to get</param>
+        /// <returns>The Endpoint for the specified ID</returns>
         public Endpoint this[byte endpointID]
         {
             get { return _endpoints.GetOrAdd(endpointID, Node.CreateEndpoint(endpointID)); }
