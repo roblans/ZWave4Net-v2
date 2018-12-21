@@ -16,7 +16,7 @@ namespace ZWave4Net
         {
             _commandClasseServiceTypes = typeof(CommandClassService).Assembly.GetTypes()
                 .Where(element => typeof(CommandClassService).IsAssignableFrom(element))
-                .Where(element => element != typeof(CommandClassService))
+                .Where(element => !element.IsAbstract)
                 .ToArray();
         }
 
@@ -33,6 +33,15 @@ namespace ZWave4Net
             }
         }
 
+        private static ProxyGenerationOptions CreateProxyGeneratorOptions(ZWaveController controller, byte nodeID, byte endpointID)
+        {
+            var options = new ProxyGenerationOptions();
+            foreach (var service in CreateCommandClasseServices(controller, nodeID, endpointID))
+            {
+                options.AddMixinInstance(service);
+            }
+            return options;
+        }
 
         public static Node CreateNode(ZWaveController controller, byte nodeID)
         {
@@ -42,12 +51,7 @@ namespace ZWave4Net
                 throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
 
             var generator = new ProxyGenerator();
-            var options = new ProxyGenerationOptions();
-            foreach (var service in CreateCommandClasseServices(controller, nodeID, 0))
-            {
-                options.AddMixinInstance(service);
-            }
-
+            var options = CreateProxyGeneratorOptions(controller, nodeID, 0);
             return (Node)generator.CreateClassProxy(typeof(Node), options, new object[] { controller, nodeID });
         }
 
@@ -59,13 +63,7 @@ namespace ZWave4Net
                 throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
 
             var generator = new ProxyGenerator();
-
-            var options = new ProxyGenerationOptions();
-            foreach (var service in CreateCommandClasseServices(controller, nodeID, endpointID))
-            {
-                options.AddMixinInstance(service);
-            }
-
+            var options = CreateProxyGeneratorOptions(controller, nodeID, endpointID);
             return (Endpoint)generator.CreateClassProxy(typeof(Endpoint), options, new object[] { controller, nodeID, endpointID});
         }
     }

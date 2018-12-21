@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace ZWave4Net.CommandClasses.Services
 {
-    internal class CommandClassService
+    internal abstract class CommandClassService
     {
         public readonly CommandClass CommandClass;
         public readonly ZWaveController Controller;
