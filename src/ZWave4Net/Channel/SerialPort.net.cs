@@ -52,7 +52,7 @@ namespace ZWave4Net.Channel
             return Task.CompletedTask;
         }
 
-        public Task<byte[]> Read(int length, CancellationToken cancellation = default(CancellationToken))
+        public Task<byte[]> Read(int length, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (length < 0)
                 throw new ArgumentOutOfRangeException(nameof(length), length, "length cannot be less than 0");
@@ -66,7 +66,7 @@ namespace ZWave4Net.Channel
 
                 while (read < length)
                 {
-                    cancellation.ThrowIfCancellationRequested();
+                    cancellationToken.ThrowIfCancellationRequested();
 
                     try
                     {
@@ -78,10 +78,10 @@ namespace ZWave4Net.Channel
                     }
                 }
                 return buffer;
-            }, cancellation);
+            }, cancellationToken);
         }
 
-        public Task Write(byte[] values, CancellationToken cancellation = default(CancellationToken))
+        public Task Write(byte[] values, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (values == null)
                 throw new ArgumentNullException(nameof(values));
@@ -91,7 +91,7 @@ namespace ZWave4Net.Channel
             return Task.Run(() =>
             {
                 _port.Write(values, 0, values.Length);
-            }, cancellation);
+            }, cancellationToken);
         }
     }
 #endif

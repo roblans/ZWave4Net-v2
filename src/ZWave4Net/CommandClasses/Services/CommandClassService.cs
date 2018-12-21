@@ -26,20 +26,20 @@ namespace ZWave4Net.CommandClasses.Services
             EndpointID = endpointID;
         }
 
-        protected Task Send(Command command, CancellationToken cancellation = default(CancellationToken))
+        protected Task Send(Command command, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (command == null)
                 throw new ArgumentNullException(nameof(command));
 
-            return Controller.Channel.Send(NodeID, EndpointID, command, cancellation);
+            return Controller.Channel.Send(NodeID, EndpointID, command, cancellationToken);
         }
 
-        protected async Task<T> Send<T>(Command command, Enum responseCommand, CancellationToken cancellation = default(CancellationToken)) where T : Report, new()
+        protected async Task<T> Send<T>(Command command, Enum responseCommand, CancellationToken cancellationToken = default(CancellationToken)) where T : Report, new()
         {
             if (command == null)
                 throw new ArgumentNullException(nameof(command));
 
-            var reply = await Controller.Channel.Send(NodeID, EndpointID, command, Convert.ToByte(responseCommand), cancellation);
+            var reply = await Controller.Channel.Send(NodeID, EndpointID, command, Convert.ToByte(responseCommand), cancellationToken);
 
             // push NodeID and EndpointID in the payload so T has access to the node and the endpoint
             return new Payload(new[] { NodeID, EndpointID }.Concat(reply.Payload))

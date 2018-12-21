@@ -14,17 +14,17 @@ namespace ZWave4Net.CommandClasses
         /// <summary>
         /// The Get command is used to request the status of a device with On/Off or Enable/Disable capability
         /// </summary>
-        /// <param name="cancellation">The token to monitor for cancellation requests. The default value is None.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
         /// <returns>A task that represents the asynchronous read operation</returns>
-        Task<SwitchBinaryReport> Get(CancellationToken cancellation = default(CancellationToken));
+        Task<SwitchBinaryReport> Get(CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
         /// The Set command is used to set a value
         /// </summary>
         /// <param name="value">The value</param>
-        /// <param name="cancellation">The token to monitor for cancellation requests. The default value is None.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
         /// <returns>A task that represents the asynchronous read operation</returns>
-        Task Set(bool value, CancellationToken cancellation = default(CancellationToken));
+        Task Set(bool value, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
         /// Advertises the status of a device with On/Off or Enable/Disable capability.

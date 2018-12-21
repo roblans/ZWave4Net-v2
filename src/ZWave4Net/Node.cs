@@ -50,11 +50,14 @@ namespace ZWave4Net
             var command = new ControllerRequest(Function.GetNodeProtocolInfo, new Payload(NodeID));
             var protocolInfo = await Channel.Send<NodeProtocolInfo>(command, CancellationToken.None);
 
-            NodeType = new NodeType(protocolInfo.BasicType, protocolInfo.GenericType, protocolInfo.SpecificType);
+            NodeType = protocolInfo.NodeType;
             Security = protocolInfo.Security;
             IsListening = protocolInfo.IsListening;
         }
 
+        /// <summary>
+        /// Gets a value indicating whether this node is a controller 
+        /// </summary>
         public bool IsController
         {
             get { return NodeID == Controller.NodeID; }
@@ -65,11 +68,21 @@ namespace ZWave4Net
             return Factory.CreateEndpoint(Controller, NodeID, endpointID);
         }
 
+        /// <summary>
+        /// Gets the node information
+        /// </summary>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
+        /// <returns>A task that represents the asynchronous read operation</returns>
         public async Task<NodeInfo> GetNodeInfo(CancellationToken cancellationToken = default(CancellationToken))
         {
             return await Channel.SendRequestNodeInfo(NodeID, cancellationToken);
         }
 
+        /// <summary>
+        /// Gets the neighbours of the node
+        /// </summary>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
+        /// <returns>A task that represents the asynchronous read operation</returns>
         public async Task<Node[]> GetNeighbours(CancellationToken cancellationToken = default(CancellationToken))
         {
             var results = new List<Node>();
@@ -90,12 +103,20 @@ namespace ZWave4Net
             return results.ToArray();
         }
 
-
+        /// <summary>
+        /// Request the node to update it's neighbors
+        /// </summary>
+        /// <param name="progress">A callback delegate to report progress</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
+        /// <returns>A task that represents the asynchronous read operation</returns>
         public async Task<NeighborUpdateStatus> RequestNeighborUpdate(IProgress<NeighborUpdateStatus> progress = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             return await Channel.SendRequestNeighborUpdate(NodeID, progress, cancellationToken);
         }
 
+        /// <summary>
+        /// Advertises updates of the node
+        /// </summary>
         public IObservable<NodeUpdate> Updates
         {
             get { return Channel.ReceiveNodeUpdates(NodeID); }

@@ -17,28 +17,28 @@ namespace ZWave4Net.Channel.Protocol.Frames
             return values.Aggregate((byte)0xFF, (total, next) => total ^= next);
         }
 
-        public static Task WriteHeader(this IDuplexStream stream, FrameHeader header, CancellationToken cancellation = default(CancellationToken))
+        public static Task WriteHeader(this IDuplexStream stream, FrameHeader header, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (stream == null)
                 throw new ArgumentNullException(nameof(stream));
 
-            return stream.Write(new[] { (byte)header }, cancellation);
+            return stream.Write(new[] { (byte)header }, cancellationToken);
         }
 
-        public static async Task<byte> ReadByte(this IDuplexStream stream, CancellationToken cancellation = default(CancellationToken))
+        public static async Task<byte> ReadByte(this IDuplexStream stream, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (stream == null)
                 throw new ArgumentNullException(nameof(stream));
 
-            return (await stream.Read(1, cancellation)).Single();
+            return (await stream.Read(1, cancellationToken)).Single();
         }
 
-        public static async Task<FrameHeader> ReadHeader(this IDuplexStream stream, CancellationToken cancellation = default(CancellationToken))
+        public static async Task<FrameHeader> ReadHeader(this IDuplexStream stream, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (stream == null)
                 throw new ArgumentNullException(nameof(stream));
 
-            return (FrameHeader)(await stream.Read(1, cancellation)).Single();
+            return (FrameHeader)(await stream.Read(1, cancellationToken)).Single();
         }
     }
 }

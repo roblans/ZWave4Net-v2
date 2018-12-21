@@ -16,7 +16,7 @@ namespace ZWave4Net.Channel.Protocol.Frames
             Stream = stream ?? throw new ArgumentNullException(nameof(stream));
         }
 
-        public async Task Write(Frame frame, CancellationToken cancellation = default(CancellationToken))
+        public async Task Write(Frame frame, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (frame == null)
                 throw new ArgumentNullException(nameof(frame));
@@ -26,15 +26,15 @@ namespace ZWave4Net.Channel.Protocol.Frames
                 case FrameHeader.ACK:
                 case FrameHeader.NAK:
                 case FrameHeader.CAN:
-                    await Stream.WriteHeader(frame.Header, cancellation);
+                    await Stream.WriteHeader(frame.Header, cancellationToken);
                     break;
                 case FrameHeader.SOF:
-                    await Write((DataFrame)frame, cancellation);
+                    await Write((DataFrame)frame, cancellationToken);
                     break;
             }
         }
 
-        private async Task Write(DataFrame frame, CancellationToken cancellation = default(CancellationToken))
+        private async Task Write(DataFrame frame, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (frame == null)
                 throw new ArgumentNullException(nameof(frame));
@@ -61,7 +61,7 @@ namespace ZWave4Net.Channel.Protocol.Frames
             buffer[buffer.Length - 1] = buffer.Skip(1).Take(buffer.Length - 2).CalculateChecksum();
 
             // and write to stream
-            await Stream.Write(buffer.ToArray(), cancellation);
+            await Stream.Write(buffer.ToArray(), cancellationToken);
         }
     }
 }

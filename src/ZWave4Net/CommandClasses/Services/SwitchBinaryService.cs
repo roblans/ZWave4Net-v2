@@ -22,16 +22,16 @@ namespace ZWave4Net.CommandClasses.Services
         {
         }
 
-        public async Task<SwitchBinaryReport> Get(CancellationToken cancellation = default(CancellationToken))
+        public async Task<SwitchBinaryReport> Get(CancellationToken cancellationToken = default(CancellationToken))
         {
             var command = new Channel.Command(CommandClass, Command.Get);
-            return await Send<SwitchBinaryReport>(command, Command.Report, cancellation);
+            return await Send<SwitchBinaryReport>(command, Command.Report, cancellationToken);
         }
 
-        public Task Set(bool value, CancellationToken cancellation = default(CancellationToken))
+        public Task Set(bool value, CancellationToken cancellationToken = default(CancellationToken))
         {
             var command = new Channel.Command(CommandClass, Command.Set, (byte)(value ? 0xFF : 0x00));
-            return Send(command, cancellation); 
+            return Send(command, cancellationToken); 
         }
 
         public IObservable<SwitchBinaryReport> Reports

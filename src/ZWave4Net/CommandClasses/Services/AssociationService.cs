@@ -24,26 +24,26 @@ namespace ZWave4Net.CommandClasses.Services
         {
         }
 
-        public Task<AssociationReport> Get(byte groupID, CancellationToken cancellation = default(CancellationToken))
+        public Task<AssociationReport> Get(byte groupID, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (groupID == 0)
                 throw new ArgumentOutOfRangeException(nameof(groupID), groupID, "groupID must be greater than zero");
 
             var command = new Channel.Command(CommandClass, Command.Get, groupID);
-            return Send<AssociationReport>(command, Command.Report, cancellation);
+            return Send<AssociationReport>(command, Command.Report, cancellationToken);
         }
 
-        public Task Set(byte groupID, byte[] nodes, CancellationToken cancellation = default(CancellationToken))
+        public Task Set(byte groupID, byte[] nodes, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (groupID == 0)
                 throw new ArgumentOutOfRangeException(nameof(groupID), groupID, "groupID must be greater than zero");
 
             var command = new Channel.Command(CommandClass, Command.Set, (new[] { groupID }).Concat(nodes));
-            return Send(command, cancellation);
+            return Send(command, cancellationToken);
         }
 
 
-        public Task Remove(byte groupID, byte[] nodes, CancellationToken cancellation = default(CancellationToken))
+        public Task Remove(byte groupID, byte[] nodes, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (groupID == 0)
                 throw new ArgumentOutOfRangeException(nameof(groupID), groupID, "groupID must be greater than zero");
@@ -51,13 +51,13 @@ namespace ZWave4Net.CommandClasses.Services
                 throw new ArgumentOutOfRangeException(nameof(nodes), nodes, "nodes should contain at least one node");
 
             var command = new Channel.Command(CommandClass, Command.Remove, (new[] { groupID }).Concat(nodes));
-            return Send(command, cancellation);
+            return Send(command, cancellationToken);
         }
 
-        public Task<AssociationGroupingsReport> GetGroupings(CancellationToken cancellation = default(CancellationToken))
+        public Task<AssociationGroupingsReport> GetGroupings(CancellationToken cancellationToken = default(CancellationToken))
         {
             var command = new Channel.Command(CommandClass, Command.GroupingsGet);
-            return Send<AssociationGroupingsReport>(command, Command.GroupingsReport, cancellation);
+            return Send<AssociationGroupingsReport>(command, Command.GroupingsReport, cancellationToken);
         }
     }
 }

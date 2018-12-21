@@ -147,14 +147,14 @@
             Request the current destinations of a given association group.
             </summary>
             <param name="groupID">This field is used to specify the actual association group. Grouping Identifiers MUST be assigned in a consecutive range starting from 1.</param>
-            <param name="cancellation">The token to monitor for cancellation requests. The default value is None.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
             <returns>A task that represents the asynchronous read operation</returns>
         </member>
         <member name="M:ZWave4Net.CommandClasses.IAssociation.GetGroupings(System.Threading.CancellationToken)">
             <summary>
             This command is used to request the number of association groups that this node supports.
             </summary>
-            <param name="cancellation">The token to monitor for cancellation requests. The default value is None.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
             <returns>A task that represents the asynchronous read operation</returns>
         </member>
         <member name="M:ZWave4Net.CommandClasses.IAssociation.Remove(System.Byte,System.Byte[],System.Threading.CancellationToken)">
@@ -163,7 +163,7 @@
             </summary>
             <param name="groupID">This field is used to specify from which association group the specified NodeID destinations should be removed.</param>
             <param name="nodes">This field is used to specify from which association group the specified NodeID destinations should be removed.</param>
-            <param name="cancellation">The token to monitor for cancellation requests. The default value is None.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
             <returns>A task that represents the asynchronous read operation</returns>
         </member>
         <member name="M:ZWave4Net.CommandClasses.IAssociation.Set(System.Byte,System.Byte[],System.Threading.CancellationToken)">
@@ -172,7 +172,7 @@
             </summary>
             <param name="groupID">This field is used to specify the actual association group. Grouping Identifiers MUST be assigned in a consecutive range starting from 1.</param>
             <param name="nodes">This field specifies a list of NodeIDs that are to be added to the specified association group</param>
-            <param name="cancellation">The token to monitor for cancellation requests. The default value is None.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
             <returns>A task that represents the asynchronous read operation</returns>
         </member>
         <member name="T:ZWave4Net.CommandClasses.IBasic">
@@ -184,7 +184,7 @@
             <summary>
             Request the status of a supporting device
             </summary>
-            <param name="cancellation">The token to monitor for cancellation requests. The default value is None.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
             <returns>A task that represents the asynchronous read operation</returns>
         </member>
         <member name="M:ZWave4Net.CommandClasses.IBasic.Set(System.Byte,System.Threading.CancellationToken)">
@@ -192,7 +192,7 @@
             Set a value in a supporting device.
             </summary>
             <param name="value">The value</param>
-            <param name="cancellation">The token to monitor for cancellation requests. The default value is None.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
             <returns>A task that represents the asynchronous read operation</returns>
         </member>
         <member name="P:ZWave4Net.CommandClasses.IBasic.Reports">
@@ -209,7 +209,7 @@
             <summary>
             The Get command is used to request the status of a device with On/Off or Enable/Disable capability
             </summary>
-            <param name="cancellation">The token to monitor for cancellation requests. The default value is None.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
             <returns>A task that represents the asynchronous read operation</returns>
         </member>
         <member name="M:ZWave4Net.CommandClasses.ISwitchBinary.Set(System.Boolean,System.Threading.CancellationToken)">
@@ -217,7 +217,7 @@
             The Set command is used to set a value
             </summary>
             <param name="value">The value</param>
-            <param name="cancellation">The token to monitor for cancellation requests. The default value is None.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
             <returns>A task that represents the asynchronous read operation</returns>
         </member>
         <member name="P:ZWave4Net.CommandClasses.ISwitchBinary.Reports">
@@ -234,6 +234,181 @@
             <summary>
             The current value
             </summary>
+        </member>
+        <member name="T:ZWave4Net.EndpointCollection">
+            <summary>
+             Collection of endpoints for a node
+            </summary>
+        </member>
+        <member name="P:ZWave4Net.EndpointCollection.Item(System.Byte)">
+            <summary>
+            Gets the Endpoint for the specified ID.
+            </summary>
+            <param name="endpointID">The ID of the Endpoint to get</param>
+            <returns>The Endpoint for the specified ID</returns>
+        </member>
+        <member name="T:ZWave4Net.NeighborUpdateStatus">
+            <summary>
+            Represents the status of Neighbor Update request
+            </summary>
+        </member>
+        <member name="T:ZWave4Net.Node">
+            <summary>
+            An individual node in a network
+            </summary>
+        </member>
+        <member name="P:ZWave4Net.Node.NodeType">
+            <summary>
+            The type of the node
+            </summary>
+        </member>
+        <member name="P:ZWave4Net.Node.Security">
+            <summary>
+            The security of the node
+            </summary>
+        </member>
+        <member name="P:ZWave4Net.Node.IsListening">
+            <summary>
+            Z-Wave devices that are plugged in to power and keep their receiver on all the time. Listening devices act as repeaters and therefore extend the Z-Wave mesh network
+            </summary>
+        </member>
+        <member name="F:ZWave4Net.Node.Endpoints">
+            <summary>
+            The collection of endpoints for this node
+            </summary>
+        </member>
+        <member name="P:ZWave4Net.Node.IsController">
+            <summary>
+            Gets a value indicating whether this node is a controller 
+            </summary>
+        </member>
+        <member name="M:ZWave4Net.Node.GetNodeInfo(System.Threading.CancellationToken)">
+            <summary>
+            Gets the node information
+            </summary>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
+            <returns>A task that represents the asynchronous read operation</returns>
+        </member>
+        <member name="M:ZWave4Net.Node.GetNeighbours(System.Threading.CancellationToken)">
+            <summary>
+            Gets the neighbours of the node
+            </summary>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
+            <returns>A task that represents the asynchronous read operation</returns>
+        </member>
+        <member name="M:ZWave4Net.Node.RequestNeighborUpdate(System.IProgress{ZWave4Net.NeighborUpdateStatus},System.Threading.CancellationToken)">
+            <summary>
+            Request the node to update it's neighbors
+            </summary>
+            <param name="progress">A callback delegate to report progress</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
+            <returns>A task that represents the asynchronous read operation</returns>
+        </member>
+        <member name="P:ZWave4Net.Node.Updates">
+            <summary>
+            Advertises updates of the node
+            </summary>
+        </member>
+        <member name="T:ZWave4Net.NodeCollection">
+            <summary>
+             Collection of nodes for a controller
+            </summary>
+        </member>
+        <member name="P:ZWave4Net.NodeCollection.Item(System.Byte)">
+            <summary>
+            Gets the Node for the specified ID.
+            </summary>
+            <param name="nodeID">The ID of the node to get</param>
+            <returns>The node, or NULL if the Node doesn't exists</returns>
+        </member>
+        <member name="T:ZWave4Net.NodeInfo">
+            <summary>
+            Represents a Node Information Frame
+            </summary>
+        </member>
+        <member name="P:ZWave4Net.NodeInfo.NodeID">
+            <summary>
+            The NodeID of the node
+            </summary>
+        </member>
+        <member name="P:ZWave4Net.NodeInfo.NodeType">
+            <summary>
+            The type of the node
+            </summary>
+        </member>
+        <member name="P:ZWave4Net.NodeInfo.SupportedCommandClasses">
+            <summary>
+            Command Classes implemented by the node
+            </summary>
+        </member>
+        <member name="T:ZWave4Net.NodeType">
+            <summary>
+            Represents the type of a node
+            </summary>
+        </member>
+        <member name="F:ZWave4Net.NodeType.Basic">
+            <summary>
+            The basic type of the node
+            </summary>
+        </member>
+        <member name="F:ZWave4Net.NodeType.Generic">
+            <summary>
+            The generic type of the node
+            </summary>
+        </member>
+        <member name="F:ZWave4Net.NodeType.Specific">
+            <summary>
+            The specifick type of the node
+            </summary>
+        </member>
+        <member name="T:ZWave4Net.ZWaveController">
+            <summary>
+            A controller is a Z-Wave device that has a full routing table and is therefore able to communicate with all nodes in the Z-Wave network
+            </summary>
+        </member>
+        <member name="P:ZWave4Net.ZWaveController.HomeID">
+            <summary>
+            An unique identifier to separate networks from each other
+            </summary>
+        </member>
+        <member name="P:ZWave4Net.ZWaveController.NodeID">
+            <summary>
+            The NodeID of the controller
+            </summary>
+        </member>
+        <member name="P:ZWave4Net.ZWaveController.Version">
+            <summary>
+            The version of the controller
+            </summary>
+        </member>
+        <member name="P:ZWave4Net.ZWaveController.ChipType">
+            <summary>
+            The ChipType of the controller
+            </summary>
+        </member>
+        <member name="F:ZWave4Net.ZWaveController.Nodes">
+            <summary>
+            The collection of nodes
+            </summary>
+        </member>
+        <member name="M:ZWave4Net.ZWaveController.#ctor(ZWave4Net.Channel.ISerialPort)">
+            <summary>
+            Initializes an new instance of the ZWaveController
+            </summary>
+            <param name="port">The serial port to use</param>
+        </member>
+        <member name="M:ZWave4Net.ZWaveController.Open(System.Boolean)">
+            <summary>
+            Opens the controller
+            </summary>
+            <param name="softReset">True to perform a sofreset, False otherwise</param>
+            <returns>A task that represents the asynchronous operation</returns>
+        </member>
+        <member name="M:ZWave4Net.ZWaveController.Close">
+            <summary>
+            Closes the controller
+            </summary>
+            <returns>A task that represents the asynchronous operation</returns>
         </member>
     </members>
 </doc>

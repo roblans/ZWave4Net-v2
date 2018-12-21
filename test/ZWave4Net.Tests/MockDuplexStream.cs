@@ -26,14 +26,14 @@ namespace ZWave4Net.Tests
         }
 
        
-        public async Task<byte[]> Read(int lenght, CancellationToken cancellation)
+        public async Task<byte[]> Read(int lenght, CancellationToken cancellationToken)
         {
             var buffer = new byte[lenght];
 
             var read = 0;
             while (read < lenght)
             {
-                read += await Input.ReadAsync(buffer, read, lenght - read, cancellation);
+                read += await Input.ReadAsync(buffer, read, lenght - read, cancellationToken);
             }
 
             _logger.LogDebug($"Read {BitConverter.ToString(buffer)}");
@@ -41,9 +41,9 @@ namespace ZWave4Net.Tests
             return buffer;
         }
 
-        public async Task Write(byte[] values, CancellationToken cancellation)
+        public async Task Write(byte[] values, CancellationToken cancellationToken)
         {
-            await Output.WriteAsync(values, 0, values.Length, cancellation);
+            await Output.WriteAsync(values, 0, values.Length, cancellationToken);
 
             _logger.LogDebug($"Write {BitConverter.ToString(values)}");
 

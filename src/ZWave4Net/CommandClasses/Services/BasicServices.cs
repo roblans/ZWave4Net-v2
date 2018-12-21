@@ -22,16 +22,16 @@ namespace ZWave4Net.CommandClasses.Services
         {
         }
 
-        public Task<BasicReport> Get(CancellationToken cancellation = default(CancellationToken))
+        public Task<BasicReport> Get(CancellationToken cancellationToken = default(CancellationToken))
         {
             var command = new Channel.Command(CommandClass, Command.Get);
-            return Send<BasicReport>(command, Command.Report, cancellation);
+            return Send<BasicReport>(command, Command.Report, cancellationToken);
         }
 
-        public Task Set(byte value, CancellationToken cancellation = default(CancellationToken))
+        public Task Set(byte value, CancellationToken cancellationToken = default(CancellationToken))
         {
             var command = new Channel.Command(CommandClass, Command.Set, value);
-            return Send(command, cancellation); 
+            return Send(command, cancellationToken); 
         }
 
         public IObservable<BasicReport> Reports

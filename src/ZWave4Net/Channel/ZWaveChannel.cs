@@ -131,7 +131,7 @@ namespace ZWave4Net.Channel
             }
         }
 
-        internal async Task<T> Send<T>(RequestMessage request, IObservable<T> pipeline, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
+        internal async Task<T> Send<T>(RequestMessage request, IObservable<T> pipeline, CancellationToken cancellationToken = default(CancellationToken)) where T : IPayloadSerializable, new()
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -139,7 +139,7 @@ namespace ZWave4Net.Channel
                 throw new ArgumentNullException(nameof(pipeline));
 
             // use timeout only when no cancellationtoken is passed
-            var timeout = cancellation == default(CancellationToken) ? ResponseTimeout : TimeSpan.MaxValue;
+            var timeout = cancellationToken == default(CancellationToken) ? ResponseTimeout : TimeSpan.MaxValue;
 
             // number of retransmissions
             var retransmissions = 0;
@@ -147,14 +147,14 @@ namespace ZWave4Net.Channel
             while (true)
             {
                 // if cancelled then throw
-                cancellation.ThrowIfCancellationRequested();
+                cancellationToken.ThrowIfCancellationRequested();
 
                 // create a completionsource
                 var completion = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
                 try
                 {
                     // set the completion cancelled when the token is cancelled
-                    using (cancellation.Register(() => completion.TrySetCanceled()))
+                    using (cancellationToken.Register(() => completion.TrySetCanceled()))
                     {
                         // subscribe to response pipeline, with timout
                         using (pipeline.Timeout(timeout).Subscribe
@@ -166,7 +166,7 @@ namespace ZWave4Net.Channel
                         ))
                         {
                             // send the request
-                            await _broker.Send(request, cancellation);
+                            await _broker.Send(request, cancellationToken);
 
                             // wait for response
                             return await completion.Task;
@@ -196,7 +196,7 @@ namespace ZWave4Net.Channel
         }
 
         // ControllerRequest: request followed by one response from the controller
-        internal async Task<T> Send<T>(ControllerRequest request, CancellationToken cancellation = default(CancellationToken)) where T : IPayloadSerializable, new()
+        internal async Task<T> Send<T>(ControllerRequest request, CancellationToken cancellationToken = default(CancellationToken)) where T : IPayloadSerializable, new()
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -212,14 +212,14 @@ namespace ZWave4Net.Channel
                 // and finally deserialize the received payload
                 .Select(response => response.Payload.Deserialize<T>());
 
-            return await Send(Encode(request, null), pipeline, cancellation);
+            return await Send(Encode(request, null), pipeline, cancellationToken);
         }
 
 
         // NodeCommand, no return value. Request followed by:
         // 1) a response from the controller
         // 2) a event from the controller: command deliverd at node)  
-        internal async Task Send(byte nodeID, byte endpointID, Command command, CancellationToken cancellation = default(CancellationToken))
+        internal async Task Send(byte nodeID, byte endpointID, Command command, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (nodeID == 0)
                 throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
@@ -266,14 +266,14 @@ namespace ZWave4Net.Channel
                 // verify the state
                 .Verify(completed => completed.TransmissionState == TransmissionState.CompleteOK, completed => new TransmissionException(completed.TransmissionState));
 
-            await Send(Encode(controllerRequest, callbackID), pipeline, cancellation);
+            await Send(Encode(controllerRequest, callbackID), pipeline, cancellationToken);
         }
 
         // NodeCommand, with return value. Request followed by:
         // 1) a response from the controller
         // 2) a event from the controller: command deliverd at node)  
         // 3) a event from the node: return value
-        internal async Task<Command> Send(byte nodeID, byte endpointID, Command command, byte responseCommandID, CancellationToken cancellation = default(CancellationToken))
+        internal async Task<Command> Send(byte nodeID, byte endpointID, Command command, byte responseCommandID, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (nodeID == 0)
                 throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
@@ -362,7 +362,7 @@ namespace ZWave4Net.Channel
                 .Where(reply => reply.ClassID == command.ClassID && reply.CommandID == responseCommandID);
             }
 
-            return await Send(Encode(controllerRequest, callbackID), pipeline, cancellation);
+            return await Send(Encode(controllerRequest, callbackID), pipeline, cancellationToken);
         }
 
         internal IObservable<Command> ReceiveNodeEvents(byte nodeID, byte endpointID, Command command)

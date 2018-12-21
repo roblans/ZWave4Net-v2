@@ -35,22 +35,22 @@ namespace ZWave4Net.Channel.Protocol
             _writer = new FrameWriter(stream);
         }
 
-        public void Run(CancellationToken cancellation = default(CancellationToken))
+        public void Run(CancellationToken cancellationToken = default(CancellationToken))
         {
             // create the Observable, use Publish so frame are all published to all subcribers 
-            _observable = Observable.Create<Frame>(observer => Execute(observer, cancellation)).Publish();
+            _observable = Observable.Create<Frame>(observer => Execute(observer, cancellationToken)).Publish();
 
             // connect the observerable (start running)
             var subscription = _observable.Connect();
 
             // when canceled dispose subscription
-            cancellation.Register(() =>
+            cancellationToken.Register(() =>
             {
                 subscription.Dispose();
             });
         }
 
-        private Task Execute(IObserver<Frame> observer, CancellationToken cancellation = default(CancellationToken))
+        private Task Execute(IObserver<Frame> observer, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (observer == null)
                 throw new ArgumentNullException(nameof(observer));
@@ -60,13 +60,13 @@ namespace ZWave4Net.Channel.Protocol
                 _logger.LogDebug("Started");
 
                 // execute until externally cancelled
-                while (!cancellation.IsCancellationRequested)
+                while (!cancellationToken.IsCancellationRequested)
                 {
                     var frame = default(Frame);
                     try
                     {
                         // read next frame
-                        frame = await _reader.Read(cancellation);
+                        frame = await _reader.Read(cancellationToken);
                     }
                     catch (StreamClosedException ex)
                     {
@@ -77,7 +77,7 @@ namespace ZWave4Net.Channel.Protocol
 
                         return;
                     }
-                    catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                     {
                         observer.OnCompleted();
 
@@ -92,7 +92,7 @@ namespace ZWave4Net.Channel.Protocol
 
                         // send NACK and hopefully the controller will send this frame again
                         _logger.LogDebug($"Writing: {Frame.NAK}");
-                        await _writer.Write(Frame.NAK, cancellation);
+                        await _writer.Write(Frame.NAK, cancellationToken);
 
                         // wait for next frame
                         continue;
@@ -119,7 +119,7 @@ namespace ZWave4Net.Channel.Protocol
 
                         // dataframes must be aknowledged
                         _logger.LogDebug($"Writing: {Frame.ACK}");
-                        await _writer.Write(Frame.ACK, cancellation);
+                        await _writer.Write(Frame.ACK, cancellationToken);
 
                         // publish the frame
                         observer.OnNext(dataFrame);
@@ -131,7 +131,7 @@ namespace ZWave4Net.Channel.Protocol
 
                 _logger.LogDebug("Completed");
 
-            }, cancellation);
+            }, cancellationToken);
         }
 
         public static Message Decode(DataFrame frame)
@@ -173,7 +173,7 @@ namespace ZWave4Net.Channel.Protocol
             get { return _observable.OfType<DataFrame>().Select(element => Decode(element)); }
         }
 
-        public async Task Send(RequestMessage message, CancellationToken cancellation = default(CancellationToken))
+        public async Task Send(RequestMessage message, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (message == null)
                 throw new ArgumentNullException(nameof(message));
@@ -182,7 +182,7 @@ namespace ZWave4Net.Channel.Protocol
 
             // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.5.2 Request/Response frame flow
             // Note that due to the simple nature of the simple acknowledge mechanism, only one REQ->RES session is allowed.
-            await _sendLock.WaitAsync(cancellation);
+            await _sendLock.WaitAsync(cancellationToken);
             try
             {
                 // number of retransmissions
@@ -201,7 +201,7 @@ namespace ZWave4Net.Channel.Protocol
                         .Timeout(ProtocolSettings.ACKWaitTime);
 
                     // set completion cancelled when token gets cancelled
-                    using (cancellation.Register(() => completion.TrySetCanceled()))
+                    using (cancellationToken.Register(() => completion.TrySetCanceled()))
                     {
                         // start listening for received frames, call onVerifyResponse for every received frame 
                         using (var subscription = chain.Subscribe
@@ -219,7 +219,7 @@ namespace ZWave4Net.Channel.Protocol
                                 _logger.LogWarning($"Resending: {frame}, attempt: {retransmissions}");
 
                             // send the request
-                            await _writer.Write(frame, cancellation);
+                            await _writer.Write(frame, cancellationToken);
 
                             // mesasure time until frame received
                             stopwatch.Restart();
@@ -243,7 +243,7 @@ namespace ZWave4Net.Channel.Protocol
                                         throw new NakResponseException();
                                 }
                             }
-                            catch (TaskCanceledException) when (cancellation.IsCancellationRequested)
+                            catch (TaskCanceledException) when (cancellationToken.IsCancellationRequested)
                             {
                                 // operation was externally canceled, so rethrow
                                 throw;
@@ -270,7 +270,7 @@ namespace ZWave4Net.Channel.Protocol
                     waitTime -= stopwatch.ElapsedMilliseconds;
                     if (waitTime > 0)
                     {
-                        await Task.Delay((int)waitTime, cancellation);
+                        await Task.Delay((int)waitTime, cancellationToken);
                     }
                 }
             }

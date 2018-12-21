@@ -17,13 +17,13 @@ namespace ZWave4Net.Channel.Protocol.Frames
             Stream = stream ?? throw new ArgumentNullException(nameof(stream));
         }
 
-        public async Task<Frame> Read(CancellationToken cancellation = default(CancellationToken))
+        public async Task<Frame> Read(CancellationToken cancellationToken = default(CancellationToken))
         {
             while (true)
             {
-                cancellation.ThrowIfCancellationRequested();
+                cancellationToken.ThrowIfCancellationRequested();
 
-                var header = await Stream.ReadHeader(cancellation);
+                var header = await Stream.ReadHeader(cancellationToken);
 
                 switch (header)
                 {
@@ -34,12 +34,12 @@ namespace ZWave4Net.Channel.Protocol.Frames
                     case FrameHeader.CAN:
                         return Frame.CAN;
                     case FrameHeader.SOF:
-                        return await ReadDataFrame(cancellation);
+                        return await ReadDataFrame(cancellationToken);
                 }
             }
         }
 
-        private async Task<DataFrame> ReadDataFrame(CancellationToken cancellation = default(CancellationToken))
+        private async Task<DataFrame> ReadDataFrame(CancellationToken cancellationToken = default(CancellationToken))
         {
             // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.2.1 Data frame reception timeout
             // A receiving host or Z-Wave chip MUST abort reception of a Data frame if the reception has lasted for 
@@ -47,7 +47,7 @@ namespace ZWave4Net.Channel.Protocol.Frames
             using (var timeoutCancelation = new CancellationTokenSource(ProtocolSettings.DataFrameWaitTime))
             {
                 // combine the passed and the timeout cancelationtokens  
-                using (var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellation, timeoutCancelation.Token))
+                using (var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCancelation.Token))
                 {
                     // read the length
                     var length = await Stream.ReadByte(linkedCancellation.Token);

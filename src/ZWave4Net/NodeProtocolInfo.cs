@@ -8,9 +8,7 @@ namespace ZWave4Net
     {
         public byte Capability { get; private set; }
         public byte Reserved { get; private set; }
-        public BasicType BasicType { get; private set; }
-        public GenericType GenericType { get; private set; }
-        public SpecificType SpecificType { get; private set; }
+        public NodeType NodeType { get; private set; }
         public Security Security { get; private set; }
 
         void IPayloadSerializable.Read(PayloadReader reader)
@@ -21,9 +19,11 @@ namespace ZWave4Net
             Capability = reader.ReadByte();
             Security = (Security)reader.ReadByte();
             Reserved = reader.ReadByte();
-            BasicType = (BasicType)reader.ReadByte();
-            GenericType = (GenericType)reader.ReadByte();
-            SpecificType = reader.ReadSpecificType(GenericType);
+
+            var basicType = (BasicType)reader.ReadByte();
+            var genericType = (GenericType)reader.ReadByte();
+            var specificType = reader.ReadSpecificType(genericType);
+            NodeType = new NodeType(basicType, genericType, specificType);
         }
 
         void IPayloadSerializable.Write(PayloadWriter writer)
@@ -53,7 +53,7 @@ namespace ZWave4Net
 
         public override string ToString()
         {
-            return $"BasicType = {BasicType}, GenericType = {GenericType}, SpecificType = {SpecificType}, Listening = {IsListening}, Version = {Version}, Security = [{Security}], Routing = {Routing}, MaxBaudrate = {MaxBaudrate}";
+            return $"NodeType = {NodeType}, Listening = {IsListening}, Version = {Version}, Security = [{Security}], Routing = {Routing}, MaxBaudrate = {MaxBaudrate}";
         }
     }
 }
