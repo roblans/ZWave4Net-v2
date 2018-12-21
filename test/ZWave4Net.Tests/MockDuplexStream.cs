@@ -26,14 +26,14 @@ namespace ZWave4Net.Tests
         }
 
        
-        public async Task<byte[]> Read(int lenght, CancellationToken cancellationToken)
+        public async Task<byte[]> Read(int length, CancellationToken cancellationToken)
         {
-            var buffer = new byte[lenght];
+            var buffer = new byte[length];
 
             var read = 0;
-            while (read < lenght)
+            while (read < length)
             {
-                read += await Input.ReadAsync(buffer, read, lenght - read, cancellationToken);
+                read += await Input.ReadAsync(buffer, read, length - read, cancellationToken);
             }
 
             _logger.LogDebug($"Read {BitConverter.ToString(buffer)}");

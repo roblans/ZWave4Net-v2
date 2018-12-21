@@ -9,6 +9,6 @@ namespace ZWave4Net.Channel
     public interface IDuplexStream
     {
         Task Write(byte[] values, CancellationToken cancellationToken);
-        Task<byte[]> Read(int lenght, CancellationToken cancellationToken);
+        Task<byte[]> Read(int length, CancellationToken cancellationToken);
     }
 }

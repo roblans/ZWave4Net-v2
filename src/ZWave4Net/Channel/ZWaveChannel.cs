@@ -346,11 +346,11 @@ namespace ZWave4Net.Channel
                 .Select(response => response.Payload.Deserialize<EncapsulatedCommand>())
                 // verify if the encapsulated conmmand is the correct on
                 .Where(reply => reply.ClassID == encapsulated.ClassID && reply.CommandID == encapsulated.CommandID)
-                // verify if the endpoint the correct on
+                // verify if the endpoint the correct one
                 .Where(reply => reply.SourceEndpointID == encapsulated.TargetEndpointID)
                 // select the inner command
                 .Select(reply => reply.Unwrap())
-                // verify if the response command is the correct on
+                // verify if the response command is the correct one
                 .Where(reply => reply.ClassID == encapsulated.Unwrap().ClassID && reply.CommandID == responseCommandID);
             }
             else
@@ -358,7 +358,7 @@ namespace ZWave4Net.Channel
                 pipeline = replyPipeline
                 // deserialize the received payload to a command
                 .Select(response => response.Payload.Deserialize<Command>())
-                // verify if the response conmmand is the correct on
+                // verify if the response conmmand is the correct one
                 .Where(reply => reply.ClassID == command.ClassID && reply.CommandID == responseCommandID);
             }
 
@@ -397,11 +397,11 @@ namespace ZWave4Net.Channel
                 .Select(response => response.Payload.Deserialize<EncapsulatedCommand>())
                 // verify if the encapsulated conmmand is the correct on
                 .Where(reply => reply.ClassID == encapsulated.ClassID && reply.CommandID == encapsulated.CommandID)
-                // verify if the endpoint is the correct on
+                // verify if the endpoint is the correct one
                 .Where(reply => reply.SourceEndpointID == encapsulated.SourceEndpointID)
                 // select the inner command
                 .Select(reply => reply.Unwrap())
-                // verify if the response command is the correct on
+                // verify if the response command is the correct one
                 .Where(reply => reply.ClassID == encapsulated.Unwrap().ClassID && reply.CommandID == command.CommandID);
             }
             else
@@ -409,7 +409,7 @@ namespace ZWave4Net.Channel
                 return messages
                 // deserialize the received payload to a command
                 .Select(response => response.Payload.Deserialize<Command>())
-                // verify if the response conmmand is the correct on
+                // verify if the response conmmand is the correct one
                 .Where(reply => reply.ClassID == command.ClassID && reply.CommandID == command.CommandID);
             }
         }
