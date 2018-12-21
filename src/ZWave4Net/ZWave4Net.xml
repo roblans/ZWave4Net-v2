@@ -137,6 +137,16 @@
             This field advertises a list of NodeID destinations of the advertised association group. The list of NodeIDs is empty if there are no NodeID destinations configured for the advertised association group.
             </summary>
         </member>
+        <member name="T:ZWave4Net.CommandClasses.BasicReport">
+            <summary>
+            Advertises the status of the primary functionality of the node
+            </summary>
+        </member>
+        <member name="P:ZWave4Net.CommandClasses.BasicReport.Value">
+            <summary>
+            The current value
+            </summary>
+        </member>
         <member name="T:ZWave4Net.CommandClasses.IAssociation">
             <summary>
             The Association interface is used to manage associations to NodeID destinations. A NodeID destination may be a simple device or the Root Device of a Multi Channel device.
