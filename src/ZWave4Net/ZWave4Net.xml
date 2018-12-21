@@ -112,6 +112,31 @@
             No response received 
             </summary> 
         </member>
+        <member name="T:ZWave4Net.CommandClasses.AssociationReport">
+            <summary>
+            Advertises the current destinations of a given association group
+            </summary>
+        </member>
+        <member name="P:ZWave4Net.CommandClasses.AssociationReport.GroupID">
+            <summary>
+            This field is used to advertise the actual association group.
+            </summary>
+        </member>
+        <member name="P:ZWave4Net.CommandClasses.AssociationReport.MaxNodesSupported">
+            <summary>
+            The maximum number of destinations supported by the advertised association group. Each destination MAY be a NodeID destination or an End Point destination (if the node supports the Multi Channel Association Command Class).
+            </summary>
+        </member>
+        <member name="P:ZWave4Net.CommandClasses.AssociationReport.ReportsToFollow">
+            <summary>
+            The entire list destinations of the advertised association group may be too long for one command. This field advertise how many report frames will follow this report
+            </summary>
+        </member>
+        <member name="P:ZWave4Net.CommandClasses.AssociationReport.Nodes">
+            <summary>
+            This field advertises a list of NodeID destinations of the advertised association group. The list of NodeIDs is empty if there are no NodeID destinations configured for the advertised association group.
+            </summary>
+        </member>
         <member name="T:ZWave4Net.CommandClasses.IAssociation">
             <summary>
             The Association interface is used to manage associations to NodeID destinations. A NodeID destination may be a simple device or the Root Device of a Multi Channel device.
@@ -198,6 +223,16 @@
         <member name="P:ZWave4Net.CommandClasses.ISwitchBinary.Reports">
             <summary>
             Advertises the status of a device with On/Off or Enable/Disable capability.
+            </summary>
+        </member>
+        <member name="T:ZWave4Net.CommandClasses.SwitchBinaryReport">
+            <summary>
+            Advertises the status of a device with On/Off or Enable/Disable capability.
+            </summary>
+        </member>
+        <member name="P:ZWave4Net.CommandClasses.SwitchBinaryReport.Value">
+            <summary>
+            The current value
             </summary>
         </member>
     </members>

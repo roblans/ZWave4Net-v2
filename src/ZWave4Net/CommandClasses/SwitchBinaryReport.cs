@@ -4,8 +4,14 @@ using System.Text;
 
 namespace ZWave4Net.CommandClasses
 {
+    /// <summary>
+    /// Advertises the status of a device with On/Off or Enable/Disable capability.
+    /// </summary>
     public class SwitchBinaryReport : Report
     {
+        /// <summary>
+        /// The current value
+        /// </summary>
         public bool Value { get; private set; }
 
         protected override void Read(PayloadReader reader)
