@@ -61,6 +61,8 @@ namespace ZWave4Net
                 throw new ArgumentNullException(nameof(controller));
             if (nodeID == 0)
                 throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
+            if (endpointID == 0)
+                throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "endpointID must be greater than 0");
 
             var generator = new ProxyGenerator();
             var options = CreateProxyGeneratorOptions(controller, nodeID, endpointID);
