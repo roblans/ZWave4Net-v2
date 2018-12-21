@@ -15,7 +15,7 @@ namespace ZWave4Net.CommandClasses
         /// Request the status of a supporting device
         /// </summary>
         /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
-        /// <returns>A task that represents the asynchronous read operation</returns>
+        /// <returns>A task that represents the asynchronous operation</returns>
         Task<BasicReport> Get(CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
@@ -23,7 +23,7 @@ namespace ZWave4Net.CommandClasses
         /// </summary>
         /// <param name="value">The value</param>
         /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
-        /// <returns>A task that represents the asynchronous read operation</returns>
+        /// <returns>A task that represents the asynchronous operation</returns>
         Task Set(byte value, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
