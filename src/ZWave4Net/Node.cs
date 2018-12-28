@@ -35,7 +35,7 @@ namespace ZWave4Net
         /// </summary>
         public readonly EndpointCollection Endpoints;
 
-        internal Node(ZWaveController controller, byte nodeID) : base(controller, nodeID, 0)
+        public Node(ZWaveController controller, byte nodeID) : base(controller, nodeID, 0)
         {
             if (controller == null)
                 throw new ArgumentNullException(nameof(controller));

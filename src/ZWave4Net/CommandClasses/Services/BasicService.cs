@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace ZWave4Net.CommandClasses.Services
 {
-    internal class BasicServices : CommandClassService, IBasic
+    internal class BasicService : CommandClassService, IBasic
     {
         enum Command : byte
         {
@@ -17,21 +17,21 @@ namespace ZWave4Net.CommandClasses.Services
             Report = 0x03
         }
 
-        public BasicServices(ZWaveController controller, byte nodeID, byte endpointID)
+        public BasicService(ZWaveController controller, byte nodeID, byte endpointID)
             : base(CommandClass.Basic, controller, nodeID, endpointID)
         {
         }
 
-        public Task<BasicReport> Get(CancellationToken cancellationToken = default(CancellationToken))
+        public Task<BasicReport> Get(CancellationToken cancellation = default(CancellationToken))
         {
             var command = new Channel.Command(CommandClass, Command.Get);
-            return Send<BasicReport>(command, Command.Report, cancellationToken);
+            return Send<BasicReport>(command, Command.Report, cancellation);
         }
 
-        public Task Set(byte value, CancellationToken cancellationToken = default(CancellationToken))
+        public Task Set(byte value, CancellationToken cancellation = default(CancellationToken))
         {
             var command = new Channel.Command(CommandClass, Command.Set, value);
-            return Send(command, cancellationToken); 
+            return Send(command, cancellation); 
         }
 
         public IObservable<BasicReport> Reports

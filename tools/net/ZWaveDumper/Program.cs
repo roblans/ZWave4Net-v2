@@ -94,6 +94,11 @@ namespace ZWaveDumper
                     {
                         await Dump(node as ISwitchBinary);
                     }
+
+                    if (commandClasses.Contains(CommandClass.Version))
+                    {
+                        await Dump(node as IVersion, commandClasses);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -140,6 +145,25 @@ namespace ZWaveDumper
             {
                 var report = await binarySwitch.Get();
                 WriteInfo($"BinarySwitch: {report.Value}");
+            }
+            catch (Exception ex)
+            {
+                WriteError(ex);
+            }
+        }
+
+        private static async Task Dump(IVersion version, CommandClass[] commandClasses)
+        {
+            try
+            {
+                var report = await version.Get();
+                WriteInfo($"Version: {report}");
+
+                foreach(var commandClass in commandClasses)
+                {
+                    var commandClassReport = await version.CommandClassGet(commandClass);
+                    WriteInfo($"Version: {commandClassReport}");
+                }
             }
             catch (Exception ex)
             {
