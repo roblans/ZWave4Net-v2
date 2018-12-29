@@ -104,6 +104,11 @@ namespace ZWaveDumper
                     {
                         await Dump(node as IConfiguration);
                     }
+
+                    if (commandClasses.Contains(CommandClass.ManufacturerSpecific))
+                    {
+                        await Dump(node as IManufacturerSpecific);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -183,6 +188,19 @@ namespace ZWaveDumper
                 //var report = await configuration.Get(parameter);
                 //WriteInfo($"Configuration: {report}");
                 await Task.CompletedTask;
+            }
+            catch (Exception ex)
+            {
+                WriteError(ex);
+            }
+        }
+
+        private static async Task Dump(IManufacturerSpecific manufacturerSpecific)
+        {
+            try
+            {
+                var report = await manufacturerSpecific.Get();
+                WriteInfo($"Manufacturer Specific: {report}");
             }
             catch (Exception ex)
             {
