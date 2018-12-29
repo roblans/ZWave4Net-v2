@@ -28,7 +28,7 @@ namespace ZWave4Net.CommandClasses.Services
         }
 
 
-        public Task<VersionCommandClassReport> CommandClassGet(CommandClass commandClass, CancellationToken cancellationToken)
+        public Task<VersionCommandClassReport> GetCommandClass(CommandClass commandClass, CancellationToken cancellationToken)
         {
             var command = new Channel.Command(CommandClass, Command.CommandClassGet, Convert.ToByte(commandClass));
             return Send<VersionCommandClassReport>(command, Command.CommandClassReport, cancellationToken);

@@ -99,6 +99,11 @@ namespace ZWaveDumper
                     {
                         await Dump(node as IVersion, commandClasses);
                     }
+
+                    if (node.NodeID == 3 && commandClasses.Contains(CommandClass.Configuration))
+                    {
+                        await Dump(node as IConfiguration);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -161,9 +166,22 @@ namespace ZWaveDumper
 
                 foreach(var commandClass in commandClasses)
                 {
-                    var commandClassReport = await version.CommandClassGet(commandClass);
+                    var commandClassReport = await version.GetCommandClass(commandClass);
                     WriteInfo($"Version: {commandClassReport}");
                 }
+            }
+            catch (Exception ex)
+            {
+                WriteError(ex);
+            }
+        }
+
+        private static async Task Dump(IConfiguration configuration)
+        {
+            try
+            {
+                var report = await configuration.Get(47);
+                WriteInfo($"Configuration: {report}");
             }
             catch (Exception ex)
             {
