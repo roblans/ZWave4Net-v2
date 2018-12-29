@@ -100,7 +100,7 @@ namespace ZWaveDumper
                         await Dump(node as IVersion, commandClasses);
                     }
 
-                    if (node.NodeID == 3 && commandClasses.Contains(CommandClass.Configuration))
+                    if (commandClasses.Contains(CommandClass.Configuration))
                     {
                         await Dump(node as IConfiguration);
                     }
@@ -180,8 +180,9 @@ namespace ZWaveDumper
         {
             try
             {
-                var report = await configuration.Get(47);
-                WriteInfo($"Configuration: {report}");
+                //var report = await configuration.Get(parameter);
+                //WriteInfo($"Configuration: {report}");
+                await Task.CompletedTask;
             }
             catch (Exception ex)
             {
