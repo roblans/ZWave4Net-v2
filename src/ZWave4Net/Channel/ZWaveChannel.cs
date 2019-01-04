@@ -230,7 +230,7 @@ namespace ZWave4Net.Channel
             if (endpointID != 0)
             {
                 // yes, so wrap command in a encapsulated command
-                command = EncapsulatedCommand.Wrap(0, endpointID, command);
+                command = MultiChannelCommand.Wrap(0, endpointID, command);
             }
 
             // generate new callback
@@ -286,7 +286,7 @@ namespace ZWave4Net.Channel
             if (endpointID != 0)
             {
                 // yes, so wrap command in a encapsulated command
-                command = EncapsulatedCommand.Wrap(0, endpointID, command);
+                command = MultiChannelCommand.Wrap(0, endpointID, command);
             }
 
             // generate new callback
@@ -339,19 +339,19 @@ namespace ZWave4Net.Channel
 
             var pipeline = default(IObservable<Command>);
 
-            if (command is EncapsulatedCommand encapsulated)
+            if (command is MultiChannelCommand multiChannel)
             {
                 pipeline = replyPipeline
                 // deserialize the received payload to a command
-                .Select(response => response.Payload.Deserialize<EncapsulatedCommand>())
+                .Select(response => response.Payload.Deserialize<MultiChannelCommand>())
                 // verify if the encapsulated conmmand is the correct on
-                .Where(reply => reply.ClassID == encapsulated.ClassID && reply.CommandID == encapsulated.CommandID)
+                .Where(reply => reply.ClassID == multiChannel.ClassID && reply.CommandID == multiChannel.CommandID)
                 // verify if the endpoint the correct one
-                .Where(reply => reply.SourceEndpointID == encapsulated.TargetEndpointID)
+                .Where(reply => reply.SourceEndpointID == multiChannel.TargetEndpointID)
                 // select the inner command
                 .Select(reply => reply.Unwrap())
                 // verify if the response command is the correct one
-                .Where(reply => reply.ClassID == encapsulated.Unwrap().ClassID && reply.CommandID == responseCommandID);
+                .Where(reply => reply.ClassID == multiChannel.Unwrap().ClassID && reply.CommandID == responseCommandID);
             }
             else
             {
@@ -375,8 +375,8 @@ namespace ZWave4Net.Channel
             // addressing an enpoint?
             if (endpointID != 0)
             {
-                // yes, so wrap command in a encapsulated command
-                command = EncapsulatedCommand.Wrap(0, endpointID, command);
+                // yes, so wrap command in a multichannel command
+                command = MultiChannelCommand.Wrap(0, endpointID, command);
             }
 
             var messages = Messages
@@ -391,18 +391,18 @@ namespace ZWave4Net.Channel
             // verify if the responding node is the correct one
             .Where(response => response.NodeID == nodeID);
 
-            if (command is EncapsulatedCommand encapsulated)
+            if (command is MultiChannelCommand multiChannel)
             {
                 return messages
-                .Select(response => response.Payload.Deserialize<EncapsulatedCommand>())
+                .Select(response => response.Payload.Deserialize<MultiChannelCommand>())
                 // verify if the encapsulated conmmand is the correct on
-                .Where(reply => reply.ClassID == encapsulated.ClassID && reply.CommandID == encapsulated.CommandID)
+                .Where(reply => reply.ClassID == multiChannel.ClassID && reply.CommandID == multiChannel.CommandID)
                 // verify if the endpoint is the correct one
-                .Where(reply => reply.SourceEndpointID == encapsulated.SourceEndpointID)
+                .Where(reply => reply.SourceEndpointID == multiChannel.SourceEndpointID)
                 // select the inner command
                 .Select(reply => reply.Unwrap())
                 // verify if the response command is the correct one
-                .Where(reply => reply.ClassID == encapsulated.Unwrap().ClassID && reply.CommandID == command.CommandID);
+                .Where(reply => reply.ClassID == multiChannel.Unwrap().ClassID && reply.CommandID == command.CommandID);
             }
             else
             {
