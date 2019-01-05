@@ -49,6 +49,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommandTests.cs" />
     <Compile Include="FrameReadWriteTests.cs" />
     <Compile Include="MessageBrokerTests.cs" />
     <Compile Include="MockDuplexStream.cs" />

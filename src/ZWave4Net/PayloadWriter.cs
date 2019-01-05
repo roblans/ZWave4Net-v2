@@ -32,6 +32,11 @@ namespace ZWave4Net
             return new Payload(_stream.ToArray());
         }
 
+        public byte[] ToByteArray()
+        {
+            return _stream.ToArray();
+        }
+
         public void WriteByte(byte value)
         {
             _stream.WriteByte(value);

@@ -41,7 +41,6 @@ namespace ZWave4Net.Channel
 
         protected override void Read(PayloadReader reader)
         {
-            var length = reader.ReadByte();
             ClassID = reader.ReadByte();
             CommandID = reader.ReadByte();
             SourceEndpointID = reader.ReadByte();
@@ -51,7 +50,6 @@ namespace ZWave4Net.Channel
 
         protected override void Write(PayloadWriter writer)
         {
-            writer.WriteByte((byte)(4 + Payload.Length));
             writer.WriteByte(ClassID);
             writer.WriteByte(CommandID);
             writer.WriteByte(SourceEndpointID);

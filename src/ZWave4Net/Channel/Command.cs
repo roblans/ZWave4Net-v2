@@ -59,7 +59,6 @@ namespace ZWave4Net.Channel
             if (reader == null)
                 throw new ArgumentNullException(nameof(reader));
 
-            var length = reader.ReadByte();
             var classID = reader.ReadByte();
             var commandID = reader.ReadByte();
             var data = default(byte[]);
@@ -71,7 +70,7 @@ namespace ZWave4Net.Channel
                 Crc16Checksum = true;
                 ClassID = reader.ReadByte();
                 CommandID = reader.ReadByte();
-                data = reader.ReadBytes(length - 6);
+                data = reader.ReadBytes(reader.Length - reader.Position - 2);
 
                 var actualChecksum = reader.ReadInt16();
                 var expectedChecksum = new byte[] { classID, commandID, ClassID, CommandID }.Concat(data).CalculateCrc16Checksum();
@@ -85,7 +84,7 @@ namespace ZWave4Net.Channel
                 Crc16Checksum = false;
                 ClassID = classID;
                 CommandID = commandID;
-                data = reader.ReadBytes(length - 2);
+                data = reader.ReadBytes(reader.Length - reader.Position);
             }
 
             Payload = new Payload(data);
@@ -96,7 +95,13 @@ namespace ZWave4Net.Channel
             if (reader == null)
                 throw new ArgumentNullException(nameof(reader));
 
-            Read(reader);
+            var length = reader.ReadByte();
+            var payload = reader.ReadBytes(length);
+
+            using (var commandReader = new PayloadReader(payload))
+            {
+                Read(commandReader);
+            }
         }
 
         protected virtual void Write(PayloadWriter writer)
@@ -106,7 +111,6 @@ namespace ZWave4Net.Channel
 
             if (Crc16Checksum)
             { 
-                writer.WriteByte((byte)(6 + Payload.Length));
                 writer.WriteByte((byte)CommandClass.Crc16Encap);
                 writer.WriteByte(1);
                 writer.WriteByte(ClassID);
@@ -118,7 +122,6 @@ namespace ZWave4Net.Channel
             }
             else
             {
-                writer.WriteByte((byte)(2 + Payload.Length));
                 writer.WriteByte(ClassID);
                 writer.WriteByte(CommandID);
                 writer.WriteObject(Payload);
@@ -130,7 +133,14 @@ namespace ZWave4Net.Channel
             if (writer == null)
                 throw new ArgumentNullException(nameof(writer));
 
-            Write(writer);
+            using (var commandWriter = new PayloadWriter())
+            {
+                Write(commandWriter);
+
+                var payload = commandWriter.ToByteArray();
+                writer.WriteByte((byte)payload.Length);
+                writer.WriteBytes(payload);
+            }
         }
     }
 }
