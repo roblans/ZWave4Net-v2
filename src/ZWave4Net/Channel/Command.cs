@@ -12,6 +12,7 @@ namespace ZWave4Net.Channel
         public byte ClassID { get; protected set; }
         public byte CommandID { get; protected set; }
         public Payload Payload { get; protected set; }
+        public bool Crc16Checksum { get; set; }
 
         public Command()
         {
@@ -67,6 +68,7 @@ namespace ZWave4Net.Channel
             // The CRC-16 Encapsulation Command is used to encapsulate a command with an additional checksum to ensure integrity of the payload
             if (classID == (byte)CommandClass.Crc16Encap && commandID == 1)
             {
+                Crc16Checksum = true;
                 ClassID = reader.ReadByte();
                 CommandID = reader.ReadByte();
                 data = reader.ReadBytes(length - 6);
@@ -76,9 +78,11 @@ namespace ZWave4Net.Channel
 
                 if (actualChecksum != expectedChecksum)
                     throw new Crc16ChecksumException("CRC-16 encapsulated command checksum failure");
+
             }
             else
             {
+                Crc16Checksum = false;
                 ClassID = classID;
                 CommandID = commandID;
                 data = reader.ReadBytes(length - 2);
@@ -100,10 +104,25 @@ namespace ZWave4Net.Channel
             if (writer == null)
                 throw new ArgumentNullException(nameof(writer));
 
-            writer.WriteByte((byte)(2 + Payload.Length));
-            writer.WriteByte(ClassID);
-            writer.WriteByte(CommandID);
-            writer.WriteObject(Payload);
+            if (Crc16Checksum)
+            { 
+                writer.WriteByte((byte)(6 + Payload.Length));
+                writer.WriteByte((byte)CommandClass.Crc16Encap);
+                writer.WriteByte(1);
+                writer.WriteByte(ClassID);
+                writer.WriteByte(CommandID);
+                writer.WriteObject(Payload);
+
+                var checksum = new byte[] { (byte)CommandClass.Crc16Encap, 1, ClassID, CommandID }.Concat(Payload.ToArray()).CalculateCrc16Checksum();
+                writer.WriteInt16(checksum);
+            }
+            else
+            {
+                writer.WriteByte((byte)(2 + Payload.Length));
+                writer.WriteByte(ClassID);
+                writer.WriteByte(CommandID);
+                writer.WriteObject(Payload);
+            }
         }
 
         void IPayloadSerializable.Write(PayloadWriter writer)
