@@ -9,6 +9,8 @@ namespace ZWave4Net.Channel
 {
     internal class Command : IPayloadSerializable
     {
+        const byte Crc16EncapCommandID = 1;
+
         public byte ClassID { get; protected set; }
         public byte CommandID { get; protected set; }
         public Payload Payload { get; protected set; }
@@ -65,7 +67,7 @@ namespace ZWave4Net.Channel
 
             // SDS12657-12-Z-Wave-Command-Class-Specification-A-M.pdf | 4.41.1 CRC-16 Encapsulated Command
             // The CRC-16 Encapsulation Command is used to encapsulate a command with an additional checksum to ensure integrity of the payload
-            if (classID == (byte)CommandClass.Crc16Encap && commandID == 1)
+            if (classID == (byte)CommandClass.Crc16Encap && commandID == Crc16EncapCommandID)
             {
                 Crc16Checksum = true;
                 ClassID = reader.ReadByte();
@@ -112,7 +114,7 @@ namespace ZWave4Net.Channel
             if (Crc16Checksum)
             { 
                 writer.WriteByte((byte)CommandClass.Crc16Encap);
-                writer.WriteByte(1);
+                writer.WriteByte(Crc16EncapCommandID);
                 writer.WriteByte(ClassID);
                 writer.WriteByte(CommandID);
                 writer.WriteObject(Payload);

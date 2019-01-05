@@ -109,6 +109,11 @@ namespace ZWaveDumper
                     {
                         await Dump(node as IManufacturerSpecific);
                     }
+
+                    if (commandClasses.Contains(CommandClass.MultiChannel))
+                    {
+                        await Dump(node as IMultiChannel);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -200,7 +205,20 @@ namespace ZWaveDumper
             try
             {
                 var report = await manufacturerSpecific.Get();
-                WriteInfo($"Manufacturer Specific: {report}");
+                WriteInfo($"ManufacturerSpecific: {report}");
+            }
+            catch (Exception ex)
+            {
+                WriteError(ex);
+            }
+        }
+
+        private static async Task Dump(IMultiChannel multiChannel)
+        {
+            try
+            {
+                var report = await multiChannel.GetEndpoints();
+                WriteInfo($"MultiChannel endpoints: {report}");
             }
             catch (Exception ex)
             {

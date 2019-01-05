@@ -8,6 +8,8 @@ namespace ZWave4Net.Channel
 {
     internal class MultiChannelCommand : Command
     {
+        const byte MultiChannelEncapCommandID = 0x0D;
+
         public byte SourceEndpointID { get; private set; }
         public byte TargetEndpointID { get; private set; }
 
@@ -16,7 +18,7 @@ namespace ZWave4Net.Channel
         }
 
         private MultiChannelCommand(byte sourceEndpointID, byte targetEndpointID, Payload payload)
-            : base(Convert.ToByte(CommandClass.MultiChannel), 0x0D, payload)
+            : base(Convert.ToByte(CommandClass.MultiChannel), MultiChannelEncapCommandID, payload)
         {
             SourceEndpointID = sourceEndpointID;
             TargetEndpointID = targetEndpointID;
