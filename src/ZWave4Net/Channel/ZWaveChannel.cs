@@ -230,7 +230,7 @@ namespace ZWave4Net.Channel
             if (endpointID != 0)
             {
                 // yes, so wrap command in a encapsulated command
-                command = MultiChannelCommand.Wrap(0, endpointID, command);
+                command = MultiChannelCommand.Encapsulate(0, endpointID, command);
             }
 
             // generate new callback
@@ -286,7 +286,7 @@ namespace ZWave4Net.Channel
             if (endpointID != 0)
             {
                 // yes, so wrap command in a encapsulated command
-                command = MultiChannelCommand.Wrap(0, endpointID, command);
+                command = MultiChannelCommand.Encapsulate(0, endpointID, command);
             }
 
             // generate new callback
@@ -341,6 +341,9 @@ namespace ZWave4Net.Channel
 
             if (command is MultiChannelCommand multiChannel)
             {
+                // get the inner (wrapped command)
+                var innerCommand = multiChannel.Decapsulate();
+
                 pipeline = replyPipeline
                 // deserialize the received payload to a command
                 .Select(response => response.Payload.Deserialize<MultiChannelCommand>())
@@ -349,9 +352,9 @@ namespace ZWave4Net.Channel
                 // verify if the endpoint the correct one
                 .Where(reply => reply.SourceEndpointID == multiChannel.TargetEndpointID)
                 // select the inner command
-                .Select(reply => reply.Unwrap())
+                .Select(reply => reply.Decapsulate())
                 // verify if the response command is the correct one
-                .Where(reply => reply.ClassID == multiChannel.Unwrap().ClassID && reply.CommandID == responseCommandID);
+                .Where(reply => reply.ClassID == innerCommand.ClassID && reply.CommandID == responseCommandID);
             }
             else
             {
@@ -376,7 +379,7 @@ namespace ZWave4Net.Channel
             if (endpointID != 0)
             {
                 // yes, so wrap command in a multichannel command
-                command = MultiChannelCommand.Wrap(0, endpointID, command);
+                command = MultiChannelCommand.Encapsulate(0, endpointID, command);
             }
 
             var messages = Messages
@@ -393,6 +396,9 @@ namespace ZWave4Net.Channel
 
             if (command is MultiChannelCommand multiChannel)
             {
+                // get the inner (wrapped command)
+                var innerCommand = multiChannel.Decapsulate();
+
                 return messages
                 .Select(response => response.Payload.Deserialize<MultiChannelCommand>())
                 // verify if the encapsulated conmmand is the correct on
@@ -400,9 +406,9 @@ namespace ZWave4Net.Channel
                 // verify if the endpoint is the correct one
                 .Where(reply => reply.SourceEndpointID == multiChannel.SourceEndpointID)
                 // select the inner command
-                .Select(reply => reply.Unwrap())
+                .Select(reply => reply.Decapsulate())
                 // verify if the response command is the correct one
-                .Where(reply => reply.ClassID == multiChannel.Unwrap().ClassID && reply.CommandID == command.CommandID);
+                .Where(reply => reply.ClassID == innerCommand.ClassID && reply.CommandID == innerCommand.CommandID);
             }
             else
             {

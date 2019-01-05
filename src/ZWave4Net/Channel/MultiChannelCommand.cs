@@ -23,13 +23,13 @@ namespace ZWave4Net.Channel
             Payload = payload;
         }
 
-        public static MultiChannelCommand Wrap(byte sourceEndpointID, byte targetEndpointID, Command command)
+        public static MultiChannelCommand Encapsulate(byte sourceEndpointID, byte targetEndpointID, Command command)
         {
             var payload = new Payload(command.Serialize().ToArray().Skip(1).ToArray());
             return new MultiChannelCommand(sourceEndpointID, targetEndpointID, payload);
         }
 
-        public Command Unwrap()
+        public Command Decapsulate()
         {
             return new Command(Payload[0], Payload[1], Payload.Skip(2).ToArray());
         }
