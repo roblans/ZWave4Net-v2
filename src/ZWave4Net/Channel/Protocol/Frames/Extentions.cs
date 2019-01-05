@@ -9,7 +9,7 @@ namespace ZWave4Net.Channel.Protocol.Frames
 {
     public static partial class Extentions
     {
-        public static byte CalculateChecksum(this IEnumerable<byte> values)
+        public static byte CalculateLrc8Checksum(this IEnumerable<byte> values)
         {
             if (values == null)
                 throw new ArgumentNullException(nameof(values));

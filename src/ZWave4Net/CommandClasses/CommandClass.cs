@@ -18,6 +18,7 @@ namespace ZWave4Net.CommandClasses
         Color = 0x33,
         ThermostatSetpoint = 0x43,
         CentralScene = 0x5B,
+        Crc16Encap = 0x56,
         MultiChannel = 0x60,
         Configuration = 0x70,
         Alarm = 0x71,

@@ -58,7 +58,7 @@ namespace ZWave4Net.Channel.Protocol.Frames
             Array.Copy(frame.Payload.ToArray(), 0, buffer, 3, frame.Payload.Length);
 
             // checksum
-            buffer[buffer.Length - 1] = buffer.Skip(1).Take(buffer.Length - 2).CalculateChecksum();
+            buffer[buffer.Length - 1] = buffer.Skip(1).Take(buffer.Length - 2).CalculateLrc8Checksum();
 
             // and write to stream
             await Stream.Write(buffer.ToArray(), cancellationToken);

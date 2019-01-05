@@ -62,7 +62,7 @@ namespace ZWave4Net.Channel.Protocol.Frames
                     var actualChecksum = data.Last();
 
                     // calculate required checksum (include length)
-                    var expectedChecksum = new byte[] { length }.Concat(payload).CalculateChecksum();
+                    var expectedChecksum = new byte[] { length }.Concat(payload).CalculateLrc8Checksum();
 
                     // validate checksum
                     if (actualChecksum != expectedChecksum)

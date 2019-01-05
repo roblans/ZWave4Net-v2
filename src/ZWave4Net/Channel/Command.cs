@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using ZWave4Net.Channel.Protocol;
@@ -58,9 +59,32 @@ namespace ZWave4Net.Channel
                 throw new ArgumentNullException(nameof(reader));
 
             var length = reader.ReadByte();
-            ClassID = reader.ReadByte();
-            CommandID = reader.ReadByte();
-            Payload = reader.ReadObject<Payload>();
+            var classID = reader.ReadByte();
+            var commandID = reader.ReadByte();
+            var data = default(byte[]);
+
+            // SDS12657-12-Z-Wave-Command-Class-Specification-A-M.pdf | 4.41.1 CRC-16 Encapsulated Command
+            // The CRC-16 Encapsulation Command is used to encapsulate a command with an additional checksum to ensure integrity of the payload
+            if (classID == (byte)CommandClass.Crc16Encap && commandID == 1)
+            {
+                ClassID = reader.ReadByte();
+                CommandID = reader.ReadByte();
+                data = reader.ReadBytes(length - 6);
+
+                var actualChecksum = reader.ReadInt16();
+                var expectedChecksum = new byte[] { classID, commandID, ClassID, CommandID }.Concat(data).CalculateCrc16Checksum();
+
+                if (actualChecksum != expectedChecksum)
+                    throw new Crc16ChecksumException("CRC-16 encapsulated command checksum failure");
+            }
+            else
+            {
+                ClassID = classID;
+                CommandID = commandID;
+                data = reader.ReadBytes(length - 2);
+            }
+
+            Payload = new Payload(data);
         }
 
         void IPayloadSerializable.Read(PayloadReader reader)
