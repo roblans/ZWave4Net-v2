@@ -11,23 +11,21 @@ namespace ZWave4Net
         public readonly ZWaveController Controller;
         public readonly byte NodeID;
         public readonly byte EndpointID;
-        public readonly string Name;
 
-        public Endpoint(ZWaveController controller, byte nodeID, byte endpointID)
+        public Endpoint(byte nodeID, byte endpointID, ZWaveController controller)
         {
             if (nodeID == 0)
                 throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
 
-            Controller = controller ?? throw new ArgumentNullException(nameof(controller));
             NodeID = nodeID;
             EndpointID = endpointID;
-            Name = ZWaveController.GetEndpointName(NodeID, EndpointID);
+            Controller = controller ?? throw new ArgumentNullException(nameof(controller));
         }
 
 
         public override string ToString()
         {
-            return $"{Name}";
+            return EndpointID != 0 ? $"{NodeID:D3}.{EndpointID:D3}" : $"{NodeID:D3}";
         }
 
         protected ZWaveChannel Channel

@@ -20,7 +20,7 @@ namespace ZWave4Net
                 .ToArray();
         }
 
-        private static IEnumerable<CommandClassService> CreateCommandClasseServices(ZWaveController controller, byte nodeID, byte endpointID)
+        private static IEnumerable<CommandClassService> CreateCommandClasseServices(byte nodeID, byte endpointID, ZWaveController controller)
         {
             if (controller == null)
                 throw new ArgumentNullException(nameof(controller));
@@ -29,44 +29,44 @@ namespace ZWave4Net
 
             foreach (var commandClasseServiceType in _commandClasseServiceTypes)
             {
-                yield return (CommandClassService)Activator.CreateInstance(commandClasseServiceType, controller, nodeID, endpointID);
+                yield return (CommandClassService)Activator.CreateInstance(commandClasseServiceType, nodeID, endpointID, controller);
             }
         }
 
-        private static ProxyGenerationOptions CreateProxyGeneratorOptions(ZWaveController controller, byte nodeID, byte endpointID)
+        private static ProxyGenerationOptions CreateProxyGeneratorOptions(byte nodeID, byte endpointID, ZWaveController controller)
         {
             var options = new ProxyGenerationOptions();
-            foreach (var service in CreateCommandClasseServices(controller, nodeID, endpointID))
+            foreach (var service in CreateCommandClasseServices(nodeID, endpointID, controller))
             {
                 options.AddMixinInstance(service);
             }
             return options;
         }
 
-        public static Node CreateNode(ZWaveController controller, byte nodeID)
+        public static Node CreateNode(byte nodeID, ZWaveController controller)
         {
-            if (controller == null)
-                throw new ArgumentNullException(nameof(controller));
             if (nodeID == 0)
                 throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
-
-            var generator = new ProxyGenerator();
-            var options = CreateProxyGeneratorOptions(controller, nodeID, 0);
-            return (Node)generator.CreateClassProxy(typeof(Node), options, new object[] { controller, nodeID });
-        }
-
-        public static Endpoint CreateEndpoint(ZWaveController controller, byte nodeID, byte endpointID)
-        {
             if (controller == null)
                 throw new ArgumentNullException(nameof(controller));
+
+            var generator = new ProxyGenerator();
+            var options = CreateProxyGeneratorOptions(nodeID, 0, controller);
+            return (Node)generator.CreateClassProxy(typeof(Node), options, new object[] { nodeID, controller });
+        }
+
+        public static Endpoint CreateEndpoint(byte nodeID, byte endpointID, ZWaveController controller)
+        {
             if (nodeID == 0)
                 throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
             if (endpointID == 0)
-                throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "endpointID must be greater than 0");
+                throw new ArgumentOutOfRangeException(nameof(endpointID), endpointID, "endpointID must be greater than 0");
+            if (controller == null)
+                throw new ArgumentNullException(nameof(controller));
 
             var generator = new ProxyGenerator();
-            var options = CreateProxyGeneratorOptions(controller, nodeID, endpointID);
-            return (Endpoint)generator.CreateClassProxy(typeof(Endpoint), options, new object[] { controller, nodeID, endpointID});
+            var options = CreateProxyGeneratorOptions(nodeID, endpointID, controller);
+            return (Endpoint)generator.CreateClassProxy(typeof(Endpoint), options, new object[] { nodeID, endpointID, controller});
         }
     }
 }

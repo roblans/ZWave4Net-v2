@@ -35,12 +35,18 @@ namespace ZWave4Net
         /// </summary>
         public readonly EndpointCollection Endpoints;
 
-        internal Node(ZWaveController controller, byte nodeID) : base(controller, nodeID, 0)
+        /// <summary>
+        /// gets or sets a value indicating whether to include a CRC16 checksum during communication to ensure integrity of the payload,
+        /// use only on nodes that supports the CRC-16 Encapsulation Command Class 
+        /// </summary>
+        public bool UseCrc16Checksum { get; set; }
+
+        internal Node(byte nodeID, ZWaveController controller) : base(nodeID, 0, controller)
         {
-            if (controller == null)
-                throw new ArgumentNullException(nameof(controller));
             if (nodeID == 0)
                 throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
+            if (controller == null)
+                throw new ArgumentNullException(nameof(controller));
 
             Endpoints = new EndpointCollection(this);
         }
@@ -65,7 +71,7 @@ namespace ZWave4Net
 
         internal Endpoint CreateEndpoint(byte endpointID)
         {
-            return Factory.CreateEndpoint(Controller, NodeID, endpointID);
+            return Factory.CreateEndpoint(NodeID, endpointID, Controller);
         }
 
         /// <summary>
@@ -135,11 +141,6 @@ namespace ZWave4Net
         public override int GetHashCode()
         {
             return -1960697928 + NodeID.GetHashCode();
-        }
-
-        public override string ToString()
-        {
-            return $"{Name}";
         }
 
         public static bool operator ==(Node node1, Node node2)

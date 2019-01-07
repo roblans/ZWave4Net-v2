@@ -10,20 +10,33 @@ namespace ZWave4Net.CommandClasses.Services
 {
     internal abstract class CommandClassService
     {
+        private readonly byte _nodeID;
+        private readonly byte _endpointID;
+        private Node _node;
+        private Endpoint _endpoint;
         public readonly CommandClass CommandClass;
         public readonly ZWaveController Controller;
-        public readonly byte NodeID;
-        public readonly byte EndpointID;
 
-        public CommandClassService(CommandClass commandClass, ZWaveController controller, byte nodeID, byte endpointID)
+        public CommandClassService(byte nodeID, byte endpointID, CommandClass commandClass, ZWaveController controller)
         {
             if (nodeID == 0)
                 throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
 
+            _nodeID = nodeID;
+            _endpointID = endpointID;
+
             CommandClass = commandClass;
             Controller = controller ?? throw new ArgumentNullException(nameof(controller));
-            NodeID = nodeID;
-            EndpointID = endpointID;
+        }
+
+        public Node Node
+        {
+            get { return _node ?? (_node = Controller.Nodes[_nodeID]); }
+        }
+
+        public Endpoint Endpoint
+        {
+            get { return _endpoint ?? (_endpoint = Node.Endpoints[_endpointID]); }
         }
 
         protected Task Send(Command command, CancellationToken cancellationToken = default(CancellationToken))
@@ -31,7 +44,9 @@ namespace ZWave4Net.CommandClasses.Services
             if (command == null)
                 throw new ArgumentNullException(nameof(command));
 
-            return Controller.Channel.Send(NodeID, EndpointID, command, cancellationToken);
+            command.Crc16Checksum = Node.UseCrc16Checksum;
+
+            return Controller.Channel.Send(Node.NodeID, Endpoint.EndpointID, command, cancellationToken);
         }
 
         protected async Task<T> Send<T>(Command command, Enum responseCommand, CancellationToken cancellationToken = default(CancellationToken)) where T : Report, new()
@@ -39,21 +54,25 @@ namespace ZWave4Net.CommandClasses.Services
             if (command == null)
                 throw new ArgumentNullException(nameof(command));
 
-            var reply = await Controller.Channel.Send(NodeID, EndpointID, command, Convert.ToByte(responseCommand), cancellationToken);
+            command.Crc16Checksum = Node.UseCrc16Checksum;
 
-            // push NodeID and EndpointID in the payload so T has access to the node and the endpoint
-            return new Payload(new[] { NodeID, EndpointID }.Concat(reply.Payload))
-                .Deserialize<T>();
+            var reply = await Controller.Channel.Send(Node.NodeID, Endpoint.EndpointID, command, Convert.ToByte(responseCommand), cancellationToken);
+            return CreateReport<T>(reply.Payload);
         }
 
         protected IObservable<T> Reports<T>(Enum command) where T : Report, new()
         {
             var reportCommand = new Command(CommandClass, command);
 
-            return Controller.Channel.ReceiveNodeEvents(NodeID, EndpointID, reportCommand)
-                // push NodeID and EndpointID in the payload so T has access to the node and the endpoint
-                .Select(element => new Payload(new[] { NodeID, EndpointID }.Concat(element.Payload)))
-                .Select(element => element.Deserialize<T>()); 
+            return Controller.Channel.ReceiveNodeEvents(Node.NodeID, Endpoint.EndpointID, reportCommand)
+                .Select(@event => CreateReport<T>(@event.Payload));
+        }
+
+        private T CreateReport<T>(Payload payload) where T : Report, new()
+        {
+            var report = new T();
+            report.Build(Node, Endpoint, payload);
+            return report;
         }
     }
 }

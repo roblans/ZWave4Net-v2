@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ZWave4Net.CommandClasses
 {
-    public abstract class Report : IPayloadSerializable
+    public abstract class Report
     {
         public ReportSender Sender { get; private set; }
 
@@ -15,21 +15,21 @@ namespace ZWave4Net.CommandClasses
             return $"{GetType().Name}: Sender: {Sender}";
         }
 
-        void IPayloadSerializable.Read(PayloadReader reader)
+        internal void Build(Node node, Endpoint endpoint, Payload payload)
         {
-            if (reader == null)
-                throw new ArgumentNullException(nameof(reader));
+            if (node == null)
+                throw new ArgumentNullException(nameof(node));
+            if (endpoint == null)
+                throw new ArgumentNullException(nameof(endpoint));
+            if (payload == null)
+                throw new ArgumentNullException(nameof(payload));
 
-            var nodeID = reader.ReadByte();
-            var endpointID = reader.ReadByte();
-            Sender = new ReportSender(nodeID, endpointID);
+            Sender = new ReportSender(node, endpoint);
 
-            Read(reader);
-        }
-
-        void IPayloadSerializable.Write(PayloadWriter writer)
-        {
-            throw new NotImplementedException();
+            using (var reader = new PayloadReader(payload))
+            {
+                Read(reader);
+            }
         }
     }
 }

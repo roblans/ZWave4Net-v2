@@ -19,8 +19,8 @@ namespace ZWave4Net.CommandClasses.Services
             GroupingsReport = 0x06
         }
 
-        public AssociationService(ZWaveController controller, byte nodeID, byte endpointID)
-            : base(CommandClass.Association, controller, nodeID, endpointID)
+        public AssociationService(byte nodeID, byte endpointID, ZWaveController controller)
+            : base(nodeID, endpointID, CommandClass.Association, controller)
         {
         }
 

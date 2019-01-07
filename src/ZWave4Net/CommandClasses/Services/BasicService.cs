@@ -17,8 +17,8 @@ namespace ZWave4Net.CommandClasses.Services
             Report = 0x03
         }
 
-        public BasicService(ZWaveController controller, byte nodeID, byte endpointID)
-            : base(CommandClass.Basic, controller, nodeID, endpointID)
+        public BasicService(byte nodeID, byte endpointID, ZWaveController controller)
+            : base(nodeID, endpointID, CommandClass.Basic, controller)
         {
         }
 

@@ -16,8 +16,8 @@ namespace ZWave4Net.CommandClasses.Services
             CommandClassReport = 0x14
         }
 
-        public VersionService(ZWaveController controller, byte nodeID, byte endpointID)
-            : base(CommandClass.Version, controller, nodeID, endpointID)
+        public VersionService(byte nodeID, byte endpointID, ZWaveController controller)
+            : base(nodeID, endpointID, CommandClass.Version, controller)
         {
         }
 

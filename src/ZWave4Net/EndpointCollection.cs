@@ -42,7 +42,7 @@ namespace ZWave4Net
         /// <returns>The Endpoint for the specified ID</returns>
         public Endpoint this[byte endpointID]
         {
-            get { return _endpoints.GetOrAdd(endpointID, Node.CreateEndpoint(endpointID)); }
+            get { return _endpoints.GetOrAdd(endpointID, (element) => Node.CreateEndpoint(element)); }
         }
 
     }

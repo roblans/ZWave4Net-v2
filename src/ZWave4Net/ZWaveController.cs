@@ -111,7 +111,7 @@ namespace ZWave4Net
                 {
                     if (bits[i])
                     {
-                        var node = Factory.CreateNode(this, (byte)(i + 1));
+                        var node = Factory.CreateNode((byte)(i + 1), this);
 
                         await node.Initialize();
 
