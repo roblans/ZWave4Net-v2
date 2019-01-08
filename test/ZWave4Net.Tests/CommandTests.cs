@@ -63,5 +63,28 @@ namespace ZWave4Net.Tests
             Assert.AreEqual(payload[5], 0x4D);
             Assert.AreEqual(payload[6], 0x26);
         }
+
+        [TestMethod]
+        public void MultiEncapDecap()
+        {
+            var multiChannelCommand = MultiChannelCommand.Encapsulate(0, 1, Crc16EndcapCommand.Encapsulate(new Command((byte)CommandClass.Basic, 0x02)));
+
+            Assert.AreEqual(multiChannelCommand.SourceEndpointID, 0);
+            Assert.AreEqual(multiChannelCommand.TargetEndpointID, 1);
+            Assert.AreEqual(multiChannelCommand.ClassID, (byte)CommandClass.MultiChannel);
+            Assert.AreEqual(multiChannelCommand.CommandID, 0x0D);
+
+            var crc16EndcapCommand = ((IEncapsulatedCommand)multiChannelCommand).Decapsulate();
+            Assert.AreEqual(crc16EndcapCommand.ClassID, (byte)CommandClass.Crc16Encap);
+            Assert.AreEqual(crc16EndcapCommand.CommandID, 0x01);
+
+            var basicCommand = ((IEncapsulatedCommand)crc16EndcapCommand).Decapsulate();
+            Assert.AreEqual(basicCommand.ClassID, (byte)CommandClass.Basic);
+            Assert.AreEqual(basicCommand.CommandID, 0x02);
+
+            basicCommand = Command.Decapsulate(multiChannelCommand);
+            Assert.AreEqual(basicCommand.ClassID, (byte)CommandClass.Basic);
+            Assert.AreEqual(basicCommand.CommandID, 0x02);
+        }
     }
 }
