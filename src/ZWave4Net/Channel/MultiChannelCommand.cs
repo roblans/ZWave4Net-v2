@@ -33,7 +33,7 @@ namespace ZWave4Net.Channel
 
         Command IEncapsulatedCommand.Decapsulate()
         {
-            var payload = new Payload(new[] { (byte)(Payload.Length + 2) }.Concat(Payload.ToArray()));
+            var payload = new Payload(new[] { (byte)Payload.Length }.Concat(Payload.ToArray()));
             return Deserialize(payload);
         }
 
