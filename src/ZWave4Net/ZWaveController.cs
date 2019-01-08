@@ -71,11 +71,6 @@ namespace ZWave4Net
         }
 #endif
 
-        internal static string GetEndpointName(byte nodeID, byte endpointID)
-        {
-            return endpointID != 0 ? $"{nodeID:D3}.{endpointID:D3}" : $"{nodeID:D3}";
-        }
-
         /// <summary>
         /// Opens the controller
         /// </summary>

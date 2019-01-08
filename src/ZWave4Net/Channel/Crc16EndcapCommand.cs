@@ -12,14 +12,15 @@ namespace ZWave4Net.Channel
     // </summary>
     internal class Crc16EndcapCommand : Command, IEncapsulatedCommand
     {
-        const byte Crc16EncapCommandID = 1;
+        public const byte EncapClassID = (byte)CommandClass.Crc16Encap;
+        public const byte EncapCommandID = 1;
 
         public Crc16EndcapCommand()
         {
         }
 
         private Crc16EndcapCommand(Payload payload)
-            : base(Convert.ToByte(CommandClass.Crc16Encap), Crc16EncapCommandID, payload)
+            : base(EncapClassID, EncapCommandID, payload)
         {
             Payload = payload;
         }

@@ -53,16 +53,18 @@ namespace ZWave4Net.Channel
             if (payload.Length < 3)
                 throw new ArgumentOutOfRangeException(nameof(payload), "payload must have at least 3 bytes");
 
-            var classID = payload[1];
-
             var command = default(Command);
+
+            var classID = payload[1];
+            var commandID = payload[2];
+            
             switch (classID)
             {
-                case (byte)CommandClass.Crc16Encap:
+                case Crc16EndcapCommand.EncapClassID when Crc16EndcapCommand.EncapCommandID == commandID:
                     command = new Crc16EndcapCommand();
                     break;
-                case (byte)CommandClass.MultiChannel:
-                    command = new MultiChannelCommand();
+                case MultiChannelEndcapCommand.EncapClassID when MultiChannelEndcapCommand.EncapCommandID == commandID:
+                    command = new MultiChannelEndcapCommand();
                     break;
                 default:
                     command = new Command();
@@ -75,13 +77,14 @@ namespace ZWave4Net.Channel
             return command;
         }
 
-        public static Command Decapsulate(Command command)
+        public static IEnumerable<Command> Decapsulate(Command command)
         {
-            while(command is IEncapsulatedCommand encapsulatedCommand)
+            yield return command;
+            while (command is IEncapsulatedCommand encapsulatedCommand)
             {
                 command = encapsulatedCommand.Decapsulate();
+                yield return command;
             }
-            return command;
         }
 
         public Payload Serialize()

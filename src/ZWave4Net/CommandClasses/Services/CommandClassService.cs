@@ -45,7 +45,7 @@ namespace ZWave4Net.CommandClasses.Services
             if (_endpointID != 0)
             {
                 // yes, so wrap command in a encapsulated multi channel command
-                command = MultiChannelCommand.Encapsulate(0, _endpointID, command);
+                command = MultiChannelEndcapCommand.Encapsulate(0, _endpointID, command);
             }
             // additional CRC16 checksum required?
             if (Node.UseCrc16Checksum)

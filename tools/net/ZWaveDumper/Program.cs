@@ -73,8 +73,6 @@ namespace ZWaveDumper
             var neighbours = await node.GetNeighbours();
             WriteInfo($"Neighbours: {string.Join(", ", neighbours.Cast<object>().ToArray())}");
 
-            node.Updates.Subscribe((update) => WriteWarning(update));
-
             if (!node.IsController && node.IsListening)
             {
                 try
@@ -119,6 +117,8 @@ namespace ZWaveDumper
                 {
                     WriteError(ex);
                 }
+
+                node.Updates.Subscribe((update) => WriteWarning(update));
             }
         }
 
@@ -219,6 +219,12 @@ namespace ZWaveDumper
             {
                 var report = await multiChannel.GetEndpoints();
                 WriteInfo($"MultiChannel endpoints: {report}");
+
+                for(byte endpointID = 1; endpointID <= report.NumberOfIndividualEndpoints; endpointID++)
+                {
+                    var basic = await (((Node)multiChannel).Endpoints[endpointID] as IBasic).Get();
+                    WriteInfo($"MultiChannel endpoint {endpointID}: Basic: {basic.Value}");
+                }
             }
             catch (Exception ex)
             {
