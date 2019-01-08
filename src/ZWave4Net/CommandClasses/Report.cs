@@ -8,14 +8,7 @@ namespace ZWave4Net.CommandClasses
     {
         public ReportSender Sender { get; private set; }
 
-        protected abstract void Read(PayloadReader reader);
-
-        public override string ToString()
-        {
-            return $"{GetType().Name}: Sender: {Sender}";
-        }
-
-        internal void Build(Node node, Endpoint endpoint, Payload payload)
+        internal static T Create<T>(Node node, Endpoint endpoint, Payload payload) where T : Report, new()
         {
             if (node == null)
                 throw new ArgumentNullException(nameof(node));
@@ -24,12 +17,23 @@ namespace ZWave4Net.CommandClasses
             if (payload == null)
                 throw new ArgumentNullException(nameof(payload));
 
-            Sender = new ReportSender(node, endpoint);
+            var report = new T()
+            {
+                Sender = new ReportSender(node, endpoint),
+            };
 
             using (var reader = new PayloadReader(payload))
             {
-                Read(reader);
+                report.Read(reader);
             }
+            return report;
+        }
+
+        protected abstract void Read(PayloadReader reader);
+
+        public override string ToString()
+        {
+            return $"{GetType().Name}: Sender: {Sender}";
         }
     }
 }

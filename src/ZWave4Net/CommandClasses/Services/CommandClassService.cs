@@ -39,14 +39,31 @@ namespace ZWave4Net.CommandClasses.Services
             get { return _endpoint ?? (_endpoint = Node.Endpoints[_endpointID]); }
         }
 
+        private Command CreateTransportCommand(Command command)
+        {
+            // addressing an enpoint?
+            if (_endpointID != 0)
+            {
+                // yes, so wrap command in a encapsulated multi channel command
+                command = MultiChannelCommand.Encapsulate(0, _endpointID, command);
+            }
+            // additional CRC16 checksum required?
+            if (Node.UseCrc16Checksum)
+            {
+                // yes, so wrap command in a encapsulated CRC16 endcap command
+                command = Crc16EndcapCommand.Encapsulate(command);
+            }
+            return command;
+        }
+
         protected Task Send(Command command, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (command == null)
                 throw new ArgumentNullException(nameof(command));
 
-            command.Crc16Checksum = Node.UseCrc16Checksum;
+            var transportCommand = CreateTransportCommand(command);
 
-            return Controller.Channel.Send(Node.NodeID, Endpoint.EndpointID, command, cancellationToken);
+            return Controller.Channel.Send(Node.NodeID, transportCommand, cancellationToken);
         }
 
         protected async Task<T> Send<T>(Command command, Enum responseCommand, CancellationToken cancellationToken = default(CancellationToken)) where T : Report, new()
@@ -54,25 +71,19 @@ namespace ZWave4Net.CommandClasses.Services
             if (command == null)
                 throw new ArgumentNullException(nameof(command));
 
-            command.Crc16Checksum = Node.UseCrc16Checksum;
+            var transportCommand = CreateTransportCommand(command);
 
-            var reply = await Controller.Channel.Send(Node.NodeID, Endpoint.EndpointID, command, Convert.ToByte(responseCommand), cancellationToken);
-            return CreateReport<T>(reply.Payload);
+            var reply = await Controller.Channel.Send(Node.NodeID, transportCommand, Convert.ToByte(responseCommand), cancellationToken);
+            return Report.Create<T>(Node, Endpoint, reply.Payload);
         }
 
         protected IObservable<T> Reports<T>(Enum command) where T : Report, new()
         {
-            var reportCommand = new Command(CommandClass, command);
+            var receiveCommand = new Command(CommandClass, command);
+            var transportCommand = CreateTransportCommand(receiveCommand);
 
-            return Controller.Channel.ReceiveNodeEvents(Node.NodeID, Endpoint.EndpointID, reportCommand)
-                .Select(@event => CreateReport<T>(@event.Payload));
-        }
-
-        private T CreateReport<T>(Payload payload) where T : Report, new()
-        {
-            var report = new T();
-            report.Build(Node, Endpoint, payload);
-            return report;
+            return Controller.Channel.ReceiveNodeEvents(Node.NodeID, transportCommand)
+                .Select(@event => Report.Create<T>(Node, Endpoint, @event.Payload));
         }
     }
 }

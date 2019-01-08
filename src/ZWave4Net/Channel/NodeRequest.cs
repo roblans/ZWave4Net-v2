@@ -30,7 +30,7 @@ namespace ZWave4Net.Channel
                 throw new ArgumentNullException(nameof(writer));
 
             writer.WriteByte(NodeID);
-            writer.WriteObject(Command);
+            writer.WritePayload(Command.Serialize());
             writer.WriteByte((byte)(TransmitOptions.Ack | TransmitOptions.AutoRoute | TransmitOptions.Explore));
         }
     }

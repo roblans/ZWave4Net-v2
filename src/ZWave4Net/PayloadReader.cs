@@ -20,12 +20,12 @@ namespace ZWave4Net
             _stream = new MemoryStream(payload.ToArray());
         }
 
-        public PayloadReader(byte[] bytes)
+        public PayloadReader(IEnumerable<byte> bytes)
         {
             if (bytes == null)
                 throw new ArgumentNullException(nameof(bytes));
 
-            _stream = new MemoryStream(bytes);
+            _stream = new MemoryStream(bytes.ToArray());
         }
 
         private void FillBuffer(int length)

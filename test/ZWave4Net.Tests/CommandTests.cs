@@ -35,10 +35,9 @@ namespace ZWave4Net.Tests
                 0x02,
                 0x4D,
                 0x26 });
-            var command = payload.Deserialize<Command>();
+            var command = Command.Decapsulate(Command.Deserialize(payload));
             Assert.AreEqual(command.ClassID, (byte)CommandClass.Basic);
             Assert.AreEqual(command.CommandID, 0x02);
-            Assert.IsTrue(command.Crc16Checksum);
         }
 
         [TestMethod]
@@ -53,10 +52,7 @@ namespace ZWave4Net.Tests
             // CRC1 = 0x4D 
             // CRC2 = 0x26
 
-            var command = new Command((byte)CommandClass.Basic, 0x02)
-            {
-                Crc16Checksum = true,
-            };
+            var command = Crc16EndcapCommand.Encapsulate(new Command((byte)CommandClass.Basic, 0x02));
             var payload = command.Serialize().ToArray();
 
             Assert.AreEqual(payload[0], 6);

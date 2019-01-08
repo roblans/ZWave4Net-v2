@@ -7,21 +7,18 @@ using ZWave4Net.CommandClasses;
 
 namespace ZWave4Net.Channel
 {
-    internal class Command : IPayloadSerializable
+    internal class Command
     {
-        const byte Crc16EncapCommandID = 1;
-
         public byte ClassID { get; protected set; }
         public byte CommandID { get; protected set; }
         public Payload Payload { get; protected set; }
-        public bool Crc16Checksum { get; set; }
 
         public Command()
         {
         }
 
         public Command(CommandClass @class, Enum command, params byte[] payload)
-            : this(Convert.ToByte(@class) , Convert.ToByte(command), payload)
+            : this(Convert.ToByte(@class), Convert.ToByte(command), payload)
         {
         }
 
@@ -51,6 +48,53 @@ namespace ZWave4Net.Channel
             Payload = payload != null ? new Payload(payload) : Payload.Empty;
         }
 
+        public static Command Deserialize(Payload payload)
+        {
+            if (payload.Length < 3)
+                throw new ArgumentOutOfRangeException(nameof(payload), "payload must have at least 3 bytes");
+
+            var classID = payload[1];
+
+            var command = default(Command);
+            switch (classID)
+            {
+                case (byte)CommandClass.Crc16Encap:
+                    command = new Crc16EndcapCommand();
+                    break;
+                case (byte)CommandClass.MultiChannel:
+                    command = new MultiChannelCommand();
+                    break;
+                default:
+                    command = new Command();
+                    break;
+            }
+            using (var reader = new PayloadReader(payload.ToArray().Skip(1)))
+            {
+                command.Read(reader);
+            }
+            return command;
+        }
+
+        public static Command Decapsulate(Command command)
+        {
+            while(command is IEncapsulatedCommand encapsulatedCommand)
+            {
+                command = encapsulatedCommand.Decapsulate();
+            }
+            return command;
+        }
+
+        public Payload Serialize()
+        {
+            using (var writer = new PayloadWriter())
+            {
+                Write(writer);
+
+                var payload = writer.ToByteArray();
+                return new Payload(new[] { (byte)payload.Length }.Concat(payload));
+            }
+        }
+
         public override string ToString()
         {
             return $"{ClassID}, {CommandID}, {Payload}";
@@ -61,49 +105,9 @@ namespace ZWave4Net.Channel
             if (reader == null)
                 throw new ArgumentNullException(nameof(reader));
 
-            var classID = reader.ReadByte();
-            var commandID = reader.ReadByte();
-            var data = default(byte[]);
-
-            // SDS12657-12-Z-Wave-Command-Class-Specification-A-M.pdf | 4.41.1 CRC-16 Encapsulated Command
-            // The CRC-16 Encapsulation Command is used to encapsulate a command with an additional checksum to ensure integrity of the payload
-            if (classID == (byte)CommandClass.Crc16Encap && commandID == Crc16EncapCommandID)
-            {
-                Crc16Checksum = true;
-                ClassID = reader.ReadByte();
-                CommandID = reader.ReadByte();
-                data = reader.ReadBytes(reader.Length - reader.Position - 2);
-
-                var actualChecksum = reader.ReadInt16();
-                var expectedChecksum = new byte[] { classID, commandID, ClassID, CommandID }.Concat(data).CalculateCrc16Checksum();
-
-                if (actualChecksum != expectedChecksum)
-                    throw new Crc16ChecksumException("CRC-16 encapsulated command checksum failure");
-
-            }
-            else
-            {
-                Crc16Checksum = false;
-                ClassID = classID;
-                CommandID = commandID;
-                data = reader.ReadBytes(reader.Length - reader.Position);
-            }
-
-            Payload = new Payload(data);
-        }
-
-        void IPayloadSerializable.Read(PayloadReader reader)
-        {
-            if (reader == null)
-                throw new ArgumentNullException(nameof(reader));
-
-            var length = reader.ReadByte();
-            var payload = reader.ReadBytes(length);
-
-            using (var commandReader = new PayloadReader(payload))
-            {
-                Read(commandReader);
-            }
+            ClassID = reader.ReadByte();
+            CommandID = reader.ReadByte();
+            Payload = new Payload(reader.ReadBytes(reader.Length - reader.Position));
         }
 
         protected virtual void Write(PayloadWriter writer)
@@ -111,38 +115,9 @@ namespace ZWave4Net.Channel
             if (writer == null)
                 throw new ArgumentNullException(nameof(writer));
 
-            if (Crc16Checksum)
-            { 
-                writer.WriteByte((byte)CommandClass.Crc16Encap);
-                writer.WriteByte(Crc16EncapCommandID);
-                writer.WriteByte(ClassID);
-                writer.WriteByte(CommandID);
-                writer.WriteObject(Payload);
-
-                var checksum = new byte[] { (byte)CommandClass.Crc16Encap, 1, ClassID, CommandID }.Concat(Payload.ToArray()).CalculateCrc16Checksum();
-                writer.WriteInt16(checksum);
-            }
-            else
-            {
-                writer.WriteByte(ClassID);
-                writer.WriteByte(CommandID);
-                writer.WriteObject(Payload);
-            }
-        }
-
-        void IPayloadSerializable.Write(PayloadWriter writer)
-        {
-            if (writer == null)
-                throw new ArgumentNullException(nameof(writer));
-
-            using (var commandWriter = new PayloadWriter())
-            {
-                Write(commandWriter);
-
-                var payload = commandWriter.ToByteArray();
-                writer.WriteByte((byte)payload.Length);
-                writer.WriteBytes(payload);
-            }
+            writer.WriteByte(ClassID);
+            writer.WriteByte(CommandID);
+            writer.WriteObject(Payload);
         }
     }
 }

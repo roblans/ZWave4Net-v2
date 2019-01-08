@@ -131,7 +131,7 @@ namespace ZWave4Net.Channel
             }
         }
 
-        internal async Task<T> Send<T>(RequestMessage request, IObservable<T> pipeline, CancellationToken cancellationToken = default(CancellationToken)) where T : IPayloadSerializable, new()
+        internal async Task<T> Send<T>(RequestMessage request, IObservable<T> pipeline, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -219,19 +219,12 @@ namespace ZWave4Net.Channel
         // NodeCommand, no return value. Request followed by:
         // 1) a response from the controller
         // 2) a event from the controller: command deliverd at node)  
-        internal async Task Send(byte nodeID, byte endpointID, Command command, CancellationToken cancellationToken = default(CancellationToken))
+        internal async Task Send(byte nodeID, Command command, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (nodeID == 0)
                 throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
             if (command == null)
                 throw new ArgumentNullException(nameof(command));
-
-            // addressing an enpoint?
-            if (endpointID != 0)
-            {
-                // yes, so wrap command in a encapsulated command
-                command = MultiChannelCommand.Encapsulate(0, endpointID, command);
-            }
 
             // generate new callback
             var callbackID = GetNextCallbackID();
@@ -273,7 +266,7 @@ namespace ZWave4Net.Channel
         // 1) a response from the controller
         // 2) a event from the controller: command deliverd at node)  
         // 3) a event from the node: return value
-        internal async Task<Command> Send(byte nodeID, byte endpointID, Command command, byte responseCommandID, CancellationToken cancellationToken = default(CancellationToken))
+        internal async Task<Command> Send(byte nodeID, Command command, byte responseCommandID, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (nodeID == 0)
                 throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
@@ -281,13 +274,6 @@ namespace ZWave4Net.Channel
                 throw new ArgumentNullException(nameof(command));
             if (responseCommandID == 0)
                 throw new ArgumentOutOfRangeException(nameof(responseCommandID), responseCommandID, "responseCommandID must be greater than 0");
-
-            // addressing an enpoint?
-            if (endpointID != 0)
-            {
-                // yes, so wrap command in a encapsulated command
-                command = MultiChannelCommand.Encapsulate(0, endpointID, command);
-            }
 
             // generate new callback
             var callbackID = GetNextCallbackID();
@@ -341,26 +327,28 @@ namespace ZWave4Net.Channel
 
             if (command is MultiChannelCommand multiChannel)
             {
-                // get the inner (wrapped command)
-                var innerCommand = multiChannel.Decapsulate();
+                // get the base/root command
+                var baseCommand = Command.Decapsulate(multiChannel);
 
                 pipeline = replyPipeline
                 // deserialize the received payload to a command
-                .Select(response => response.Payload.Deserialize<MultiChannelCommand>())
+                .Select(response => (MultiChannelCommand)Command.Deserialize(response.Payload))
                 // verify if the encapsulated conmmand is the correct on
                 .Where(reply => reply.ClassID == multiChannel.ClassID && reply.CommandID == multiChannel.CommandID)
                 // verify if the endpoint the correct one
                 .Where(reply => reply.SourceEndpointID == multiChannel.TargetEndpointID)
                 // select the inner command
-                .Select(reply => reply.Decapsulate())
+                .Select(reply => Command.Decapsulate(reply))
                 // verify if the response command is the correct one
-                .Where(reply => reply.ClassID == innerCommand.ClassID && reply.CommandID == responseCommandID);
+                .Where(reply => reply.ClassID == baseCommand.ClassID && reply.CommandID == responseCommandID);
             }
             else
             {
                 pipeline = replyPipeline
                 // deserialize the received payload to a command
-                .Select(response => response.Payload.Deserialize<Command>())
+                .Select(response => Command.Deserialize(response.Payload))
+                // select the inner command
+                .Select(reply => Command.Decapsulate(reply))
                 // verify if the response conmmand is the correct one
                 .Where(reply => reply.ClassID == command.ClassID && reply.CommandID == responseCommandID);
             }
@@ -368,19 +356,12 @@ namespace ZWave4Net.Channel
             return await Send(Encode(controllerRequest, callbackID), pipeline, cancellationToken);
         }
 
-        internal IObservable<Command> ReceiveNodeEvents(byte nodeID, byte endpointID, Command command)
+        internal IObservable<Command> ReceiveNodeEvents(byte nodeID, Command command)
         {
             if (nodeID == 0)
                 throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
             if (command == null)
                 throw new ArgumentNullException(nameof(command));
-
-            // addressing an enpoint?
-            if (endpointID != 0)
-            {
-                // yes, so wrap command in a multichannel command
-                command = MultiChannelCommand.Encapsulate(0, endpointID, command);
-            }
 
             var messages = Messages
             // decode the response
@@ -396,25 +377,27 @@ namespace ZWave4Net.Channel
 
             if (command is MultiChannelCommand multiChannel)
             {
-                // get the inner (wrapped command)
-                var innerCommand = multiChannel.Decapsulate();
+                // get the base/root command
+                var baseCommand = Command.Decapsulate(multiChannel);
 
                 return messages
-                .Select(response => response.Payload.Deserialize<MultiChannelCommand>())
+                .Select(response => (MultiChannelCommand)Command.Deserialize(response.Payload))
                 // verify if the encapsulated conmmand is the correct on
                 .Where(reply => reply.ClassID == multiChannel.ClassID && reply.CommandID == multiChannel.CommandID)
                 // verify if the endpoint is the correct one
                 .Where(reply => reply.SourceEndpointID == multiChannel.SourceEndpointID)
                 // select the inner command
-                .Select(reply => reply.Decapsulate())
+                .Select(reply => Command.Decapsulate(reply))
                 // verify if the response command is the correct one
-                .Where(reply => reply.ClassID == innerCommand.ClassID && reply.CommandID == innerCommand.CommandID);
+                .Where(reply => reply.ClassID == baseCommand.ClassID && reply.CommandID == baseCommand.CommandID);
             }
             else
             {
                 return messages
                 // deserialize the received payload to a command
-                .Select(response => response.Payload.Deserialize<Command>())
+                .Select(response => Command.Deserialize(response.Payload))
+                // select the inner command
+                .Select(reply => Command.Decapsulate(reply))
                 // verify if the response conmmand is the correct one
                 .Where(reply => reply.ClassID == command.ClassID && reply.CommandID == command.CommandID);
             }

@@ -210,6 +210,41 @@
             Advertises the status of the primary functionality of the device
             </summary>
         </member>
+        <member name="T:ZWave4Net.CommandClasses.IConfiguration">
+            <summary>
+            The Configuration interface allows product specific configuration parameters to be changed
+            </summary>
+        </member>
+        <member name="M:ZWave4Net.CommandClasses.IConfiguration.Get(System.Byte,System.Threading.CancellationToken)">
+            <summary>
+            The Configuration Get Command is used to query the value of a configuration parameter. 
+            </summary>
+            <param name="parameter">The parameter number</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
+            <returns>A task that represents the asynchronous operation</returns>
+        </member>
+        <member name="M:ZWave4Net.CommandClasses.IConfiguration.Set(System.Byte,System.Object,System.Byte,System.Threading.CancellationToken)">
+            <summary>
+            The Configuration Set Command is used to set the value of a configuration parameter.
+            </summary>
+            <param name="parameter">The parameter number</param>
+            <param name="value">The value of the parameter, must be an integral value</param>
+            <param name="size">The size of the parameter, must be 1, 2 or 4</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
+            <returns>A task that represents the asynchronous operation</returns>
+        </member>
+        <member name="T:ZWave4Net.CommandClasses.IManufacturerSpecific">
+            <summary>
+            The ManufacturerSpecific interface advertises manufacturer specific information
+            </summary>
+        </member>
+        <member name="M:ZWave4Net.CommandClasses.IManufacturerSpecific.Get(System.Threading.CancellationToken)">
+            <summary>
+            Use the Manufacturer Specific Get Command to request manufacturer specific information from a node
+            </summary>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
+            <returns>A task that represents the asynchronous operation</returns>
+        </member>
         <member name="T:ZWave4Net.CommandClasses.ISwitchBinary">
             <summary>
             The Binary Switch interface is used to control devices with On/Off or Enable/Disable capability
@@ -233,6 +268,31 @@
         <member name="P:ZWave4Net.CommandClasses.ISwitchBinary.Reports">
             <summary>
             Advertises the status of a device with On/Off or Enable/Disable capability.
+            </summary>
+        </member>
+        <member name="T:ZWave4Net.CommandClasses.IVersion">
+            <summary>
+            The Version interface may be used to obtain the Z-Wave library type, the Z-Wave protocol version used by the application, the individual command class versions used by the application and the vendor specific application version from a Z-Wave enabled device
+            </summary>
+        </member>
+        <member name="M:ZWave4Net.CommandClasses.IVersion.Get(System.Threading.CancellationToken)">
+            <summary>
+            The Version Get Command is used to request the library type, protocol version and application version from a device that supports the Version Command Class
+            </summary>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
+            <returns>A task that represents the asynchronous operation</returns>
+        </member>
+        <member name="M:ZWave4Net.CommandClasses.IVersion.GetCommandClass(ZWave4Net.CommandClasses.CommandClass,System.Threading.CancellationToken)">
+            <summary>
+            The Version Command Class Get Command is used to request the individual command class versions from a device
+            </summary>
+            <param name="commandClass">This field specifies which command class identifier is being requested</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
+            <returns>A task that represents the asynchronous operation</returns>
+        </member>
+        <member name="P:ZWave4Net.CommandClasses.ManufacturerSpecificReport.ManufacturerID">
+            <summary>
+            https://www.silabs.com/documents/login/miscellaneous/SDS13425-Z-Wave-Plus-Assigned-Manufacturer-IDs.xlsx
             </summary>
         </member>
         <member name="T:ZWave4Net.CommandClasses.SwitchBinaryReport">
@@ -285,6 +345,12 @@
         <member name="F:ZWave4Net.Node.Endpoints">
             <summary>
             The collection of endpoints for this node
+            </summary>
+        </member>
+        <member name="P:ZWave4Net.Node.UseCrc16Checksum">
+            <summary>
+            gets or sets a value indicating whether to include a CRC16 checksum during communication to ensure integrity of the payload,
+            use only on nodes that supports the CRC-16 Encapsulation Command Class 
             </summary>
         </member>
         <member name="P:ZWave4Net.Node.IsController">
