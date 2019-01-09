@@ -84,44 +84,50 @@ namespace ZWaveDumper
                     var commandClasses = nodeInfo.SupportedCommandClasses;
                     WriteInfo($"Supported CommandClasses: {string.Join(", ", commandClasses)}");
 
-                    await Dump(node as IBasic);
+                    await Dump(node, commandClasses);
 
-                    if (commandClasses.Contains(CommandClass.Association))
-                    {
-                        await Dump(node as IAssociation);
-                    }
-
-                    if (commandClasses.Contains(CommandClass.SwitchBinary))
-                    {
-                        await Dump(node as ISwitchBinary);
-                    }
-
-                    if (commandClasses.Contains(CommandClass.Version))
-                    {
-                        await Dump(node as IVersion, commandClasses);
-                    }
-
-                    if (commandClasses.Contains(CommandClass.Configuration))
-                    {
-                        await Dump(node as IConfiguration);
-                    }
-
-                    if (commandClasses.Contains(CommandClass.ManufacturerSpecific))
-                    {
-                        await Dump(node as IManufacturerSpecific);
-                    }
-
-                    if (commandClasses.Contains(CommandClass.MultiChannel))
-                    {
-                        await Dump(node as IMultiChannel);
-                    }
+                    Subscribe(node);
                 }
                 catch (Exception ex)
                 {
                     WriteError(ex);
                 }
 
-                Subscribe(node);
+            }
+        }
+
+        private static async Task Dump(Endpoint enpoint, CommandClass[] commandClasses)
+        {
+            await Dump(enpoint as IBasic);
+
+            if (commandClasses.Contains(CommandClass.Association))
+            {
+                await Dump(enpoint as IAssociation);
+            }
+
+            if (commandClasses.Contains(CommandClass.SwitchBinary))
+            {
+                await Dump(enpoint as ISwitchBinary);
+            }
+
+            if (commandClasses.Contains(CommandClass.Version))
+            {
+                await Dump(enpoint as IVersion, commandClasses);
+            }
+
+            if (commandClasses.Contains(CommandClass.Configuration))
+            {
+                await Dump(enpoint as IConfiguration);
+            }
+
+            if (commandClasses.Contains(CommandClass.ManufacturerSpecific))
+            {
+                await Dump(enpoint as IManufacturerSpecific);
+            }
+
+            if (commandClasses.Contains(CommandClass.MultiChannel))
+            {
+                await Dump(enpoint as IMultiChannel);
             }
         }
 
@@ -129,10 +135,15 @@ namespace ZWaveDumper
         {
             node.Updates.Subscribe((update) => WriteInfo(update));
 
-            var basic = node as IBasic;
+            Subscribe(node as Endpoint);
+        }
+
+        private static void Subscribe(Endpoint endpoint)
+        {
+            var basic = endpoint as IBasic;
             basic.Reports.Subscribe((report) => WriteInfo(report));
 
-            var switchBinary = node as ISwitchBinary;
+            var switchBinary = endpoint as ISwitchBinary;
             switchBinary.Reports.Subscribe((report) => WriteInfo(report));
         }
 
@@ -232,12 +243,25 @@ namespace ZWaveDumper
             try
             {
                 var report = await multiChannel.GetEndpoints();
-                WriteInfo($"MultiChannel endpoints: {report}");
+                WriteInfo($"MultiChannel: {report}");
 
                 for(byte endpointID = 1; endpointID <= report.NumberOfIndividualEndpoints; endpointID++)
                 {
+                    WriteLine();
+                    WriteInfo($"Endpoint {endpointID}");
+
                     var capability = await multiChannel.GetCapability(endpointID);
-                    WriteInfo($"MultiChannel capability: {capability}");
+                    WriteInfo($"Capability: {capability}");
+
+                    if (multiChannel is Node node)
+                    {
+                        var endpoint = node.Endpoints[endpointID];
+
+                        await Dump(endpoint, capability.SupportedCommandClasses);
+
+                        Subscribe(endpoint);
+
+                    }
                 }
             }
             catch (Exception ex)

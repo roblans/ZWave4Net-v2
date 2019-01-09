@@ -386,7 +386,9 @@ namespace ZWave4Net.Channel
 
                 return messages
                 // extract the MultiChannelCommand from the response
-                .Select(response => Command.Decapsulate(response.Command).OfType<MultiChannelCommand>().Single())
+                .Select(response => Command.Decapsulate(response.Command).OfType<MultiChannelCommand>().SingleOrDefault())
+                // verify if present
+                .Where(reply => reply != null)
                 // verify if the MultiChannelCommand is the correct one
                 .Where(reply => reply.ClassID == multiChannelRequestCommand.ClassID && reply.CommandID == multiChannelRequestCommand.CommandID)
                 // verify if the endpoint is the correct one
