@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 namespace ZWave4Net.CommandClasses
 {
     /// <summary>
-    /// The Configuration interface allows product specific configuration parameters to be changed
+    /// The Configuration command class allows product specific configuration parameters to be changed
     /// </summary>
     public interface IConfiguration
     {

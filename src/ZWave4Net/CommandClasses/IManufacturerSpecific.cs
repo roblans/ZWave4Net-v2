@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 namespace ZWave4Net.CommandClasses
 {
     /// <summary>
-    /// The ManufacturerSpecific interface advertises manufacturer specific information
+    /// The ManufacturerSpecific command class advertises manufacturer specific information
     /// </summary>
     public interface IManufacturerSpecific
     {

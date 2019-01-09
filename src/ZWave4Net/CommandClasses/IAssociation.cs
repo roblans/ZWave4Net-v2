@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 namespace ZWave4Net.CommandClasses
 {
     /// <summary>
-    /// The Association interface is used to manage associations to NodeID destinations. A NodeID destination may be a simple device or the Root Device of a Multi Channel device.
+    /// The Association command class is used to manage associations to NodeID destinations. A NodeID destination may be a simple device or the Root Device of a Multi Channel device.
     /// </summary>
     public interface IAssociation
     {

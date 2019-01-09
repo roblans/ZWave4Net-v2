@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace ZWave4Net.CommandClasses
 {
     /// <summary>
-    /// The Binary Switch interface is used to control devices with On/Off or Enable/Disable capability
+    /// The Binary Switch command class is used to control devices with On/Off or Enable/Disable capability
     /// </summary>
     public interface ISwitchBinary
     {

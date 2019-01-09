@@ -64,6 +64,9 @@ namespace ZWaveDumper
 
         private static async Task Dump(Node node)
         {
+            //if (node.NodeID != 25)
+            //    return;
+
             WriteInfo($"node {node}");
             WriteSeparator();
 
@@ -233,8 +236,8 @@ namespace ZWaveDumper
 
                 for(byte endpointID = 1; endpointID <= report.NumberOfIndividualEndpoints; endpointID++)
                 {
-                    var basic = await (((Node)multiChannel).Endpoints[endpointID] as IBasic).Get();
-                    WriteInfo($"MultiChannel endpoint {endpointID}: Basic: {basic.Value}");
+                    var capability = await multiChannel.GetCapability(endpointID);
+                    WriteInfo($"MultiChannel capability: {capability}");
                 }
             }
             catch (Exception ex)

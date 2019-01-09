@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace ZWave4Net.CommandClasses
 {
     /// <summary>
-    /// The IBasic interface allows a controlling device to operate the primary functionality of a supporting device without any further knowledge.
+    /// The IBasic command class allows a controlling device to operate the primary functionality of a supporting device without any further knowledge.
     /// </summary>
     public interface IBasic
     {
