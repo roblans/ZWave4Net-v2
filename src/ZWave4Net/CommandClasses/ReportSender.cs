@@ -17,7 +17,7 @@ namespace ZWave4Net.CommandClasses
 
         public override string ToString()
         {
-            return $"{Endpoint}";
+            return Endpoint.EndpointID != 0 ? $"Node: {Node.NodeID}, Endpoint: {Endpoint.EndpointID}" : $"Node: {Node.NodeID}";
         }
     }
 }
