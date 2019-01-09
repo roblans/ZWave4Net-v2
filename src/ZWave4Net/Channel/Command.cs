@@ -93,8 +93,8 @@ namespace ZWave4Net.Channel
             {
                 Write(writer);
 
-                var payload = writer.ToByteArray();
-                return new Payload(new[] { (byte)payload.Length }.Concat(payload));
+                var bytes = writer.ToByteArray();
+                return new Payload(new[] { (byte)bytes.Length }.Concat(bytes));
             }
         }
 
