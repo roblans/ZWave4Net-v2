@@ -335,7 +335,7 @@ namespace ZWave4Net.Channel
 
                 pipeline = replyPipeline
                 // deserialize the received payload to a command
-                .Select(response => (MultiChannelEndcapCommand)Command.Deserialize(response.Payload))
+                .Select(response => (MultiChannelEndcapCommand)response.Command)
                 // verify if the encapsulated conmmand is the correct on
                 .Where(reply => reply.ClassID == multiChannelCommand.ClassID && reply.CommandID == multiChannelCommand.CommandID)
                 // verify if the endpoint the correct one
@@ -349,7 +349,7 @@ namespace ZWave4Net.Channel
             {
                 pipeline = replyPipeline
                 // deserialize the received payload to a command
-                .Select(response => Command.Deserialize(response.Payload))
+                .Select(response => response.Command)
                 // select the inner most command
                 .Select(reply => Command.Decapsulate(reply).Last())
                 // verify if the response conmmand is the correct one
@@ -387,7 +387,7 @@ namespace ZWave4Net.Channel
                 var innerMostCommand = Command.Decapsulate(multiChannelCommand).Last();
 
                 return messages
-                .Select(response => (MultiChannelEndcapCommand)Command.Deserialize(response.Payload))
+                .Select(response => (MultiChannelEndcapCommand)response.Command)
                 // verify if the encapsulated conmmand is the correct on
                 .Where(reply => reply.ClassID == multiChannelCommand.ClassID && reply.CommandID == multiChannelCommand.CommandID)
                 // verify if the endpoint is the correct one
@@ -401,7 +401,7 @@ namespace ZWave4Net.Channel
             {
                 return messages
                 // deserialize the received payload to a command
-                .Select(response => Command.Deserialize(response.Payload))
+                .Select(response => response.Command)
                 // select the inner most command
                 .Select(reply => Command.Decapsulate(reply).Last())
                 // verify if the response conmmand is the correct one

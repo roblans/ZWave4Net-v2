@@ -28,14 +28,13 @@ namespace ZWave4Net.Channel
 
         public static MultiChannelEndcapCommand Encapsulate(byte sourceEndpointID, byte targetEndpointID, Command command)
         {
-            var payload = new Payload(command.Serialize().ToArray().Skip(1).ToArray());
+            var payload = new Payload(command.Serialize());
             return new MultiChannelEndcapCommand(sourceEndpointID, targetEndpointID, payload);
         }
 
         Command IEncapsulatedCommand.Decapsulate()
         {
-            var payload = new Payload(new[] { (byte)Payload.Length }.Concat(Payload.ToArray()));
-            return Deserialize(payload);
+            return Deserialize(Payload);
         }
 
         public override string ToString()

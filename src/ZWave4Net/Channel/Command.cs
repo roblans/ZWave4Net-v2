@@ -50,13 +50,13 @@ namespace ZWave4Net.Channel
 
         public static Command Deserialize(Payload payload)
         {
-            if (payload.Length < 3)
-                throw new ArgumentOutOfRangeException(nameof(payload), "payload must have at least 3 bytes");
+            if (payload.Length < 2)
+                throw new ArgumentOutOfRangeException(nameof(payload), "payload must have at least 2 bytes");
 
             var command = default(Command);
 
-            var classID = payload[1];
-            var commandID = payload[2];
+            var classID = payload[0];
+            var commandID = payload[1];
             
             switch (classID)
             {
@@ -70,7 +70,7 @@ namespace ZWave4Net.Channel
                     command = new Command();
                     break;
             }
-            using (var reader = new PayloadReader(payload.ToArray().Skip(1)))
+            using (var reader = new PayloadReader(payload))
             {
                 command.Read(reader);
             }
@@ -93,8 +93,7 @@ namespace ZWave4Net.Channel
             {
                 Write(writer);
 
-                var bytes = writer.ToByteArray();
-                return new Payload(new[] { (byte)bytes.Length }.Concat(bytes));
+                return writer.ToPayload();
             }
         }
 

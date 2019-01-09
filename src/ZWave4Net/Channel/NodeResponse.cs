@@ -9,7 +9,7 @@ namespace ZWave4Net.Channel
     {
         public ReceiveStatus Status { get; private set; }
         public byte NodeID { get; private set; }
-        public Payload Payload { get; private set; }
+        public Command Command { get; private set; }
 
         void IPayloadSerializable.Read(PayloadReader reader)
         {
@@ -35,7 +35,10 @@ namespace ZWave4Net.Channel
                 Status |= ReceiveStatus.ForeignFrame;
 
             NodeID = reader.ReadByte();
-            Payload = reader.ReadObject<Payload>();
+
+            var commandLength = reader.ReadByte();
+            var commandBytes = reader.ReadBytes(commandLength);
+            Command = Command.Deserialize(new Payload(commandBytes));
         }
 
         void IPayloadSerializable.Write(PayloadWriter writer)

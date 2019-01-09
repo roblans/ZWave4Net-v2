@@ -28,7 +28,6 @@ namespace ZWave4Net.Tests
             // CRC2 = 0x26
             var payload = new Payload(new byte[] 
             {
-                6,
                 (byte)CommandClass.Crc16Encap,
                 0x01,
                 (byte)CommandClass.Basic,
@@ -55,13 +54,12 @@ namespace ZWave4Net.Tests
             var command = Crc16EndcapCommand.Encapsulate(new Command((byte)CommandClass.Basic, 0x02));
             var payload = command.Serialize().ToArray();
 
-            Assert.AreEqual(payload[0], 6);
-            Assert.AreEqual(payload[1], (byte)CommandClass.Crc16Encap);
-            Assert.AreEqual(payload[2], 0x01);
-            Assert.AreEqual(payload[3], (byte)CommandClass.Basic);
-            Assert.AreEqual(payload[4], 0x02);
-            Assert.AreEqual(payload[5], 0x4D);
-            Assert.AreEqual(payload[6], 0x26);
+            Assert.AreEqual(payload[0], (byte)CommandClass.Crc16Encap);
+            Assert.AreEqual(payload[1], 0x01);
+            Assert.AreEqual(payload[2], (byte)CommandClass.Basic);
+            Assert.AreEqual(payload[3], 0x02);
+            Assert.AreEqual(payload[4], 0x4D);
+            Assert.AreEqual(payload[5], 0x26);
         }
 
         [TestMethod]

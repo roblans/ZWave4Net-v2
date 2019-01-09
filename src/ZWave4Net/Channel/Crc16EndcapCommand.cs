@@ -27,14 +27,12 @@ namespace ZWave4Net.Channel
 
         public static Crc16EndcapCommand Encapsulate(Command command)
         {
-            var payload = new Payload(command.Serialize().ToArray().Skip(1).ToArray());
-            return new Crc16EndcapCommand(payload);
+            return new Crc16EndcapCommand(command.Serialize());
         }
 
         Command IEncapsulatedCommand.Decapsulate()
         {
-            var payload = new Payload(new[] { (byte)Payload.Length }.Concat(Payload.ToArray()));
-            return Deserialize(payload);
+            return Deserialize(Payload);
         }
 
         protected override void Read(PayloadReader reader)
