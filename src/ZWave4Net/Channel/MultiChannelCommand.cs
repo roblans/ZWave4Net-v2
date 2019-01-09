@@ -6,7 +6,7 @@ using ZWave4Net.CommandClasses;
 
 namespace ZWave4Net.Channel
 {
-    internal class MultiChannelEndcapCommand : EncapsulatedCommand
+    internal class MultiChannelCommand : EncapsulatedCommand
     {
         public const byte EncapClassID = (byte)CommandClass.MultiChannel;
         public const byte EncapCommandID = 0x0D;
@@ -14,11 +14,11 @@ namespace ZWave4Net.Channel
         public byte SourceEndpointID { get; private set; }
         public byte TargetEndpointID { get; private set; }
 
-        public MultiChannelEndcapCommand()
+        public MultiChannelCommand()
         {
         }
 
-        public MultiChannelEndcapCommand(byte sourceEndpointID, byte targetEndpointID, Command command)
+        public MultiChannelCommand(byte sourceEndpointID, byte targetEndpointID, Command command)
             : base(EncapClassID, EncapCommandID, command)
         {
             SourceEndpointID = sourceEndpointID;

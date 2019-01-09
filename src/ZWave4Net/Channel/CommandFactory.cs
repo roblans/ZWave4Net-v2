@@ -18,10 +18,10 @@ namespace ZWave4Net.Channel
             {
                 switch (classID)
                 {
-                    case Crc16EndcapCommand.EncapClassID when Crc16EndcapCommand.EncapCommandID == commandID:
-                        return reader.ReadObject<Crc16EndcapCommand>();
-                    case MultiChannelEndcapCommand.EncapClassID when MultiChannelEndcapCommand.EncapCommandID == commandID:
-                        return reader.ReadObject<MultiChannelEndcapCommand>();
+                    case Crc16Command.EncapClassID when Crc16Command.EncapCommandID == commandID:
+                        return reader.ReadObject<Crc16Command>();
+                    case MultiChannelCommand.EncapClassID when MultiChannelCommand.EncapCommandID == commandID:
+                        return reader.ReadObject<MultiChannelCommand>();
                     default:
                         return reader.ReadObject<Command>();
                 }

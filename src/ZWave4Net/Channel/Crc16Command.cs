@@ -10,16 +10,16 @@ namespace ZWave4Net.Channel
     // SDS12657-12-Z-Wave-Command-Class-Specification-A-M.pdf | 4.41.1 CRC-16 Encapsulated Command
     // The CRC-16 Encapsulation Command is used to encapsulate a command with an additional checksum to ensure integrity of the payload
     // </summary>
-    internal class Crc16EndcapCommand : EncapsulatedCommand
+    internal class Crc16Command : EncapsulatedCommand
     {
         public const byte EncapClassID = (byte)CommandClass.Crc16Encap;
         public const byte EncapCommandID = 1;
 
-        public Crc16EndcapCommand()
+        public Crc16Command()
         {
         }
 
-        public Crc16EndcapCommand(Command command)
+        public Crc16Command(Command command)
             : base(EncapClassID, EncapCommandID, command)
         {
         }

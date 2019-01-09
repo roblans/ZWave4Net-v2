@@ -326,16 +326,16 @@ namespace ZWave4Net.Channel
             var pipeline = default(IObservable<Command>);
 
             // does the command contain an encapsulated MultiChannelCommand? 
-            if (Command.Decapsulate(command).OfType<MultiChannelEndcapCommand>().Any())
+            if (Command.Decapsulate(command).OfType<MultiChannelCommand>().Any())
             {
                 // yes, so extract the MultiChannelCommand
-                var multiChannelRequestCommand = Command.Decapsulate(command).OfType<MultiChannelEndcapCommand>().Single();              
+                var multiChannelRequestCommand = Command.Decapsulate(command).OfType<MultiChannelCommand>().Single();              
                 // and get the inner most command
                 var requestCommand = Command.Decapsulate(multiChannelRequestCommand).Last();
 
                 pipeline = replyPipeline
                 // extract the MultiChannelCommand from the response
-                .Select(response => Command.Decapsulate(response.Command).OfType<MultiChannelEndcapCommand>().Single())
+                .Select(response => Command.Decapsulate(response.Command).OfType<MultiChannelCommand>().Single())
                 // verify if the MultiChannelCommand is the correct one
                 .Where(reply => reply.ClassID == multiChannelRequestCommand.ClassID && reply.CommandID == multiChannelRequestCommand.CommandID)
                 // verify if the endpoint the correct one
@@ -348,10 +348,8 @@ namespace ZWave4Net.Channel
             else
             {
                 pipeline = replyPipeline
-                // deserialize the received payload to a command
-                .Select(response => response.Command)
                 // select the inner most command
-                .Select(reply => Command.Decapsulate(reply).Last())
+                .Select(response => Command.Decapsulate(response.Command).Last())
                 // verify if the response conmmand is the correct one
                 .Where(reply => reply.ClassID == command.ClassID && reply.CommandID == responseCommandID);
             }
@@ -379,16 +377,16 @@ namespace ZWave4Net.Channel
             .Where(response => response.NodeID == nodeID);
 
             // does the command contain an encapsulated MultiChannelCommand? 
-            if (Command.Decapsulate(command).OfType<MultiChannelEndcapCommand>().Any())
+            if (Command.Decapsulate(command).OfType<MultiChannelCommand>().Any())
             {
                 // yes, so extract the MultiChannelCommand
-                var multiChannelRequestCommand = Command.Decapsulate(command).OfType<MultiChannelEndcapCommand>().Single();
+                var multiChannelRequestCommand = Command.Decapsulate(command).OfType<MultiChannelCommand>().Single();
                 // and get the inner most command
                 var requestCommand = Command.Decapsulate(multiChannelRequestCommand).Last();
 
                 return messages
                 // extract the MultiChannelCommand from the response
-                .Select(response => Command.Decapsulate(response.Command).OfType<MultiChannelEndcapCommand>().Single())
+                .Select(response => Command.Decapsulate(response.Command).OfType<MultiChannelCommand>().Single())
                 // verify if the MultiChannelCommand is the correct one
                 .Where(reply => reply.ClassID == multiChannelRequestCommand.ClassID && reply.CommandID == multiChannelRequestCommand.CommandID)
                 // verify if the endpoint is the correct one
@@ -401,10 +399,8 @@ namespace ZWave4Net.Channel
             else
             {
                 return messages
-                // deserialize the received payload to a command
-                .Select(response => response.Command)
                 // select the inner most command
-                .Select(reply => Command.Decapsulate(reply).Last())
+                .Select(response => Command.Decapsulate(response.Command).Last())
                 // verify if the response conmmand is the correct one
                 .Where(reply => reply.ClassID == command.ClassID && reply.CommandID == command.CommandID);
             }

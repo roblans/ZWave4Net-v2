@@ -45,13 +45,13 @@ namespace ZWave4Net.CommandClasses.Services
             if (_endpointID != 0)
             {
                 // yes, so wrap command in a encapsulated multi channel command
-                command = new MultiChannelEndcapCommand(0, _endpointID, command);
+                command = new MultiChannelCommand(0, _endpointID, command);
             }
             // additional CRC16 checksum required?
             if (Node.UseCrc16Checksum)
             {
                 // yes, so wrap command in a encapsulated CRC16 endcap command
-                command = new Crc16EndcapCommand(command);
+                command = new Crc16Command(command);
             }
             return command;
         }

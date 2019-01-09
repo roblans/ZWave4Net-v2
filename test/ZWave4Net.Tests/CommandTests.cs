@@ -51,7 +51,7 @@ namespace ZWave4Net.Tests
             // CRC1 = 0x4D 
             // CRC2 = 0x26
 
-            var command = new Crc16EndcapCommand(new Command((byte)CommandClass.Basic, 0x02));
+            var command = new Crc16Command(new Command((byte)CommandClass.Basic, 0x02));
             var payload = command.Serialize().ToArray();
 
             Assert.AreEqual(payload[0], (byte)CommandClass.Crc16Encap);
@@ -65,12 +65,12 @@ namespace ZWave4Net.Tests
         [TestMethod]
         public void MultiEncapDecap()
         {
-            var crc16EndcapCommand = new Crc16EndcapCommand(new MultiChannelEndcapCommand(0, 1, new Command((byte)CommandClass.Basic, 0x02)));
+            var crc16EndcapCommand = new Crc16Command(new MultiChannelCommand(0, 1, new Command((byte)CommandClass.Basic, 0x02)));
 
             Assert.AreEqual(crc16EndcapCommand.ClassID, (byte)CommandClass.Crc16Encap);
             Assert.AreEqual(crc16EndcapCommand.CommandID, 0x01);
 
-            var multiChannelCommand = (MultiChannelEndcapCommand)crc16EndcapCommand.Decapsulate();
+            var multiChannelCommand = (MultiChannelCommand)crc16EndcapCommand.Decapsulate();
             Assert.AreEqual(multiChannelCommand.SourceEndpointID, 0);
             Assert.AreEqual(multiChannelCommand.TargetEndpointID, 1);
             Assert.AreEqual(multiChannelCommand.ClassID, (byte)CommandClass.MultiChannel);
@@ -83,11 +83,11 @@ namespace ZWave4Net.Tests
             var commands = Command.Decapsulate(crc16EndcapCommand).ToArray();
             Assert.AreEqual(commands.Length, 3);
 
-            crc16EndcapCommand = (Crc16EndcapCommand)commands[0];
+            crc16EndcapCommand = (Crc16Command)commands[0];
             Assert.AreEqual(crc16EndcapCommand.ClassID, (byte)CommandClass.Crc16Encap);
             Assert.AreEqual(crc16EndcapCommand.CommandID, 0x01);
 
-            multiChannelCommand = (MultiChannelEndcapCommand)commands[1];
+            multiChannelCommand = (MultiChannelCommand)commands[1];
             Assert.AreEqual(multiChannelCommand.SourceEndpointID, 0);
             Assert.AreEqual(multiChannelCommand.TargetEndpointID, 1);
             Assert.AreEqual(multiChannelCommand.ClassID, (byte)CommandClass.MultiChannel);

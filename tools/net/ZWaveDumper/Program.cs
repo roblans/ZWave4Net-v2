@@ -118,8 +118,19 @@ namespace ZWaveDumper
                     WriteError(ex);
                 }
 
-                node.Updates.Subscribe((update) => WriteWarning(update));
+                Subscribe(node);
             }
+        }
+
+        private static void Subscribe(Node node)
+        {
+            node.Updates.Subscribe((update) => WriteInfo(update));
+
+            var basic = node as IBasic;
+            basic.Reports.Subscribe((report) => WriteInfo(report));
+
+            var switchBinary = node as ISwitchBinary;
+            switchBinary.Reports.Subscribe((report) => WriteInfo(report));
         }
 
         private static async Task Dump(IBasic basic)
