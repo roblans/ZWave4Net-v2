@@ -7,7 +7,7 @@ using ZWave4Net.CommandClasses;
 
 namespace ZWave4Net.Channel
 {
-    internal class Command
+    internal class Command : IPayloadSerializable
     {
         public byte ClassID { get; protected set; }
         public byte CommandID { get; protected set; }
@@ -48,52 +48,13 @@ namespace ZWave4Net.Channel
             Payload = payload != null ? new Payload(payload) : Payload.Empty;
         }
 
-        public static Command Deserialize(Payload payload)
-        {
-            if (payload.Length < 2)
-                throw new ArgumentOutOfRangeException(nameof(payload), "payload must have at least 2 bytes");
-
-            var command = default(Command);
-
-            var classID = payload[0];
-            var commandID = payload[1];
-            
-            switch (classID)
-            {
-                case Crc16EndcapCommand.EncapClassID when Crc16EndcapCommand.EncapCommandID == commandID:
-                    command = new Crc16EndcapCommand();
-                    break;
-                case MultiChannelEndcapCommand.EncapClassID when MultiChannelEndcapCommand.EncapCommandID == commandID:
-                    command = new MultiChannelEndcapCommand();
-                    break;
-                default:
-                    command = new Command();
-                    break;
-            }
-            using (var reader = new PayloadReader(payload))
-            {
-                command.Read(reader);
-            }
-            return command;
-        }
-
         public static IEnumerable<Command> Decapsulate(Command command)
         {
             yield return command;
-            while (command is IEncapsulatedCommand encapsulatedCommand)
+            while (command is EncapsulatedCommand encapsulatedCommand)
             {
                 command = encapsulatedCommand.Decapsulate();
                 yield return command;
-            }
-        }
-
-        public Payload Serialize()
-        {
-            using (var writer = new PayloadWriter())
-            {
-                Write(writer);
-
-                return writer.ToPayload();
             }
         }
 
@@ -120,6 +81,16 @@ namespace ZWave4Net.Channel
             writer.WriteByte(ClassID);
             writer.WriteByte(CommandID);
             writer.WriteObject(Payload);
+        }
+
+        void IPayloadSerializable.Read(PayloadReader reader)
+        {
+            Read(reader);
+        }
+
+        void IPayloadSerializable.Write(PayloadWriter writer)
+        {
+           Write(writer);
         }
     }
 }

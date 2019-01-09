@@ -34,7 +34,7 @@ namespace ZWave4Net.Tests
                 0x02,
                 0x4D,
                 0x26 });
-            var command = Command.Decapsulate(Command.Deserialize(payload)).Last();
+            var command = Command.Decapsulate(CommandFactory.CreateCommand(payload)).Last();
             Assert.AreEqual(command.ClassID, (byte)CommandClass.Basic);
             Assert.AreEqual(command.CommandID, 0x02);
         }
@@ -51,7 +51,7 @@ namespace ZWave4Net.Tests
             // CRC1 = 0x4D 
             // CRC2 = 0x26
 
-            var command = Crc16EndcapCommand.Encapsulate(new Command((byte)CommandClass.Basic, 0x02));
+            var command = new Crc16EndcapCommand(new Command((byte)CommandClass.Basic, 0x02));
             var payload = command.Serialize().ToArray();
 
             Assert.AreEqual(payload[0], (byte)CommandClass.Crc16Encap);
@@ -65,18 +65,18 @@ namespace ZWave4Net.Tests
         [TestMethod]
         public void MultiEncapDecap()
         {
-            var crc16EndcapCommand = Crc16EndcapCommand.Encapsulate(MultiChannelEndcapCommand.Encapsulate(0, 1, new Command((byte)CommandClass.Basic, 0x02)));
+            var crc16EndcapCommand = new Crc16EndcapCommand(new MultiChannelEndcapCommand(0, 1, new Command((byte)CommandClass.Basic, 0x02)));
 
             Assert.AreEqual(crc16EndcapCommand.ClassID, (byte)CommandClass.Crc16Encap);
             Assert.AreEqual(crc16EndcapCommand.CommandID, 0x01);
 
-            var multiChannelCommand = (MultiChannelEndcapCommand)((IEncapsulatedCommand)crc16EndcapCommand).Decapsulate();
+            var multiChannelCommand = (MultiChannelEndcapCommand)crc16EndcapCommand.Decapsulate();
             Assert.AreEqual(multiChannelCommand.SourceEndpointID, 0);
             Assert.AreEqual(multiChannelCommand.TargetEndpointID, 1);
             Assert.AreEqual(multiChannelCommand.ClassID, (byte)CommandClass.MultiChannel);
             Assert.AreEqual(multiChannelCommand.CommandID, 0x0D);
 
-            var basicCommand = ((IEncapsulatedCommand)multiChannelCommand).Decapsulate();
+            var basicCommand = multiChannelCommand.Decapsulate();
             Assert.AreEqual(basicCommand.ClassID, (byte)CommandClass.Basic);
             Assert.AreEqual(basicCommand.CommandID, 0x02);
 

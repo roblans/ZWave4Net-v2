@@ -6,7 +6,7 @@ using ZWave4Net.CommandClasses;
 
 namespace ZWave4Net.Channel
 {
-    internal class MultiChannelEndcapCommand : Command, IEncapsulatedCommand
+    internal class MultiChannelEndcapCommand : EncapsulatedCommand
     {
         public const byte EncapClassID = (byte)CommandClass.MultiChannel;
         public const byte EncapCommandID = 0x0D;
@@ -18,23 +18,11 @@ namespace ZWave4Net.Channel
         {
         }
 
-        private MultiChannelEndcapCommand(byte sourceEndpointID, byte targetEndpointID, Payload payload)
-            : base(EncapClassID, EncapCommandID, payload)
+        public MultiChannelEndcapCommand(byte sourceEndpointID, byte targetEndpointID, Command command)
+            : base(EncapClassID, EncapCommandID, command)
         {
             SourceEndpointID = sourceEndpointID;
             TargetEndpointID = targetEndpointID;
-            Payload = payload;
-        }
-
-        public static MultiChannelEndcapCommand Encapsulate(byte sourceEndpointID, byte targetEndpointID, Command command)
-        {
-            var payload = new Payload(command.Serialize());
-            return new MultiChannelEndcapCommand(sourceEndpointID, targetEndpointID, payload);
-        }
-
-        Command IEncapsulatedCommand.Decapsulate()
-        {
-            return Deserialize(Payload);
         }
 
         public override string ToString()
