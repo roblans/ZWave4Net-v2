@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ZWave4Net.Channel;
 
 namespace ZWave4Net.CommandClasses.Services
 {
     internal class ManufacturerSpecificService : CommandClassService, IManufacturerSpecific
     {
-        enum Command
+        enum ManufacturerSpecificCommand
         {
             Get = 0x04,
             Report = 0x05
@@ -21,8 +22,8 @@ namespace ZWave4Net.CommandClasses.Services
 
         public Task<ManufacturerSpecificReport> Get(CancellationToken cancellationToken = default(CancellationToken))
         {
-            var command = new Channel.Command(CommandClass, Command.Get);
-            return Send<ManufacturerSpecificReport>(command, Command.Report, cancellationToken);
+            var command = new Command(CommandClass, ManufacturerSpecificCommand.Get);
+            return Send<ManufacturerSpecificReport>(command, ManufacturerSpecificCommand.Report, cancellationToken);
         }
     }
 }

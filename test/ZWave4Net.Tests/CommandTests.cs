@@ -65,12 +65,12 @@ namespace ZWave4Net.Tests
         [TestMethod]
         public void MultiEncapDecap()
         {
-            var crc16EndcapCommand = new Crc16Command(new MultiChannelCommand(0, 1, new Command((byte)CommandClass.Basic, 0x02)));
+            var crc16Command = new Crc16Command(new MultiChannelCommand(0, 1, new Command((byte)CommandClass.Basic, 0x02)));
 
-            Assert.AreEqual(crc16EndcapCommand.ClassID, (byte)CommandClass.Crc16Encap);
-            Assert.AreEqual(crc16EndcapCommand.CommandID, 0x01);
+            Assert.AreEqual(crc16Command.ClassID, (byte)CommandClass.Crc16Encap);
+            Assert.AreEqual(crc16Command.CommandID, 0x01);
 
-            var multiChannelCommand = (MultiChannelCommand)crc16EndcapCommand.Decapsulate();
+            var multiChannelCommand = (MultiChannelCommand)crc16Command.Decapsulate();
             Assert.AreEqual(multiChannelCommand.SourceEndpointID, 0);
             Assert.AreEqual(multiChannelCommand.TargetEndpointID, 1);
             Assert.AreEqual(multiChannelCommand.ClassID, (byte)CommandClass.MultiChannel);
@@ -80,12 +80,12 @@ namespace ZWave4Net.Tests
             Assert.AreEqual(basicCommand.ClassID, (byte)CommandClass.Basic);
             Assert.AreEqual(basicCommand.CommandID, 0x02);
 
-            var commands = Command.Decapsulate(crc16EndcapCommand).ToArray();
+            var commands = Command.Decapsulate(crc16Command).ToArray();
             Assert.AreEqual(commands.Length, 3);
 
-            crc16EndcapCommand = (Crc16Command)commands[0];
-            Assert.AreEqual(crc16EndcapCommand.ClassID, (byte)CommandClass.Crc16Encap);
-            Assert.AreEqual(crc16EndcapCommand.CommandID, 0x01);
+            crc16Command = (Crc16Command)commands[0];
+            Assert.AreEqual(crc16Command.ClassID, (byte)CommandClass.Crc16Encap);
+            Assert.AreEqual(crc16Command.CommandID, 0x01);
 
             multiChannelCommand = (MultiChannelCommand)commands[1];
             Assert.AreEqual(multiChannelCommand.SourceEndpointID, 0);

@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ZWave4Net.Channel;
 
 namespace ZWave4Net.CommandClasses.Services
 {
     internal class ConfigurationService : CommandClassService, IConfiguration
     {
-        enum Command : byte
+        enum ConfigurationCommand : byte
         {
             Set = 0x04,
             Get = 0x05,
@@ -22,8 +23,8 @@ namespace ZWave4Net.CommandClasses.Services
 
         public Task<ConfigurationReport> Get(byte parameter, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var command = new Channel.Command(CommandClass, Command.Get, parameter);
-            return Send<ConfigurationReport>(command, Command.Report, cancellationToken);
+            var command = new Command(CommandClass, ConfigurationCommand.Get, parameter);
+            return Send<ConfigurationReport>(command, ConfigurationCommand.Report, cancellationToken);
         }
 
         public Task Set(byte parameter, object value, byte size, CancellationToken cancellationToken = default(CancellationToken))
@@ -47,7 +48,7 @@ namespace ZWave4Net.CommandClasses.Services
                         writer.WriteInt32(Convert.ToInt32(value));
                         break;
                 }
-                var command = new Channel.Command(CommandClass, Command.Set, writer.ToPayload());
+                var command = new Command(CommandClass, ConfigurationCommand.Set, writer.ToPayload());
                 return Send(command, cancellationToken);
             }
         }

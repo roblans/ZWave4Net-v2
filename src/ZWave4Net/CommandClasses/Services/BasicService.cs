@@ -10,7 +10,7 @@ namespace ZWave4Net.CommandClasses.Services
 {
     internal class BasicService : CommandClassService, IBasic
     {
-        enum Command : byte
+        enum BasicCommand : byte
         {
             Set = 0x01,
             Get = 0x02,
@@ -24,19 +24,19 @@ namespace ZWave4Net.CommandClasses.Services
 
         public Task<BasicReport> Get(CancellationToken cancellation = default(CancellationToken))
         {
-            var command = new Channel.Command(CommandClass, Command.Get);
-            return Send<BasicReport>(command, Command.Report, cancellation);
+            var command = new Command(CommandClass, BasicCommand.Get);
+            return Send<BasicReport>(command, BasicCommand.Report, cancellation);
         }
 
         public Task Set(byte value, CancellationToken cancellation = default(CancellationToken))
         {
-            var command = new Channel.Command(CommandClass, Command.Set, value);
+            var command = new Command(CommandClass, BasicCommand.Set, value);
             return Send(command, cancellation); 
         }
 
         public IObservable<BasicReport> Reports
         {
-            get { return Reports<BasicReport>(Command.Report); }
+            get { return Reports<BasicReport>(BasicCommand.Report); }
         }
     }
 }

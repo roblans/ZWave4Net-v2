@@ -10,7 +10,7 @@ namespace ZWave4Net.CommandClasses.Services
 {
     internal class SwitchBinaryService : CommandClassService, ISwitchBinary
     {
-        enum Command : byte
+        enum SwitchBinaryCommand : byte
         {
             Set = 0x01,
             Get = 0x02,
@@ -24,19 +24,19 @@ namespace ZWave4Net.CommandClasses.Services
 
         public async Task<SwitchBinaryReport> Get(CancellationToken cancellationToken = default(CancellationToken))
         {
-            var command = new Channel.Command(CommandClass, Command.Get);
-            return await Send<SwitchBinaryReport>(command, Command.Report, cancellationToken);
+            var command = new Command(CommandClass, SwitchBinaryCommand.Get);
+            return await Send<SwitchBinaryReport>(command, SwitchBinaryCommand.Report, cancellationToken);
         }
 
         public Task Set(bool value, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var command = new Channel.Command(CommandClass, Command.Set, (byte)(value ? 0xFF : 0x00));
+            var command = new Command(CommandClass, SwitchBinaryCommand.Set, (byte)(value ? 0xFF : 0x00));
             return Send(command, cancellationToken); 
         }
 
         public IObservable<SwitchBinaryReport> Reports
         {
-            get { return Reports<SwitchBinaryReport>(Command.Report); }
+            get { return Reports<SwitchBinaryReport>(SwitchBinaryCommand.Report); }
         }
     }
 }

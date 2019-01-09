@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ZWave4Net.Channel;
 
 namespace ZWave4Net.CommandClasses.Services
 {
     internal class VersionService : CommandClassService, IVersion
     {
-        enum Command : byte
+        enum VersionCommand : byte
         {
             Get = 0x11,
             Report = 0x12,
@@ -23,15 +24,15 @@ namespace ZWave4Net.CommandClasses.Services
 
         public Task<VersionReport> Get(CancellationToken cancellationToken)
         {
-            var command = new Channel.Command(CommandClass, Command.Get);
-            return Send<VersionReport>(command, Command.Report, cancellationToken);
+            var command = new Command(CommandClass, VersionCommand.Get);
+            return Send<VersionReport>(command, VersionCommand.Report, cancellationToken);
         }
 
 
         public Task<VersionCommandClassReport> GetCommandClass(CommandClass commandClass, CancellationToken cancellationToken)
         {
-            var command = new Channel.Command(CommandClass, Command.CommandClassGet, Convert.ToByte(commandClass));
-            return Send<VersionCommandClassReport>(command, Command.CommandClassReport, cancellationToken);
+            var command = new Command(CommandClass, VersionCommand.CommandClassGet, Convert.ToByte(commandClass));
+            return Send<VersionCommandClassReport>(command, VersionCommand.CommandClassReport, cancellationToken);
         }
     }
 }

@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
+using ZWave4Net.Channel;
 
 namespace ZWave4Net.CommandClasses.Services
 {
     internal class MultiChannelService : CommandClassService, IMultiChannel
     {
-        enum Command
+        enum MultiChannelCommand
         {
             EndPointGet = 0x07,
             EndPointReport = 0x08,
@@ -23,8 +24,8 @@ namespace ZWave4Net.CommandClasses.Services
 
         public Task<MultiChannelEndpointsReport> GetEndpoints(CancellationToken cancellation = default(CancellationToken))
         {
-            var command = new Channel.Command(CommandClass, Command.EndPointGet);
-            return Send<MultiChannelEndpointsReport>(command, Command.EndPointReport, cancellation);
+            var command = new Command(CommandClass, MultiChannelCommand.EndPointGet);
+            return Send<MultiChannelEndpointsReport>(command, MultiChannelCommand.EndPointReport, cancellation);
         }
 
     }
