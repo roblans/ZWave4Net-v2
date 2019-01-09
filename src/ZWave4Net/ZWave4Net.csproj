@@ -4,9 +4,16 @@
     <TargetFrameworks>netstandard2.0;netcoreapp2.0;net472</TargetFrameworks>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
-    <DocumentationFile>d:\Workspaces\GitHub\ZWave4Net-v2\src\ZWave4Net\ZWave4Net.xml</DocumentationFile>
-    <NoWarn>1701;1702;1591</NoWarn>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <DefineConstants>NETSTANDARD</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
+    <DefineConstants>NETCORE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
+    <DefineConstants>NETFRAMEWORK</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

@@ -55,7 +55,7 @@ namespace ZWave4Net
             Channel = new ZWaveChannel(port);
         }
 
-#if NET472
+#if NETFRAMEWORK
 
         /// <summary>
         /// Initializes an new instance of the ZWaveController
