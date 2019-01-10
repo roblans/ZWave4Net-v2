@@ -70,16 +70,6 @@ namespace ZWave4Net.Channel
             }
         }
 
-        public static IEnumerable<Command> Flatten(Command command)
-        {
-            yield return command;
-            while (command is IEncapsulatedCommand encapsulatedCommand)
-            {
-                command = encapsulatedCommand.Decapsulate();
-                yield return command;
-            }
-        }
-
         public override string ToString()
         {
             return $"{CommandClass}, {CommandID}, {Payload}";

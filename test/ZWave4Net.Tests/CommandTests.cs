@@ -34,7 +34,7 @@ namespace ZWave4Net.Tests
                 0x02,
                 0x4D,
                 0x26 });
-            var command = Command.Flatten(Command.Parse(payload)).Last();
+            var command = Encapsulation.Flatten(Command.Parse(payload)).Last();
             Assert.AreEqual(command.CommandClass, CommandClass.Basic);
             Assert.AreEqual(command.CommandID, 0x02);
         }
@@ -80,7 +80,7 @@ namespace ZWave4Net.Tests
             Assert.AreEqual(basicCommand.CommandClass, CommandClass.Basic);
             Assert.AreEqual(basicCommand.CommandID, 0x02);
 
-            var commands = Command.Flatten(crc16Command).ToArray();
+            var commands = Encapsulation.Flatten(crc16Command).ToArray();
             Assert.AreEqual(commands.Length, 3);
 
             crc16Command = (Crc16Command)commands[0];
