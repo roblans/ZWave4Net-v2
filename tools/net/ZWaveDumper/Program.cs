@@ -103,6 +103,11 @@ namespace ZWaveDumper
                 await Dump(enpoint as IAssociation);
             }
 
+            if (commandClasses.Contains(CommandClass.MultiChannelAssociation))
+            {
+                await Dump(enpoint as IMultiChannelAssociation);
+            }
+
             if (commandClasses.Contains(CommandClass.SwitchBinary))
             {
                 await Dump(enpoint as ISwitchBinary);
@@ -173,12 +178,31 @@ namespace ZWaveDumper
             try
             {
                 var groups = await association.GetGroupings();
-                WriteInfo($"Association: Groups = {groups.SupportedGroupings}");
+                WriteInfo($"Association: {groups}");
 
                 for (byte group = 1; group <= groups.SupportedGroupings; group++)
                 {
-                    var nodes = await association.Get(group);
-                    WriteInfo($"Association: {string.Join(", ", nodes)}");
+                    var report = await association.Get(group);
+                    WriteInfo($"Association: {report}");
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteError(ex);
+            }
+        }
+
+        private static async Task Dump(IMultiChannelAssociation association)
+        {
+            try
+            {
+                var groups = await association.GetGroupings();
+                WriteInfo($"MultiChannelAssociation: {groups}");
+
+                for (byte group = 1; group <= groups.SupportedGroupings; group++)
+                {
+                    var report = await association.Get(group);
+                    WriteInfo($"MultiChannelAssociation: {report}");
                 }
             }
             catch (Exception ex)
