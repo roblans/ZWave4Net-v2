@@ -9,7 +9,7 @@ namespace ZWave4Net.Channel
 {
     internal class Command : IPayloadSerializable
     {
-        public byte ClassID { get; protected set; }
+        public CommandClass CommandClass { get; protected set; }
         public byte CommandID { get; protected set; }
         public Payload Payload { get; protected set; }
 
@@ -17,41 +17,63 @@ namespace ZWave4Net.Channel
         {
         }
 
-        public Command(CommandClass @class, Enum command, params byte[] payload)
-            : this(Convert.ToByte(@class), Convert.ToByte(command), payload)
+        public Command(CommandClass commandClass, Enum command, params byte[] payload)
+            : this(commandClass, Convert.ToByte(command), payload)
         {
         }
 
-        public Command(CommandClass @class, Enum command, IEnumerable<byte> payload)
-            : this(Convert.ToByte(@class), Convert.ToByte(command), payload)
+        public Command(CommandClass commandClass, Enum command, IEnumerable<byte> payload)
+            : this(commandClass, Convert.ToByte(command), payload)
         {
         }
 
-        public Command(byte classID, byte commandID, params byte[] payload)
+        public Command(CommandClass classID, byte commandID, params byte[] payload)
         {
-            ClassID = classID;
+            CommandClass = classID;
             CommandID = commandID;
             Payload = payload != null ? new Payload(payload) : Payload.Empty;
         }
 
-        public Command(byte classID, byte commandID, Payload payload)
+        public Command(CommandClass classID, byte commandID, Payload payload)
         {
-            ClassID = classID;
+            CommandClass = classID;
             CommandID = commandID;
             Payload = payload;
         }
 
-        public Command(byte classID, byte commandID, IEnumerable<byte> payload)
+        public Command(CommandClass classID, byte commandID, IEnumerable<byte> payload)
         {
-            ClassID = classID;
+            CommandClass = classID;
             CommandID = commandID;
             Payload = payload != null ? new Payload(payload) : Payload.Empty;
         }
 
-        public static IEnumerable<Command> Decapsulate(Command command)
+        public static Command Parse(Payload payload)
+        {
+            if (payload.Length < 2)
+                throw new ArgumentOutOfRangeException(nameof(payload), "payload must have at least 2 bytes");
+
+            var commandClass = (CommandClass)payload[0];
+            var commandID = payload[1];
+
+            using (var reader = new PayloadReader(payload))
+            {
+                switch (commandClass)
+                {
+                    case CommandClass.Crc16Encap when Crc16Command.EncapCommandID == commandID:
+                        return reader.ReadObject<Crc16Command>();
+                    case CommandClass.MultiChannel when MultiChannelCommand.EncapCommandID == commandID:
+                        return reader.ReadObject<MultiChannelCommand>();
+                    default:
+                        return reader.ReadObject<Command>();
+                }
+            }
+        }
+
+        public static IEnumerable<Command> Flatten(Command command)
         {
             yield return command;
-            while (command is EncapsulatedCommand encapsulatedCommand)
+            while (command is IEncapsulatedCommand encapsulatedCommand)
             {
                 command = encapsulatedCommand.Decapsulate();
                 yield return command;
@@ -60,7 +82,7 @@ namespace ZWave4Net.Channel
 
         public override string ToString()
         {
-            return $"{ClassID}, {CommandID}, {Payload}";
+            return $"{CommandClass}, {CommandID}, {Payload}";
         }
 
         protected virtual void Read(PayloadReader reader)
@@ -68,7 +90,7 @@ namespace ZWave4Net.Channel
             if (reader == null)
                 throw new ArgumentNullException(nameof(reader));
 
-            ClassID = reader.ReadByte();
+            CommandClass = (CommandClass)reader.ReadByte();
             CommandID = reader.ReadByte();
             Payload = new Payload(reader.ReadBytes(reader.Length - reader.Position));
         }
@@ -78,7 +100,7 @@ namespace ZWave4Net.Channel
             if (writer == null)
                 throw new ArgumentNullException(nameof(writer));
 
-            writer.WriteByte(ClassID);
+            writer.WriteByte((byte)CommandClass);
             writer.WriteByte(CommandID);
             writer.WriteObject(Payload);
         }

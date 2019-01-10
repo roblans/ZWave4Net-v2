@@ -326,32 +326,32 @@ namespace ZWave4Net.Channel
             var pipeline = default(IObservable<Command>);
 
             // does the command contain an encapsulated MultiChannelCommand? 
-            if (Command.Decapsulate(command).OfType<MultiChannelCommand>().Any())
+            if (Command.Flatten(command).OfType<MultiChannelCommand>().Any())
             {
                 // yes, so extract the MultiChannelCommand
-                var multiChannelRequestCommand = Command.Decapsulate(command).OfType<MultiChannelCommand>().Single();              
+                var multiChannelRequestCommand = Command.Flatten(command).OfType<MultiChannelCommand>().Single();              
                 // and get the inner most command
-                var requestCommand = Command.Decapsulate(multiChannelRequestCommand).Last();
+                var requestCommand = Command.Flatten(multiChannelRequestCommand).Last();
 
                 pipeline = replyPipeline
                 // extract the MultiChannelCommand from the response
-                .Select(response => Command.Decapsulate(response.Command).OfType<MultiChannelCommand>().Single())
+                .Select(response => Command.Flatten(response.Command).OfType<MultiChannelCommand>().Single())
                 // verify if the MultiChannelCommand is the correct one
-                .Where(reply => reply.ClassID == multiChannelRequestCommand.ClassID && reply.CommandID == multiChannelRequestCommand.CommandID)
+                .Where(reply => reply.CommandClass == multiChannelRequestCommand.CommandClass && reply.CommandID == multiChannelRequestCommand.CommandID)
                 // verify if the endpoint the correct one
                 .Where(reply => reply.SourceEndpointID == multiChannelRequestCommand.TargetEndpointID)
                 // select the inner most command
-                .Select(reply => Command.Decapsulate(reply).Last())
+                .Select(reply => Command.Flatten(reply).Last())
                 // verify if the response command is the correct one
-                .Where(reply => reply.ClassID == requestCommand.ClassID && reply.CommandID == responseCommandID);
+                .Where(reply => reply.CommandClass == requestCommand.CommandClass && reply.CommandID == responseCommandID);
             }
             else
             {
                 pipeline = replyPipeline
                 // select the inner most command
-                .Select(response => Command.Decapsulate(response.Command).Last())
+                .Select(response => Command.Flatten(response.Command).Last())
                 // verify if the response conmmand is the correct one
-                .Where(reply => reply.ClassID == command.ClassID && reply.CommandID == responseCommandID);
+                .Where(reply => reply.CommandClass == command.CommandClass && reply.CommandID == responseCommandID);
             }
 
             return await Send(Encode(controllerRequest, callbackID), pipeline, cancellationToken);
@@ -377,34 +377,34 @@ namespace ZWave4Net.Channel
             .Where(response => response.NodeID == nodeID);
 
             // does the command contain an encapsulated MultiChannelCommand? 
-            if (Command.Decapsulate(command).OfType<MultiChannelCommand>().Any())
+            if (Command.Flatten(command).OfType<MultiChannelCommand>().Any())
             {
                 // yes, so extract the MultiChannelCommand
-                var multiChannelRequestCommand = Command.Decapsulate(command).OfType<MultiChannelCommand>().Single();
+                var multiChannelRequestCommand = Command.Flatten(command).OfType<MultiChannelCommand>().Single();
                 // and get the inner most command
-                var requestCommand = Command.Decapsulate(multiChannelRequestCommand).Last();
+                var requestCommand = Command.Flatten(multiChannelRequestCommand).Last();
 
                 return messages
                 // extract the MultiChannelCommand from the response
-                .Select(response => Command.Decapsulate(response.Command).OfType<MultiChannelCommand>().SingleOrDefault())
+                .Select(response => Command.Flatten(response.Command).OfType<MultiChannelCommand>().SingleOrDefault())
                 // verify if present
                 .Where(reply => reply != null)
                 // verify if the MultiChannelCommand is the correct one
-                .Where(reply => reply.ClassID == multiChannelRequestCommand.ClassID && reply.CommandID == multiChannelRequestCommand.CommandID)
+                .Where(reply => reply.CommandClass == multiChannelRequestCommand.CommandClass && reply.CommandID == multiChannelRequestCommand.CommandID)
                 // verify if the endpoint is the correct one
                 .Where(reply => reply.SourceEndpointID == multiChannelRequestCommand.SourceEndpointID)
                 // select the inner most command
-                .Select(reply => Command.Decapsulate(reply).Last())
+                .Select(reply => Command.Flatten(reply).Last())
                 // verify if the response command is the correct one
-                .Where(reply => reply.ClassID == requestCommand.ClassID && reply.CommandID == requestCommand.CommandID);
+                .Where(reply => reply.CommandClass == requestCommand.CommandClass && reply.CommandID == requestCommand.CommandID);
             }
             else
             {
                 return messages
                 // select the inner most command
-                .Select(response => Command.Decapsulate(response.Command).Last())
+                .Select(response => Command.Flatten(response.Command).Last())
                 // verify if the response conmmand is the correct one
-                .Where(reply => reply.ClassID == command.ClassID && reply.CommandID == command.CommandID);
+                .Where(reply => reply.CommandClass == command.CommandClass && reply.CommandID == command.CommandID);
             }
         }
 

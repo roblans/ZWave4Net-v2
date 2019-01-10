@@ -38,7 +38,7 @@ namespace ZWave4Net.Channel
 
             var commandLength = reader.ReadByte();
             var commandBytes = reader.ReadBytes(commandLength);
-            Command = CommandFactory.CreateCommand(new Payload(commandBytes));
+            Command = Command.Parse(new Payload(commandBytes));
         }
 
         void IPayloadSerializable.Write(PayloadWriter writer)
