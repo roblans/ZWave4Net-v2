@@ -129,6 +129,11 @@ namespace ZWaveDumper
             {
                 await Dump(enpoint as IMultiChannel);
             }
+
+            if (commandClasses.Contains(CommandClass.Powerlevel))
+            {
+                await Dump(enpoint as IPowerlevel);
+            }
         }
 
         private static void Subscribe(Node node)
@@ -270,6 +275,19 @@ namespace ZWaveDumper
             }
         }
 
+        private static async Task Dump(IPowerlevel powerlevel)
+        {
+            try
+            {
+                var report = await powerlevel.Get();
+                WriteInfo($"Powerlevel: {report}");
+            }
+            catch (Exception ex)
+            {
+                WriteError(ex);
+            }
+        }
+
         private static void WriteLogRecord(LogRecord record)
         {
             switch (record.Level)
@@ -321,6 +339,12 @@ namespace ZWaveDumper
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine(state);
+        }
+
+        private static void WriteError(Exception exception)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(exception.Message);
         }
     }
 }

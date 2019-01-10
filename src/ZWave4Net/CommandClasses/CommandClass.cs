@@ -23,7 +23,7 @@ namespace ZWave4Net.CommandClasses
         Configuration = 0x70,
         Alarm = 0x71,
         ManufacturerSpecific = 0x72,
-        PowerLevel = 0x73,
+        Powerlevel = 0x73,
         Protection = 0x75,
         FirmwareUpdateMetaData = 0x7A,
         Battery = 0x80,

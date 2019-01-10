@@ -76,7 +76,7 @@ namespace ZWave4Net
         /// </summary>
         /// <param name="softReset">True to perform a sofreset, False otherwise</param>
         /// <returns>A task that represents the asynchronous operation</returns>
-        public async Task Open(bool softReset = true)
+        public async Task Open(bool softReset = false)
         {
             await Channel.Open(softReset);
 
