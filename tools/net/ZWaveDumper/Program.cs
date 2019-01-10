@@ -17,7 +17,7 @@ namespace ZWaveDumper
         {
             Logging.Factory.Subscribe((message) =>
             {
-                if (message.Level >= LogLevel.Warning)
+                if (message.Level >= LogLevel.Info)
                 {
                     WriteLogRecord(message);
                 }
@@ -62,10 +62,7 @@ namespace ZWaveDumper
 
         private static async Task Dump(Node node)
         {
-            //if (node.NodeID != 25)
-            //    return;
-
-            WriteInfo($"node {node}");
+            WriteInfo($"Node {node}");
             WriteSeparator();
 
             WriteInfo($"Type: {node.NodeType}");
