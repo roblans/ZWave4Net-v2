@@ -21,7 +21,7 @@ namespace ZWave4Net.CommandClasses.Services
         }
 
         public AssociationService(byte nodeID, byte endpointID, ZWaveController controller)
-            : base(nodeID, endpointID, CommandClass.Association, controller)
+            : base(nodeID, endpointID, controller, CommandClass.Association)
         {
         }
 

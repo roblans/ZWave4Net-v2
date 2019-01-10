@@ -18,7 +18,7 @@ namespace ZWave4Net.CommandClasses.Services
         }
 
         public VersionService(byte nodeID, byte endpointID, ZWaveController controller)
-            : base(nodeID, endpointID, CommandClass.Version, controller)
+            : base(nodeID, endpointID, controller, CommandClass.Version)
         {
         }
 

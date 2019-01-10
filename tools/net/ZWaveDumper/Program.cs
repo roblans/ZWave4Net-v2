@@ -23,9 +23,7 @@ namespace ZWaveDumper
                 }
             });
 
-            var portName = SerialPort.GetPortNames().Where(element => element != "COM1").First();
-            var controller = new ZWaveController(portName);
-
+            var controller = new ZWaveController();
             try
             {
                 await controller.Open();
@@ -125,14 +123,19 @@ namespace ZWaveDumper
                 await Dump(enpoint as IManufacturerSpecific);
             }
 
-            if (commandClasses.Contains(CommandClass.MultiChannel))
-            {
-                await Dump(enpoint as IMultiChannel);
-            }
-
             if (commandClasses.Contains(CommandClass.Powerlevel))
             {
                 await Dump(enpoint as IPowerlevel);
+            }
+
+            if (commandClasses.Contains(CommandClass.FirmwareUpdateMetaData))
+            {
+                await Dump(enpoint as IFirmwareUpdateMetaData);
+            }
+
+            if (commandClasses.Contains(CommandClass.MultiChannel))
+            {
+                await Dump(enpoint as IMultiChannel);
             }
         }
 
@@ -281,6 +284,19 @@ namespace ZWaveDumper
             {
                 var report = await powerlevel.Get();
                 WriteInfo($"Powerlevel: {report}");
+            }
+            catch (Exception ex)
+            {
+                WriteError(ex);
+            }
+        }
+
+        private static async Task Dump(IFirmwareUpdateMetaData firmware)
+        {
+            try
+            {
+                var report = await firmware.Get();
+                WriteInfo($"FirmwareUpdateMetaData: {report}");
             }
             catch (Exception ex)
             {

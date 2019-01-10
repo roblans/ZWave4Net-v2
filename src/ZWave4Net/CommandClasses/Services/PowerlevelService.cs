@@ -17,7 +17,7 @@ namespace ZWave4Net.CommandClasses.Services
         }
 
         public PowerlevelService(byte nodeID, byte endpointID, ZWaveController controller)
-            : base(nodeID, endpointID, CommandClass.Powerlevel, controller)
+            : base(nodeID, endpointID, controller, CommandClass.Powerlevel)
         {
         }
 

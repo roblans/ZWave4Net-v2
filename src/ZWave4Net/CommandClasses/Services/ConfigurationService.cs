@@ -17,7 +17,7 @@ namespace ZWave4Net.CommandClasses.Services
         }
 
         public ConfigurationService(byte nodeID, byte endpointID, ZWaveController controller)
-            : base(nodeID, endpointID, CommandClass.Configuration, controller)
+            : base(nodeID, endpointID, controller, CommandClass.Configuration)
         {
         }
 

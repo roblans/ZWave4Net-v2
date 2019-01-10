@@ -18,7 +18,7 @@ namespace ZWave4Net.CommandClasses.Services
         }
 
         public MultiChannelService(byte nodeID, byte endpointID, ZWaveController controller)
-            : base(nodeID, endpointID, CommandClass.MultiChannel, controller)
+            : base(nodeID, endpointID, controller, CommandClass.MultiChannel)
         {
         }
 

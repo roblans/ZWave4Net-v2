@@ -16,7 +16,7 @@ namespace ZWave4Net.CommandClasses.Services
         }
 
         public ManufacturerSpecificService(byte nodeID, byte endpointID, ZWaveController controller)
-            : base(nodeID, endpointID, CommandClass.ManufacturerSpecific, controller)
+            : base(nodeID, endpointID, controller, CommandClass.ManufacturerSpecific)
         {
         }
 

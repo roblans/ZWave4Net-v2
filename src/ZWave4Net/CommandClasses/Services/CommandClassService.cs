@@ -12,21 +12,22 @@ namespace ZWave4Net.CommandClasses.Services
     {
         private readonly byte _nodeID;
         private readonly byte _endpointID;
+
         private Node _node;
         private Endpoint _endpoint;
-        public readonly CommandClass CommandClass;
-        public readonly ZWaveController Controller;
 
-        public CommandClassService(byte nodeID, byte endpointID, CommandClass commandClass, ZWaveController controller)
+        public readonly ZWaveController Controller;
+        public readonly CommandClass CommandClass;
+
+        public CommandClassService(byte nodeID, byte endpointID, ZWaveController controller, CommandClass commandClass)
         {
             if (nodeID == 0)
                 throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
 
             _nodeID = nodeID;
             _endpointID = endpointID;
-
-            CommandClass = commandClass;
             Controller = controller ?? throw new ArgumentNullException(nameof(controller));
+            CommandClass = commandClass;
         }
 
         public Node Node
