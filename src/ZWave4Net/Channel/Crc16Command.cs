@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 using ZWave4Net.CommandClasses;
+using ZWave4Net.Channel.Protocol;
 
 namespace ZWave4Net.Channel
 {
@@ -44,7 +45,7 @@ namespace ZWave4Net.Channel
             var expectedChecksum = new byte[] { (byte)CommandClass, CommandID }.Concat(Payload.ToArray()).CalculateCrc16Checksum();
 
             if (actualChecksum != expectedChecksum)
-                throw new Crc16ChecksumException("CRC-16 encapsulated command checksum failure");
+                throw new ChecksumException("CRC-16 encapsulated command checksum failure");
         }
 
         protected override void Write(PayloadWriter writer)
