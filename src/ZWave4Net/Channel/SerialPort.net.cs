@@ -20,7 +20,7 @@ namespace ZWave4Net.Channel
             return System.IO.Ports.SerialPort.GetPortNames();
         }
 
-        public static string[] GetPortNames(ushort vendorId, ushort productId)
+        public static string[] GetPortNames(UsbStick usbStick)
         {
             var results = new List<string>();
 
@@ -30,7 +30,7 @@ namespace ZWave4Net.Channel
                 foreach (var port in ports)
                 {
                     var deviceID = port.GetPropertyValue("PNPDeviceID").ToString();
-                    if (deviceID.Contains($"VID_{vendorId:X4}&PID_{productId:X4}"))
+                    if (deviceID.Contains($"VID_{usbStick.VendorId:X4}&PID_{usbStick.ProductId:X4}"))
                     {
                         results.Add(port.GetPropertyValue("DeviceID").ToString());
                     }
