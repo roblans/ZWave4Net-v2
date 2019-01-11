@@ -20,7 +20,7 @@ namespace ZWave4Net.Channel
             return System.IO.Ports.SerialPort.GetPortNames();
         }
 
-        public static string[] FindPortNames(ushort vendorId, ushort productId)
+        public static string[] GetPortNames(ushort vendorId, ushort productId)
         {
             var results = new List<string>();
 
