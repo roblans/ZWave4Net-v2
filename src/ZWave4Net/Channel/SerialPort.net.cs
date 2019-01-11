@@ -54,6 +54,17 @@ namespace ZWave4Net.Channel
             _port = new System.IO.Ports.SerialPort(portName, 115200, System.IO.Ports.Parity.None, 8, System.IO.Ports.StopBits.One);
         }
 
+        public SerialPort(UsbStick stick)
+        {
+            if (stick == null)
+                throw new ArgumentNullException(nameof(stick));
+
+            var portName = GetPortNames(stick).FirstOrDefault();
+            if (portName == null)
+                throw new ArgumentOutOfRangeException(nameof(stick), stick, "Usb stick not found.");
+
+            _port = new System.IO.Ports.SerialPort(portName, 115200, System.IO.Ports.Parity.None, 8, System.IO.Ports.StopBits.One);
+        }
 
         public Task Open()
         {

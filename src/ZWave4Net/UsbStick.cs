@@ -14,5 +14,10 @@
             VendorID = vendorID;
             ProductID = productID;
         }
+
+        public override string ToString()
+        {
+            return $"{Name}";
+        }
     }
 }

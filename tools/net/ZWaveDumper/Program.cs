@@ -23,14 +23,7 @@ namespace ZWaveDumper
                 }
             });
 
-            var portName = SerialPort.GetPortNames(UsbStick.AeotecZStick).FirstOrDefault();
-            if (portName == null)
-            {
-                WriteError("Aeotec Z-Stick not found");
-                return;
-            }
-
-            var controller = new ZWaveController(portName);
+            var controller = new ZWaveController(UsbStick.AeotecZStick);
             try
             {
                 await controller.Open();

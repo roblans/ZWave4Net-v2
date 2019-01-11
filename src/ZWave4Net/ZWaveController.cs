@@ -56,17 +56,29 @@ namespace ZWave4Net
         }
 
 #if NETFRAMEWORK
+        /// <summary>
+        /// Initializes an new instance of the ZWaveController
+        /// </summary>
+        /// <param name="usbStick">The USB stick to use</param>
+        public ZWaveController(UsbStick usbStick)
+        {
+            if (usbStick == null)
+                throw new ArgumentNullException(nameof(usbStick));
+
+            var port = new SerialPort(usbStick);
+            Channel = new ZWaveChannel(port);
+        }
 
         /// <summary>
         /// Initializes an new instance of the ZWaveController
         /// </summary>
-        /// <param name="portName">The name of the serial port to use</param>
-        public ZWaveController(string portName)
+        /// <param name="serialPortName">The name of the serial port to use</param>
+        public ZWaveController(string serialPortName)
         {
-            if (portName == null)
-                throw new ArgumentNullException(nameof(portName));
+            if (serialPortName == null)
+                throw new ArgumentNullException(nameof(serialPortName));
 
-            var port = new SerialPort(portName);
+            var port = new SerialPort(serialPortName);
             Channel = new ZWaveChannel(port);
         }
 #endif
