@@ -29,11 +29,13 @@ namespace ZWave4Net.Channel
                 var managementObjects = searcher.Get().Cast<ManagementBaseObject>().ToArray();
                 foreach (var managementObject in managementObjects)
                 {
-                    var pnpDeviceID = managementObject.GetPropertyValue("PNPDeviceID");
+                    var properties = managementObject.Properties.Cast<PropertyData>();
+
+                    var pnpDeviceID = properties.SingleOrDefault(element => element.Name == "PNPDeviceID");
                     if (pnpDeviceID == null)
                         continue;
 
-                    var deviceID = managementObject.GetPropertyValue("DeviceID");
+                    var deviceID = properties.SingleOrDefault(element => element.Name == "DeviceID");
                     if (deviceID == null)
                         continue;
 
