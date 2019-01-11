@@ -57,12 +57,6 @@ namespace ZWave4Net
 
 #if NETFRAMEWORK
 
-        public ZWaveController(ushort usbVendorId = 0x0658, ushort usbProductId = 0x0200)
-        {
-            var port = new SerialPort(usbVendorId, usbProductId);
-            Channel = new ZWaveChannel(port);
-        }
-
         /// <summary>
         /// Initializes an new instance of the ZWaveController
         /// </summary>

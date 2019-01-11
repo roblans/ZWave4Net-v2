@@ -23,7 +23,14 @@ namespace ZWaveDumper
                 }
             });
 
-            var controller = new ZWaveController();
+            var portName = SerialPort.FindPortNames(vendorId: 0x0658, productId: 0x0200).FirstOrDefault();
+            if (portName == null)
+            {
+                WriteError("Z-Stick not found");
+                return;
+            }
+
+            var controller = new ZWaveController(portName);
             try
             {
                 await controller.Open();

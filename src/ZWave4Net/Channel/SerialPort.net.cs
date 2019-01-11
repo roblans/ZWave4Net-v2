@@ -1,5 +1,6 @@
 ﻿#if NETFRAMEWORK
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Management;
 using System.Text;
@@ -19,25 +20,10 @@ namespace ZWave4Net.Channel
             return System.IO.Ports.SerialPort.GetPortNames();
         }
 
-        public SerialPort(string portName)
+        public static string[] FindPortNames(ushort vendorId, ushort productId)
         {
-            if (portName == null)
-                throw new ArgumentNullException(nameof(portName));
+            var results = new List<string>();
 
-            _port = new System.IO.Ports.SerialPort(portName, 115200, System.IO.Ports.Parity.None, 8, System.IO.Ports.StopBits.One);
-        }
-
-        public SerialPort(ushort vendorId, ushort productId)
-        {
-            var portName = FindSerialPort(vendorId, productId);
-            if (portName == null)
-                throw new ArgumentException("SerialPort not found");
-
-            _port = new System.IO.Ports.SerialPort(portName, 115200, System.IO.Ports.Parity.None, 8, System.IO.Ports.StopBits.One);
-        }
-
-        private static string FindSerialPort(ushort vendorId, ushort productId)
-        {
             using (var searcher = new ManagementObjectSearcher(@"SELECT * FROM WIN32_SerialPort"))
             {
                 var ports = searcher.Get().Cast<ManagementBaseObject>().ToArray();
@@ -46,12 +32,21 @@ namespace ZWave4Net.Channel
                     var deviceID = port.GetPropertyValue("PNPDeviceID").ToString();
                     if (deviceID.Contains($"VID_{vendorId:X4}&PID_{productId:X4}"))
                     {
-                        return port.GetPropertyValue("DeviceID").ToString();
+                        results.Add(port.GetPropertyValue("DeviceID").ToString());
                     }
                 }
             }
-            return null;
+            return results.ToArray();
         }
+
+        public SerialPort(string portName)
+        {
+            if (portName == null)
+                throw new ArgumentNullException(nameof(portName));
+
+            _port = new System.IO.Ports.SerialPort(portName, 115200, System.IO.Ports.Parity.None, 8, System.IO.Ports.StopBits.One);
+        }
+
 
         public Task Open()
         {
