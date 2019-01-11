@@ -37,7 +37,7 @@ namespace ZWave4Net.Channel
                     if (deviceID == null)
                         continue;
 
-                    if (pnpDeviceID.ToString().Contains($"VID_{usbStick.VendorId:X4}&PID_{usbStick.ProductId:X4}"))
+                    if (pnpDeviceID.ToString().Contains($"VID_{usbStick.VendorID:X4}&PID_{usbStick.ProductID:X4}"))
                     {
                         results.Add(deviceID.ToString());
                     }

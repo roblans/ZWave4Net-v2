@@ -1,22 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ZWave4Net
+﻿namespace ZWave4Net
 {
     public class UsbStick
     {
         public readonly string Name;
-        public readonly ushort VendorId;
-        public readonly ushort ProductId;
+        public readonly ushort VendorID;
+        public readonly ushort ProductID;
 
         public static readonly UsbStick AeotecZStick = new UsbStick("Aeotec Z-Stick", 0x0658, 0x0200);
 
-        public UsbStick(string name, ushort vendorId, ushort productId)
+        public UsbStick(string name, ushort vendorID, ushort productID)
         {
             Name = name;
-            VendorId = vendorId;
-            ProductId = productId;
+            VendorID = vendorID;
+            ProductID = productID;
         }
     }
 }
