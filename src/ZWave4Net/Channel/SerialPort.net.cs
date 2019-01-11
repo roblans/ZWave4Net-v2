@@ -26,13 +26,20 @@ namespace ZWave4Net.Channel
 
             using (var searcher = new ManagementObjectSearcher(@"SELECT * FROM WIN32_SerialPort"))
             {
-                var ports = searcher.Get().Cast<ManagementBaseObject>().ToArray();
-                foreach (var port in ports)
+                var managementObjects = searcher.Get().Cast<ManagementBaseObject>().ToArray();
+                foreach (var managementObject in managementObjects)
                 {
-                    var deviceID = port.GetPropertyValue("PNPDeviceID").ToString();
-                    if (deviceID.Contains($"VID_{usbStick.VendorId:X4}&PID_{usbStick.ProductId:X4}"))
+                    var pnpDeviceID = managementObject.GetPropertyValue("PNPDeviceID");
+                    if (pnpDeviceID == null)
+                        continue;
+
+                    var deviceID = managementObject.GetPropertyValue("DeviceID");
+                    if (deviceID == null)
+                        continue;
+
+                    if (pnpDeviceID.ToString().Contains($"VID_{usbStick.VendorId:X4}&PID_{usbStick.ProductId:X4}"))
                     {
-                        results.Add(port.GetPropertyValue("DeviceID").ToString());
+                        results.Add(deviceID.ToString());
                     }
                 }
             }
