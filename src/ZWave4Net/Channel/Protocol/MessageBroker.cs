@@ -20,6 +20,7 @@ namespace ZWave4Net.Channel.Protocol
         private readonly ILogger _logger = Logging.Factory.CreatLogger("Broker");
         private readonly FrameReader _reader;
         private readonly FrameWriter _writer;
+        private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
 
         private IConnectableObservable<Frame> _observable;
 
@@ -178,8 +179,6 @@ namespace ZWave4Net.Channel.Protocol
             if (message == null)
                 throw new ArgumentNullException(nameof(message));
 
-            var stopwatch = Stopwatch.StartNew();
-
             // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.5.2 Request/Response frame flow
             // Note that due to the simple nature of the simple acknowledge mechanism, only one REQ->RES session is allowed.
             await _sendLock.WaitAsync(cancellationToken);
@@ -218,11 +217,25 @@ namespace ZWave4Net.Channel.Protocol
                             else
                                 _logger.LogWarning($"Resending: {frame}, attempt: {retransmissions}");
 
+                            // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.3 Retransmission
+                            // Twaiting = 100ms + n*1000ms 
+                            // where n is incremented at each retransmission. n = 0 is used for the first waiting period.
+                            var waitTime = ProtocolSettings.RetryDelayWaitTime.TotalMilliseconds + (retransmissions++ * ProtocolSettings.RetryAttemptWaitTime.TotalMilliseconds);
+
+                            // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.2.2 Data frame delivery timeout
+                            // The transmitter MAY compensate for the 1600ms already elapsed when calculating the retransmission waiting period
+                            waitTime -= _stopwatch.ElapsedMilliseconds;
+                            if (waitTime > 0)
+                            {
+                                Console.WriteLine($"Waiting: {waitTime}");
+                                await Task.Delay((int)waitTime, cancellationToken);
+                            }
+
                             // send the request
                             await _writer.Write(frame, cancellationToken);
 
-                            // mesasure time until frame received
-                            stopwatch.Restart();
+                            // restart timing
+                            _stopwatch.Restart();
 
                             try
                             {
@@ -259,18 +272,6 @@ namespace ZWave4Net.Channel.Protocol
                                     throw new TimeoutException("Timeout while waiting for an ACK");
                             }
                         }
-                    }
-                    // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.3 Retransmission
-                    // Twaiting = 100ms + n*1000ms 
-                    // where n is incremented at each retransmission. n = 0 is used for the first waiting period.
-                    var waitTime = ProtocolSettings.RetryDelayWaitTime.TotalMilliseconds + (retransmissions++ * ProtocolSettings.RetryAttemptWaitTime.TotalMilliseconds);
-
-                    // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.2.2 Data frame delivery timeout
-                    // The transmitter MAY compensate for the 1600ms already elapsed when calculating the retransmission waiting period
-                    waitTime -= stopwatch.ElapsedMilliseconds;
-                    if (waitTime > 0)
-                    {
-                        await Task.Delay((int)waitTime, cancellationToken);
                     }
                 }
             }
