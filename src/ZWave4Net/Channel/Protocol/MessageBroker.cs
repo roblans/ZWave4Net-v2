@@ -227,7 +227,6 @@ namespace ZWave4Net.Channel.Protocol
                             waitTime -= _stopwatch.ElapsedMilliseconds;
                             if (waitTime > 0)
                             {
-                                Console.WriteLine($"Waiting: {waitTime}");
                                 await Task.Delay((int)waitTime, cancellationToken);
                             }
 
