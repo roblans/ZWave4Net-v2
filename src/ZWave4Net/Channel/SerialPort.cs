@@ -1,5 +1,4 @@
-﻿#if NETFRAMEWORK
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management;
@@ -39,9 +38,9 @@ namespace ZWave4Net.Channel
                     if (deviceID == null)
                         continue;
 
-                    if (pnpDeviceID.ToString().Contains($"VID_{usbStick.VendorID:X4}&PID_{usbStick.ProductID:X4}"))
+                    if (pnpDeviceID.Value.ToString().Contains($"VID_{usbStick.VendorID:X4}&PID_{usbStick.ProductID:X4}"))
                     {
-                        results.Add(deviceID.ToString());
+                        results.Add(deviceID.Value.ToString());
                     }
                 }
             }
@@ -94,33 +93,28 @@ namespace ZWave4Net.Channel
             return Task.CompletedTask;
         }
 
-        public Task<byte[]> Read(int length, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<byte[]> Read(int length, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (length < 0)
                 throw new ArgumentOutOfRangeException(nameof(length), length, "length cannot be less than 0");
             if (length == 0)
-                return Task.FromResult(new byte[0]);
+                return new byte[0];
 
-            return Task.Run(() =>
+            var buffer = new byte[length];
+            var read = 0;
+            while (read < length)
             {
-                var buffer = new byte[length];
-                var read = 0;
-
-                while (read < length)
+                cancellationToken.ThrowIfCancellationRequested();
+                try
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    try
-                    {
-                        read += _port.Read(buffer, read, Math.Min(_port.BytesToRead, length - read));
-                    }
-                    catch (System.IO.IOException ex)
-                    {
-                        throw new StreamClosedException(ex.Message, ex);
-                    }
+                    read += await _port.BaseStream.ReadAsync(buffer, read, length - read, cancellationToken);
                 }
-                return buffer;
-            }, cancellationToken);
+                catch (System.IO.IOException ex)
+                {
+                    throw new StreamClosedException(ex.Message, ex);
+                }
+            }
+            return buffer;
         }
 
         public Task Write(byte[] values, CancellationToken cancellationToken = default(CancellationToken))
@@ -130,11 +124,7 @@ namespace ZWave4Net.Channel
             if (values.Length == 0)
                 return Task.CompletedTask;
 
-            return Task.Run(() =>
-            {
-                _port.Write(values, 0, values.Length);
-            }, cancellationToken);
+            return _port.BaseStream.WriteAsync(values, 0, values.Length, cancellationToken);
         }
     }
 }
-#endif

@@ -55,7 +55,6 @@ namespace ZWave4Net
             Channel = new ZWaveChannel(port);
         }
 
-#if NETFRAMEWORK
         /// <summary>
         /// Initializes an new instance of the ZWaveController
         /// </summary>
@@ -81,7 +80,6 @@ namespace ZWave4Net
             var port = new SerialPort(serialPortName);
             Channel = new ZWaveChannel(port);
         }
-#endif
 
         /// <summary>
         /// Opens the controller

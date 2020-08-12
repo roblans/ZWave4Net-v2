@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ZWave4Net.Channel.Protocol;
-using System.Reactive.Linq;
 
 namespace ZWave4Net.Channel
 {
