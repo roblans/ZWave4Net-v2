@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ZWave4Net
+namespace ZWave
 {
     // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 7.4 Node List Command 
     public enum ZWaveChipType

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace ZWave4Net.CommandClasses
+namespace ZWave.CommandClasses
 {
     public class MultiChannelAssociationReport : Report
     {

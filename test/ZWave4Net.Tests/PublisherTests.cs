@@ -1,8 +1,8 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ZWave4Net.Utilities;
+using ZWave.Utilities;
 
-namespace ZWave4Net.Tests
+namespace ZWave.Tests
 {
     [TestClass]
     public class PublisherTests

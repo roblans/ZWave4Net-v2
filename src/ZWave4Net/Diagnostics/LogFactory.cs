@@ -2,9 +2,9 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
-using ZWave4Net.Utilities;
+using ZWave.Utilities;
 
-namespace ZWave4Net.Diagnostics
+namespace ZWave.Diagnostics
 {
     internal class LogFactory : ILogFactory
     {

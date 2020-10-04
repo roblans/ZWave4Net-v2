@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ZWave4Net.Channel.Protocol.Frames
+namespace ZWave.Channel.Protocol.Frames
 {
     internal class FrameWriter
     {

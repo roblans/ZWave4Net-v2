@@ -6,10 +6,10 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using ZWave4Net.Channel;
-using ZWave4Net.Diagnostics;
+using ZWave.Channel;
+using ZWave.Diagnostics;
 
-namespace ZWave4Net.Tests
+namespace ZWave.Tests
 {
     public class MockDuplexStream : IDuplexStream
     {

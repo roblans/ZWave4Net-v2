@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
-namespace ZWave4Net.Utilities
+namespace ZWave.Utilities
 {
     internal class Publisher
     {

@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace ZWave4Net.CommandClasses
+namespace ZWave.CommandClasses
 {
     /// <summary>
     /// The Multi Channel command class is used to address one or more end points in a Multi Channel device. 

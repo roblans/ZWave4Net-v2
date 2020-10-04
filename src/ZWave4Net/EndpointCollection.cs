@@ -5,7 +5,7 @@ using System.Text;
 using System.Collections;
 using System.Collections.Concurrent;
 
-namespace ZWave4Net
+namespace ZWave
 {
     /// <summary>
     ///  Collection of endpoints for a node

@@ -1,4 +1,4 @@
-﻿namespace ZWave4Net
+﻿namespace ZWave
 {
     public class UsbStick
     {

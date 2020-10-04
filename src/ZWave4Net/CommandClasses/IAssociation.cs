@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace ZWave4Net.CommandClasses
+namespace ZWave.CommandClasses
 {
     /// <summary>
     /// The Association command class is used to manage associations to NodeID destinations. A NodeID destination may be a simple device or the Root Device of a Multi Channel device.

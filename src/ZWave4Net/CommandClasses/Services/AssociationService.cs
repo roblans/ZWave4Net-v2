@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
-using ZWave4Net.Channel;
+using ZWave.Channel;
 
-namespace ZWave4Net.CommandClasses.Services
+namespace ZWave.CommandClasses.Services
 {
     internal class AssociationService : CommandClassService, IAssociation
     {

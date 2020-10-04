@@ -2,9 +2,9 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
-using ZWave4Net.CommandClasses;
+using ZWave.CommandClasses;
 
-namespace ZWave4Net
+namespace ZWave
 {
     /// <summary>
     /// Represents a Node Information Frame

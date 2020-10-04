@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace ZWave4Net.CommandClasses
+namespace ZWave.CommandClasses
 {
     /// <summary>
     /// The Multi Channel Association Command Class is used to manage associations to Multi Channel End Point destinations as well as to NodeID destination

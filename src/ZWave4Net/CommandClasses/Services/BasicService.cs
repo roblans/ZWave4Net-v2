@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using ZWave4Net.Channel;
+using ZWave.Channel;
 using System.Reactive.Linq;
 using System.Threading;
 
-namespace ZWave4Net.CommandClasses.Services
+namespace ZWave.CommandClasses.Services
 {
     internal class BasicService : CommandClassService, IBasic
     {

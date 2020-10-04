@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ZWave4Net.Channel
+namespace ZWave.Channel
 {
     internal interface IEncapsulatedCommand
     {

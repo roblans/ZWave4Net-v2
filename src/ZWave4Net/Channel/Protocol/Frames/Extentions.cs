@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 
-namespace ZWave4Net.Channel.Protocol.Frames
+namespace ZWave.Channel.Protocol.Frames
 {
     public static partial class Extentions
     {

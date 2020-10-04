@@ -5,13 +5,13 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using ZWave4Net;
-using ZWave4Net.Channel;
-using ZWave4Net.Channel.Protocol;
-using ZWave4Net.CommandClasses;
-using ZWave4Net.Diagnostics;
+using ZWave;
+using ZWave.Channel;
+using ZWave.Channel.Protocol;
+using ZWave.CommandClasses;
+using ZWave.Diagnostics;
 using System.Reactive.Linq;
-using ZWave4Net.Channel.Protocol.Frames;
+using ZWave.Channel.Protocol.Frames;
 
 namespace ChannelConsole
 {

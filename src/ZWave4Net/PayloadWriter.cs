@@ -3,9 +3,9 @@ using System.Linq;
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
-using ZWave4Net.Channel;
+using ZWave.Channel;
 
-namespace ZWave4Net
+namespace ZWave
 {
     public class PayloadWriter : IDisposable
     {

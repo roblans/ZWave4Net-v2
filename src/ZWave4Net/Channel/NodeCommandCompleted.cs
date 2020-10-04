@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using ZWave4Net.Channel.Protocol;
+using ZWave.Channel.Protocol;
 
-namespace ZWave4Net.Channel
+namespace ZWave.Channel
 {
     internal class NodeCommandCompleted : IPayloadSerializable
     {

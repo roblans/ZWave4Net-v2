@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
-using ZWave4Net.CommandClasses;
-using ZWave4Net.Channel.Protocol;
+using ZWave.CommandClasses;
+using ZWave.Channel.Protocol;
 
-namespace ZWave4Net.Channel
+namespace ZWave.Channel
 {
     // <summary>
     // SDS12657-12-Z-Wave-Command-Class-Specification-A-M.pdf | 4.41.1 CRC-16 Encapsulated Command

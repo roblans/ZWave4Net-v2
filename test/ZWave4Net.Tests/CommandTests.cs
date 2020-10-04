@@ -3,11 +3,11 @@ using System.Text;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Linq;
-using ZWave4Net;
-using ZWave4Net.Channel;
-using ZWave4Net.CommandClasses;
+using ZWave;
+using ZWave.Channel;
+using ZWave.CommandClasses;
 
-namespace ZWave4Net.Tests
+namespace ZWave.Tests
 {
     /// <summary>
     /// Summary description for CommandTests

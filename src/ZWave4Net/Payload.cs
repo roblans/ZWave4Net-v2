@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Collections;
 
-namespace ZWave4Net
+namespace ZWave
 {
     public class Payload : IEnumerable<byte>, IPayloadSerializable
     {

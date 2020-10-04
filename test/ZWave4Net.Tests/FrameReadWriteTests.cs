@@ -3,10 +3,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ZWave4Net.Channel.Protocol;
-using ZWave4Net.Channel.Protocol.Frames;
+using ZWave.Channel.Protocol;
+using ZWave.Channel.Protocol.Frames;
 
-namespace ZWave4Net.Tests
+namespace ZWave.Tests
 {
     [TestClass]
     public class FrameReadWriteTests

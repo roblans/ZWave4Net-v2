@@ -4,7 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ZWave4Net.CommandClasses
+namespace ZWave.CommandClasses
 {
     /// <summary>
     /// The IBasic command class allows a controlling device to operate the primary functionality of a supporting device without any further knowledge.

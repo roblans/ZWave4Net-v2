@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ZWave4Net.Channel.Protocol
+namespace ZWave.Channel.Protocol
 {
     /// <summary>
     /// Event from controller to host

@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using ZWave4Net.Channel.Protocol;
-using ZWave4Net.Channel.Protocol.Frames;
-using ZWave4Net.Diagnostics;
+using ZWave.Channel.Protocol;
+using ZWave.Channel.Protocol.Frames;
+using ZWave.Diagnostics;
 using System.Reactive.Linq;
-using ZWave4Net.Utilities;
+using ZWave.Utilities;
 
-namespace ZWave4Net.Channel
+namespace ZWave.Channel
 {
     public class ZWaveChannel
     {

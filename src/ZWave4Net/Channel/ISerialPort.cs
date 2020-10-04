@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ZWave4Net.Channel
+namespace ZWave.Channel
 {
     public interface ISerialPort : IDuplexStream
     {

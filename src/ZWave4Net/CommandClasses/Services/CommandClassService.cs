@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using ZWave4Net.Channel;
-using ZWave4Net.Channel.Protocol;
+using ZWave.Channel;
+using ZWave.Channel.Protocol;
 using System.Reactive.Linq;
 using System.Threading;
 
-namespace ZWave4Net.CommandClasses.Services
+namespace ZWave.CommandClasses.Services
 {
     internal abstract class CommandClassService
     {

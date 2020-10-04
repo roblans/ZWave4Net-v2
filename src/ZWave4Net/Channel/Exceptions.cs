@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using ZWave4Net.Channel.Protocol.Frames;
+using ZWave.Channel.Protocol.Frames;
 
-namespace ZWave4Net.Channel
+namespace ZWave.Channel
 {
     public class StreamClosedException : Exception
     {

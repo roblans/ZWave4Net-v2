@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ZWave4Net.CommandClasses
+namespace ZWave.CommandClasses
 {
     public class PowerlevelReport : Report
     {

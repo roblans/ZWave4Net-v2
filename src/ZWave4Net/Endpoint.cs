@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using ZWave4Net.Channel;
-using ZWave4Net.CommandClasses;
+using ZWave.Channel;
+using ZWave.CommandClasses;
 
-namespace ZWave4Net
+namespace ZWave
 {
     public class Endpoint : IEquatable<Endpoint>
     {

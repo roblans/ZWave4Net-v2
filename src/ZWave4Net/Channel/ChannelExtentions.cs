@@ -2,9 +2,9 @@
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using ZWave4Net.Channel.Protocol;
+using ZWave.Channel.Protocol;
 
-namespace ZWave4Net.Channel
+namespace ZWave.Channel
 {
     public static partial class ChannelExtentions
     {

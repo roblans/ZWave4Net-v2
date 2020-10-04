@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ZWave4Net.Diagnostics
+namespace ZWave.Diagnostics
 {
     public interface ILogger
     {

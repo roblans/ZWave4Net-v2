@@ -4,9 +4,9 @@ using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using ZWave4Net.Channel.Protocol;
+using ZWave.Channel.Protocol;
 
-namespace ZWave4Net.Channel
+namespace ZWave.Channel
 {
     public static partial class ObservableExtentions
     {

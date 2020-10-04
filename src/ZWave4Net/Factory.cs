@@ -3,10 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using ZWave4Net.CommandClasses;
-using ZWave4Net.CommandClasses.Services;
+using ZWave.CommandClasses;
+using ZWave.CommandClasses.Services;
 
-namespace ZWave4Net
+namespace ZWave
 {
     internal static class Factory
     {

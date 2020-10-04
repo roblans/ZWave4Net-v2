@@ -2,9 +2,9 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
-using ZWave4Net.Diagnostics;
+using ZWave.Diagnostics;
 
-namespace ZWave4Net.Channel.Protocol
+namespace ZWave.Channel.Protocol
 {
     internal abstract class Message : IEquatable<Message>
     {

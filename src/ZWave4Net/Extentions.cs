@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using ZWave4Net.Channel;
+using ZWave.Channel;
 
-namespace ZWave4Net
+namespace ZWave
 {
     internal static partial class Extentions
     {

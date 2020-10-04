@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 
-namespace ZWave4Net.CommandClasses
+namespace ZWave.CommandClasses
 {
     public class MultiChannelCapabilityReport : Report
     {

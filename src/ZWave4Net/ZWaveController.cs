@@ -4,12 +4,12 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using ZWave4Net;
-using ZWave4Net.Channel;
-using ZWave4Net.Channel.Protocol;
-using ZWave4Net.Channel.Protocol.Frames;
+using ZWave;
+using ZWave.Channel;
+using ZWave.Channel.Protocol;
+using ZWave.Channel.Protocol.Frames;
 
-namespace ZWave4Net
+namespace ZWave
 {
     /// <summary>
     /// A controller is a Z-Wave device that has a full routing table and is therefore able to communicate with all nodes in the Z-Wave network

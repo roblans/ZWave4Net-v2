@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Collections;
 
-namespace ZWave4Net
+namespace ZWave
 {
     /// <summary>
     ///  Collection of nodes for a controller

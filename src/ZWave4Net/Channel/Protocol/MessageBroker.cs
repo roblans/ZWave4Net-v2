@@ -7,13 +7,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
-using ZWave4Net.Channel.Protocol.Frames;
-using ZWave4Net.Diagnostics;
-using ZWave4Net.Utilities;
+using ZWave.Channel.Protocol.Frames;
+using ZWave.Diagnostics;
+using ZWave.Utilities;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
-namespace ZWave4Net.Channel.Protocol
+namespace ZWave.Channel.Protocol
 {
     internal class MessageBroker
     {

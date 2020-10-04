@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ZWave4Net
+namespace ZWave
 {
     [Flags()]
     public enum Security : byte

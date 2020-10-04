@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace ZWave4Net.Channel.Protocol.Frames
+namespace ZWave.Channel.Protocol.Frames
 {
     internal class FrameReader
     {

@@ -6,12 +6,12 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using ZWave4Net.Channel;
-using ZWave4Net.Channel.Protocol;
-using ZWave4Net.Channel.Protocol.Frames;
-using ZWave4Net.Diagnostics;
+using ZWave.Channel;
+using ZWave.Channel.Protocol;
+using ZWave.Channel.Protocol.Frames;
+using ZWave.Diagnostics;
 
-namespace ZWave4Net.Tests
+namespace ZWave.Tests
 {
     [TestClass]
     public class MessageBrokerTests
