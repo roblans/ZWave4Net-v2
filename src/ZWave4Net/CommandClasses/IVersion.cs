@@ -13,7 +13,7 @@ namespace ZWave.CommandClasses
         /// </summary>
         /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
         /// <returns>A task that represents the asynchronous operation</returns>
-        Task<VersionReport> Get(CancellationToken cancellationToken = default(CancellationToken));
+        Task<VersionReport> Get(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// The Version Command Class Get Command is used to request the individual command class versions from a device
@@ -21,6 +21,6 @@ namespace ZWave.CommandClasses
         /// <param name="commandClass">This field specifies which command class identifier is being requested</param>
         /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
         /// <returns>A task that represents the asynchronous operation</returns>
-        Task<VersionCommandClassReport> GetCommandClass(CommandClass commandClass, CancellationToken cancellationToken = default(CancellationToken));
+        Task<VersionCommandClassReport> GetCommandClass(CommandClass commandClass, CancellationToken cancellationToken = default);
     }
 }

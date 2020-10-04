@@ -22,13 +22,13 @@ namespace ZWave.CommandClasses.Services
         {
         }
 
-        public Task<MultiChannelEndpointsReport> GetEndpoints(CancellationToken cancellationToken = default(CancellationToken))
+        public Task<MultiChannelEndpointsReport> GetEndpoints(CancellationToken cancellationToken = default)
         {
             var command = new Command(CommandClass, MultiChannelCommand.EndPointGet);
             return Send<MultiChannelEndpointsReport>(command, MultiChannelCommand.EndPointReport, cancellationToken);
         }
 
-        public Task<MultiChannelCapabilityReport> GetCapability(byte endpointID, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<MultiChannelCapabilityReport> GetCapability(byte endpointID, CancellationToken cancellationToken = default)
         {
             var command = new Command(CommandClass, MultiChannelCommand.CapabilityGet, (byte)(endpointID & 0x7F));
             return Send<MultiChannelCapabilityReport>(command, MultiChannelCommand.CapabilityReport, cancellationToken);

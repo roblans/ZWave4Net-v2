@@ -25,7 +25,7 @@ namespace ZWave.CommandClasses.Services
         {
         }
 
-        public Task<AssociationReport> Get(byte groupID, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<AssociationReport> Get(byte groupID, CancellationToken cancellationToken = default)
         {
             if (groupID == 0)
                 throw new ArgumentOutOfRangeException(nameof(groupID), groupID, "groupID must be greater than zero");
@@ -34,7 +34,7 @@ namespace ZWave.CommandClasses.Services
             return Send<AssociationReport>(command, AssociationCommand.Report, cancellationToken);
         }
 
-        public Task Set(byte groupID, byte[] nodes, CancellationToken cancellationToken = default(CancellationToken))
+        public Task Set(byte groupID, byte[] nodes, CancellationToken cancellationToken = default)
         {
             if (groupID == 0)
                 throw new ArgumentOutOfRangeException(nameof(groupID), groupID, "groupID must be greater than zero");
@@ -44,7 +44,7 @@ namespace ZWave.CommandClasses.Services
         }
 
 
-        public Task Remove(byte groupID, byte[] nodes, CancellationToken cancellationToken = default(CancellationToken))
+        public Task Remove(byte groupID, byte[] nodes, CancellationToken cancellationToken = default)
         {
             if (groupID == 0)
                 throw new ArgumentOutOfRangeException(nameof(groupID), groupID, "groupID must be greater than zero");
@@ -55,7 +55,7 @@ namespace ZWave.CommandClasses.Services
             return Send(command, cancellationToken);
         }
 
-        public Task<AssociationGroupingsReport> GetGroupings(CancellationToken cancellationToken = default(CancellationToken))
+        public Task<AssociationGroupingsReport> GetGroupings(CancellationToken cancellationToken = default)
         {
             var command = new Command(CommandClass, AssociationCommand.GroupingsGet);
             return Send<AssociationGroupingsReport>(command, AssociationCommand.GroupingsReport, cancellationToken);

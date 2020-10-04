@@ -22,13 +22,13 @@ namespace ZWave.CommandClasses.Services
         {
         }
 
-        public async Task<SwitchBinaryReport> Get(CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<SwitchBinaryReport> Get(CancellationToken cancellationToken = default)
         {
             var command = new Command(CommandClass, SwitchBinaryCommand.Get);
             return await Send<SwitchBinaryReport>(command, SwitchBinaryCommand.Report, cancellationToken);
         }
 
-        public Task Set(bool value, CancellationToken cancellationToken = default(CancellationToken))
+        public Task Set(bool value, CancellationToken cancellationToken = default)
         {
             var command = new Command(CommandClass, SwitchBinaryCommand.Set, (byte)(value ? 0xFF : 0x00));
             return Send(command, cancellationToken); 

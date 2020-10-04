@@ -131,7 +131,7 @@ namespace ZWave.Channel
             }
         }
 
-        internal async Task<T> Send<T>(RequestMessage request, IObservable<T> pipeline, CancellationToken cancellationToken = default(CancellationToken))
+        internal async Task<T> Send<T>(RequestMessage request, IObservable<T> pipeline, CancellationToken cancellationToken = default)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -139,7 +139,7 @@ namespace ZWave.Channel
                 throw new ArgumentNullException(nameof(pipeline));
 
             // use timeout only when no cancellationtoken is passed
-            var timeout = cancellationToken == default(CancellationToken) ? ResponseTimeout : TimeSpan.MaxValue;
+            var timeout = cancellationToken == default ? ResponseTimeout : TimeSpan.MaxValue;
 
             // number of retransmissions
             var retransmissions = 0;
@@ -197,7 +197,7 @@ namespace ZWave.Channel
         }
 
         // ControllerRequest: request followed by one response from the controller
-        internal async Task<T> Send<T>(ControllerRequest request, CancellationToken cancellationToken = default(CancellationToken)) where T : IPayloadSerializable, new()
+        internal async Task<T> Send<T>(ControllerRequest request, CancellationToken cancellationToken = default) where T : IPayloadSerializable, new()
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -220,7 +220,7 @@ namespace ZWave.Channel
         // NodeCommand, no return value. Request followed by:
         // 1) a response from the controller
         // 2) a event from the controller: command deliverd at node)  
-        internal async Task Send(byte nodeID, Command command, CancellationToken cancellationToken = default(CancellationToken))
+        internal async Task Send(byte nodeID, Command command, CancellationToken cancellationToken = default)
         {
             if (nodeID == 0)
                 throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");
@@ -267,7 +267,7 @@ namespace ZWave.Channel
         // 1) a response from the controller
         // 2) a event from the controller: command deliverd at node)  
         // 3) a event from the node: return value
-        internal async Task<Command> Send(byte nodeID, Command command, byte responseCommandID, CancellationToken cancellationToken = default(CancellationToken))
+        internal async Task<Command> Send(byte nodeID, Command command, byte responseCommandID, CancellationToken cancellationToken = default)
         {
             if (nodeID == 0)
                 throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID must be greater than 0");

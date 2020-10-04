@@ -17,7 +17,7 @@ namespace ZWave.Channel.Protocol.Frames
             return values.Aggregate((byte)0xFF, (total, next) => total ^= next);
         }
 
-        public static Task WriteHeader(this IDuplexStream stream, FrameHeader header, CancellationToken cancellationToken = default(CancellationToken))
+        public static Task WriteHeader(this IDuplexStream stream, FrameHeader header, CancellationToken cancellationToken = default)
         {
             if (stream == null)
                 throw new ArgumentNullException(nameof(stream));
@@ -25,7 +25,7 @@ namespace ZWave.Channel.Protocol.Frames
             return stream.Write(new[] { (byte)header }, cancellationToken);
         }
 
-        public static async Task<byte> ReadByte(this IDuplexStream stream, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<byte> ReadByte(this IDuplexStream stream, CancellationToken cancellationToken = default)
         {
             if (stream == null)
                 throw new ArgumentNullException(nameof(stream));
@@ -33,7 +33,7 @@ namespace ZWave.Channel.Protocol.Frames
             return (await stream.Read(1, cancellationToken)).Single();
         }
 
-        public static async Task<FrameHeader> ReadHeader(this IDuplexStream stream, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<FrameHeader> ReadHeader(this IDuplexStream stream, CancellationToken cancellationToken = default)
         {
             if (stream == null)
                 throw new ArgumentNullException(nameof(stream));

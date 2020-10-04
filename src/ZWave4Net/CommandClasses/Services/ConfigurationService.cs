@@ -21,16 +21,16 @@ namespace ZWave.CommandClasses.Services
         {
         }
 
-        public Task<ConfigurationReport> Get(byte parameter, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<ConfigurationReport> Get(byte parameter, CancellationToken cancellationToken = default)
         {
             var command = new Command(CommandClass, ConfigurationCommand.Get, parameter);
             return Send<ConfigurationReport>(command, ConfigurationCommand.Report, cancellationToken);
         }
 
-        public Task Set(byte parameter, object value, byte size, CancellationToken cancellationToken = default(CancellationToken))
+        public Task Set(byte parameter, object value, byte size, CancellationToken cancellationToken = default)
         {
-            if (size != 1 && size != 2 && size != 4)
-                throw new ArgumentOutOfRangeException(nameof(size), size, "size must be 1, 2 or 4");
+            if (size < 1 || size > 4)
+                throw new ArgumentOutOfRangeException(nameof(size), size, "Size must be between 1 and 4");
 
             using (var writer = new PayloadWriter())
             {
@@ -43,6 +43,9 @@ namespace ZWave.CommandClasses.Services
                         break;
                     case 2:
                         writer.WriteInt16(Convert.ToInt16(value));
+                        break;
+                    case 3:
+                        writer.WriteInt24(Convert.ToInt16(value));
                         break;
                     case 4:
                         writer.WriteInt32(Convert.ToInt32(value));

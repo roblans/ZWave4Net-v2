@@ -93,7 +93,7 @@ namespace ZWave.Channel
             return Task.CompletedTask;
         }
 
-        public async Task<byte[]> Read(int length, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<byte[]> Read(int length, CancellationToken cancellationToken = default)
         {
             if (length < 0)
                 throw new ArgumentOutOfRangeException(nameof(length), length, "length cannot be less than 0");
@@ -117,7 +117,7 @@ namespace ZWave.Channel
             return buffer;
         }
 
-        public Task Write(byte[] values, CancellationToken cancellationToken = default(CancellationToken))
+        public Task Write(byte[] values, CancellationToken cancellationToken = default)
         {
             if (values == null)
                 throw new ArgumentNullException(nameof(values));

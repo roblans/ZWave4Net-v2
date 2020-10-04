@@ -57,7 +57,7 @@ namespace ZWave.CommandClasses.Services
             return command;
         }
 
-        protected Task Send(Command command, CancellationToken cancellationToken = default(CancellationToken))
+        protected Task Send(Command command, CancellationToken cancellationToken = default)
         {
             if (command == null)
                 throw new ArgumentNullException(nameof(command));
@@ -67,7 +67,7 @@ namespace ZWave.CommandClasses.Services
             return Controller.Channel.Send(Node.NodeID, transportCommand, cancellationToken);
         }
 
-        protected async Task<T> Send<T>(Command command, Enum responseCommand, CancellationToken cancellationToken = default(CancellationToken)) where T : Report, new()
+        protected async Task<T> Send<T>(Command command, Enum responseCommand, CancellationToken cancellationToken = default) where T : Report, new()
         {
             if (command == null)
                 throw new ArgumentNullException(nameof(command));

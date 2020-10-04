@@ -5,6 +5,6 @@ namespace ZWave.CommandClasses
 {
     public interface IFirmwareUpdateMetaData
     {
-        Task<FirmwareUpdateMetaDataReport> Get(CancellationToken cancellation = default(CancellationToken));
+        Task<FirmwareUpdateMetaDataReport> Get(CancellationToken cancellation = default);
     }
 }

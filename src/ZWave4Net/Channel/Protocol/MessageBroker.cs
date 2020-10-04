@@ -36,7 +36,7 @@ namespace ZWave.Channel.Protocol
             _writer = new FrameWriter(stream);
         }
 
-        public void Run(CancellationToken cancellationToken = default(CancellationToken))
+        public void Run(CancellationToken cancellationToken = default)
         {
             // create the Observable, use Publish so frame are all published to all subcribers 
             _observable = Observable.Create<Frame>(observer => Execute(observer, cancellationToken)).Publish();
@@ -51,7 +51,7 @@ namespace ZWave.Channel.Protocol
             });
         }
 
-        private Task Execute(IObserver<Frame> observer, CancellationToken cancellationToken = default(CancellationToken))
+        private Task Execute(IObserver<Frame> observer, CancellationToken cancellationToken = default)
         {
             if (observer == null)
                 throw new ArgumentNullException(nameof(observer));
@@ -158,7 +158,7 @@ namespace ZWave.Channel.Protocol
 
         public TaskAwaiter GetAwaiter()
         {
-            return _task?.GetAwaiter() ?? default(TaskAwaiter);
+            return _task?.GetAwaiter() ?? default;
         }
 
         public static DataFrame Encode(RequestMessage message)
@@ -174,7 +174,7 @@ namespace ZWave.Channel.Protocol
             get { return _observable.OfType<DataFrame>().Select(element => Decode(element)); }
         }
 
-        public async Task Send(RequestMessage message, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task Send(RequestMessage message, CancellationToken cancellationToken = default)
         {
             if (message == null)
                 throw new ArgumentNullException(nameof(message));

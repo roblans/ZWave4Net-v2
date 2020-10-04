@@ -8,9 +8,9 @@ namespace ZWave.Utilities
 {
     internal class Publisher
     {
-        private object _lock = new object();
+        private readonly object _lock = new object();
 
-        private List<ISubcriber> _subscribers = new List<ISubcriber>();
+        private readonly List<ISubcriber> _subscribers = new List<ISubcriber>();
 
         public IDisposable Subcribe<T>(Action<T> callback)
         {

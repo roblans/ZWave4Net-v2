@@ -22,13 +22,13 @@ namespace ZWave.CommandClasses.Services
         {
         }
 
-        public Task<BasicReport> Get(CancellationToken cancellation = default(CancellationToken))
+        public Task<BasicReport> Get(CancellationToken cancellation = default)
         {
             var command = new Command(CommandClass, BasicCommand.Get);
             return Send<BasicReport>(command, BasicCommand.Report, cancellation);
         }
 
-        public Task Set(byte value, CancellationToken cancellation = default(CancellationToken))
+        public Task Set(byte value, CancellationToken cancellation = default)
         {
             var command = new Command(CommandClass, BasicCommand.Set, value);
             return Send(command, cancellation); 

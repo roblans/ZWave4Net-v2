@@ -21,13 +21,13 @@ namespace ZWave.CommandClasses.Services
         {
         }
 
-        public Task<PowerlevelReport> Get(CancellationToken cancellation = default(CancellationToken))
+        public Task<PowerlevelReport> Get(CancellationToken cancellation = default)
         {
             var command = new Command(CommandClass, PowerlevelCommand.Get);
             return Send<PowerlevelReport>(command, PowerlevelCommand.Report, cancellation);
         }
 
-        public Task Set(Powerlevel Level, TimeSpan timeout, CancellationToken cancellation = default(CancellationToken))
+        public Task Set(Powerlevel Level, TimeSpan timeout, CancellationToken cancellation = default)
         {
             if (timeout.TotalSeconds < 1 || timeout.TotalSeconds > 255)
                 throw new ArgumentOutOfRangeException(nameof(timeout), timeout, "Timout must be between 1 and 255 seconds");

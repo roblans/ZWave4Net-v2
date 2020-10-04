@@ -13,7 +13,7 @@ namespace ZWave.CommandClasses
         /// </summary>
         /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
         /// <returns>A task that represents the asynchronous operation</returns>
-        Task<MultiChannelEndpointsReport> GetEndpoints(CancellationToken cancellationToken = default(CancellationToken));
+        Task<MultiChannelEndpointsReport> GetEndpoints(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// The Multi Channel Capability Get Command is used to query the capabilities of End Points
@@ -21,6 +21,6 @@ namespace ZWave.CommandClasses
         /// <param name="endpointID">The ID of the endpoint</param>
         /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
         /// <returns>A task that represents the asynchronous operation</returns>
-        Task<MultiChannelCapabilityReport> GetCapability(byte endpointID, CancellationToken cancellationToken = default(CancellationToken));
+        Task<MultiChannelCapabilityReport> GetCapability(byte endpointID, CancellationToken cancellationToken = default);
     }
 }

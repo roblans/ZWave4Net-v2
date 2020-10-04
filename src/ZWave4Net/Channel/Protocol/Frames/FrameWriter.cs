@@ -16,7 +16,7 @@ namespace ZWave.Channel.Protocol.Frames
             Stream = stream ?? throw new ArgumentNullException(nameof(stream));
         }
 
-        public async Task Write(Frame frame, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task Write(Frame frame, CancellationToken cancellationToken = default)
         {
             if (frame == null)
                 throw new ArgumentNullException(nameof(frame));
@@ -34,7 +34,7 @@ namespace ZWave.Channel.Protocol.Frames
             }
         }
 
-        private async Task Write(DataFrame frame, CancellationToken cancellationToken = default(CancellationToken))
+        private async Task Write(DataFrame frame, CancellationToken cancellationToken = default)
         {
             if (frame == null)
                 throw new ArgumentNullException(nameof(frame));

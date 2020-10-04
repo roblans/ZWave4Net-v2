@@ -34,13 +34,13 @@ namespace ZWave.Tests
 
             publisher1.Dispose();
 
-            result1 = default(int);
-            result2 = default(string);
+            result1 = default;
+            result2 = default;
 
             publisher.Publish(value1);
             publisher.Publish(value2);
 
-            Assert.AreEqual(result1, default(int));
+            Assert.AreEqual(result1, default);
             Assert.AreEqual(result2, value2);
         }
     }

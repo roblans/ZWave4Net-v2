@@ -12,7 +12,7 @@ namespace ZWave
     /// </summary>
     public class EndpointCollection : IEnumerable<Endpoint>
     {
-        private ConcurrentDictionary<byte, Endpoint> _endpoints = new ConcurrentDictionary<byte, Endpoint>();
+        private readonly ConcurrentDictionary<byte, Endpoint> _endpoints = new ConcurrentDictionary<byte, Endpoint>();
         public readonly Node Node;
 
         internal EndpointCollection(Node node)

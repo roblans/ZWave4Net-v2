@@ -66,6 +66,14 @@ namespace ZWave
             _stream.Write(_buffer, 0, 2);
         }
 
+        public void WriteInt24(int value)
+        {
+            _buffer[0] = (byte)(value >> 16);
+            _buffer[1] = (byte)(value >> 8);
+            _buffer[2] = (byte)value;
+            _stream.Write(_buffer, 0, 3);
+        }
+
         public void WriteInt32(int value)
         {
             _buffer[0] = (byte)(value >> 24);

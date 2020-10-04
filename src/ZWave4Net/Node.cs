@@ -79,7 +79,7 @@ namespace ZWave
         /// </summary>
         /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
         /// <returns>A task that represents the asynchronous operation</returns>
-        public async Task<NodeInfo> GetNodeInfo(CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<NodeInfo> GetNodeInfo(CancellationToken cancellationToken = default)
         {
             return await Channel.SendRequestNodeInfo(NodeID, cancellationToken);
         }
@@ -89,7 +89,7 @@ namespace ZWave
         /// </summary>
         /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
         /// <returns>A task that represents the asynchronous operation</returns>
-        public async Task<Node[]> GetNeighbours(CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<Node[]> GetNeighbours(CancellationToken cancellationToken = default)
         {
             var results = new List<Node>();
 
@@ -115,7 +115,7 @@ namespace ZWave
         /// <param name="progress">A callback delegate to report progress</param>
         /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
         /// <returns>A task that represents the asynchronous operation</returns>
-        public async Task<NeighborUpdateStatus> RequestNeighborUpdate(IProgress<NeighborUpdateStatus> progress = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<NeighborUpdateStatus> RequestNeighborUpdate(IProgress<NeighborUpdateStatus> progress = null, CancellationToken cancellationToken = default)
         {
             return await Channel.SendRequestNeighborUpdate(NodeID, progress, cancellationToken);
         }

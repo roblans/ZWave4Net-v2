@@ -14,7 +14,7 @@ namespace ZWave.CommandClasses
         /// <param name="parameter">The parameter number</param>
         /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
         /// <returns>A task that represents the asynchronous operation</returns>
-        Task<ConfigurationReport> Get(byte parameter, CancellationToken cancellationToken = default(CancellationToken));
+        Task<ConfigurationReport> Get(byte parameter, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// The Configuration Set Command is used to set the value of a configuration parameter.
@@ -24,6 +24,6 @@ namespace ZWave.CommandClasses
         /// <param name="size">The size of the parameter, must be 1, 2 or 4</param>
         /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
         /// <returns>A task that represents the asynchronous operation</returns>
-        Task Set(byte parameter, object value, byte size, CancellationToken cancellationToken = default(CancellationToken));
+        Task Set(byte parameter, object value, byte size, CancellationToken cancellationToken = default);
     }
 }

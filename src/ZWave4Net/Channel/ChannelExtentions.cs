@@ -8,7 +8,7 @@ namespace ZWave.Channel
 {
     public static partial class ChannelExtentions
     {
-        public static async Task<NeighborUpdateStatus> SendRequestNeighborUpdate(this ZWaveChannel channel, byte nodeID, IProgress<NeighborUpdateStatus> progress, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<NeighborUpdateStatus> SendRequestNeighborUpdate(this ZWaveChannel channel, byte nodeID, IProgress<NeighborUpdateStatus> progress, CancellationToken cancellationToken = default)
         {
             if (channel == null)
                 throw new ArgumentNullException(nameof(channel));
@@ -44,7 +44,7 @@ namespace ZWave.Channel
             return (NeighborUpdateStatus)response[0];
         }
 
-        public static async Task<NodeInfo> SendRequestNodeInfo(this ZWaveChannel channel, byte nodeID, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<NodeInfo> SendRequestNodeInfo(this ZWaveChannel channel, byte nodeID, CancellationToken cancellationToken = default)
         {
             if (channel == null)
                 throw new ArgumentNullException(nameof(channel));

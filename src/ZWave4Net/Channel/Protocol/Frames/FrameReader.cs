@@ -17,7 +17,7 @@ namespace ZWave.Channel.Protocol.Frames
             Stream = stream ?? throw new ArgumentNullException(nameof(stream));
         }
 
-        public async Task<Frame> Read(CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<Frame> Read(CancellationToken cancellationToken = default)
         {
             while (true)
             {
@@ -39,7 +39,7 @@ namespace ZWave.Channel.Protocol.Frames
             }
         }
 
-        private async Task<DataFrame> ReadDataFrame(CancellationToken cancellationToken = default(CancellationToken))
+        private async Task<DataFrame> ReadDataFrame(CancellationToken cancellationToken = default)
         {
             // INS12350-Serial-API-Host-Appl.-Prg.-Guide | 6.2.1 Data frame reception timeout
             // A receiving host or Z-Wave chip MUST abort reception of a Data frame if the reception has lasted for 

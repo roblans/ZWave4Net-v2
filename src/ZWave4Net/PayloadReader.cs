@@ -87,6 +87,12 @@ namespace ZWave
             return (ushort)(_buffer[0] << 8 | _buffer[1]);
         }
 
+        public int ReadInt24()
+        {
+            FillBuffer(3);
+            return (_buffer[0] << 16 | _buffer[1] << 8 | _buffer[2]);
+        }
+
         public int ReadInt32()
         {
             FillBuffer(4);

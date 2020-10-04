@@ -14,14 +14,14 @@ namespace ZWave.CommandClasses
         /// <param name="groupID">This field is used to specify the actual association group. Grouping Identifiers MUST be assigned in a consecutive range starting from 1.</param>
         /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
         /// <returns>A task that represents the asynchronous operation</returns>
-        Task<MultiChannelAssociationReport> Get(byte groupId, CancellationToken cancellationToken = default(CancellationToken));
+        Task<MultiChannelAssociationReport> Get(byte groupId, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// This command is used to advertise the maximum number of association groups implemented by this node.
         /// </summary>
         /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
         /// <returns>A task that represents the asynchronous operation</returns>
-        Task<AssociationGroupingsReport> GetGroupings(CancellationToken cancellationToken = default(CancellationToken));
+        Task<AssociationGroupingsReport> GetGroupings(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// This command is used to request that one or more destinations are added to a given association group
@@ -31,7 +31,7 @@ namespace ZWave.CommandClasses
         /// <param name="endpoints">This fields specify a list of Endpoints which are to be added to the specified association group as an End Point association</param>
         /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
         /// <returns>A task that represents the asynchronous operation</returns>
-        Task Set(byte groupID, byte[] nodes, EndpointAssociation[] endpoints, CancellationToken cancellationToken = default(CancellationToken));
+        Task Set(byte groupID, byte[] nodes, EndpointAssociation[] endpoints, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// This command is used to remove Nodes and Endpoint destinations from a given association group
@@ -41,6 +41,6 @@ namespace ZWave.CommandClasses
         /// <param name="endpoints">This fields specify a list of Endpoints which are to be removed from the specified association group as an End Point association</param>
         /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
         /// <returns>A task that represents the asynchronous operation</returns>
-        Task Remove(byte groupID, byte[] nodes, EndpointAssociation[] endpoints, CancellationToken cancellationToken = default(CancellationToken));
+        Task Remove(byte groupID, byte[] nodes, EndpointAssociation[] endpoints, CancellationToken cancellationToken = default);
     }
 }

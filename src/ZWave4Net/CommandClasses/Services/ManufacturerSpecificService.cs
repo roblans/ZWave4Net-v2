@@ -20,7 +20,7 @@ namespace ZWave.CommandClasses.Services
         {
         }
 
-        public Task<ManufacturerSpecificReport> Get(CancellationToken cancellationToken = default(CancellationToken))
+        public Task<ManufacturerSpecificReport> Get(CancellationToken cancellationToken = default)
         {
             var command = new Command(CommandClass, ManufacturerSpecificCommand.Get);
             return Send<ManufacturerSpecificReport>(command, ManufacturerSpecificCommand.Report, cancellationToken);

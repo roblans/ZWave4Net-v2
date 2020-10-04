@@ -20,7 +20,7 @@ namespace ZWave.CommandClasses.Services
         {
         }
 
-        public Task<FirmwareUpdateMetaDataReport> Get(CancellationToken cancellation = default(CancellationToken))
+        public Task<FirmwareUpdateMetaDataReport> Get(CancellationToken cancellation = default)
         {
             var command = new Command(CommandClass, FirmwareUpdateMetaDataCommand.Get);
             return Send<FirmwareUpdateMetaDataReport>(command, FirmwareUpdateMetaDataCommand.Report, cancellation);
