@@ -25,7 +25,7 @@ namespace ZWave4Net
 
         public override string ToString()
         {
-            return EndpointID != 0 ? $"{NodeID}.{EndpointID}" : $"{NodeID}";
+            return EndpointID != 0 ? $"{NodeID:D3}.{EndpointID:D3}" : $"{NodeID:D3}";
         }
 
         protected ZWaveChannel Channel

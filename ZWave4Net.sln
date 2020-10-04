@@ -19,8 +19,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZWave4Net.Tests", "test\ZWa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ZWaveDumper", "tools\net\ZWaveDumper\ZWaveDumper.csproj", "{F5D67A8A-DF61-469D-9617-FC0B478BF179}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZWave4Net.Devices", "src\ZWave4Net.Devices\ZWave4Net.Devices.csproj", "{970A4050-FB61-40E9-8722-7EC4D16B72B8}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,10 +41,6 @@ Global
 		{F5D67A8A-DF61-469D-9617-FC0B478BF179}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F5D67A8A-DF61-469D-9617-FC0B478BF179}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F5D67A8A-DF61-469D-9617-FC0B478BF179}.Release|Any CPU.Build.0 = Release|Any CPU
-		{970A4050-FB61-40E9-8722-7EC4D16B72B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{970A4050-FB61-40E9-8722-7EC4D16B72B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{970A4050-FB61-40E9-8722-7EC4D16B72B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{970A4050-FB61-40E9-8722-7EC4D16B72B8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -57,7 +51,6 @@ Global
 		{B752A924-1B1B-4B08-BDC6-31103D9E0E36} = {AF688601-6F6B-470A-8CF7-FF9CBA538A2F}
 		{71B5AABD-1A57-4AA5-9FAB-0015842FB9DC} = {EE140F51-C71F-4F86-A136-7349F206A517}
 		{F5D67A8A-DF61-469D-9617-FC0B478BF179} = {AF688601-6F6B-470A-8CF7-FF9CBA538A2F}
-		{970A4050-FB61-40E9-8722-7EC4D16B72B8} = {0962CA3A-9FB2-4122-B5AB-D1F3DF39DC66}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {292392AD-DCC6-460E-B745-ABE4E2BD4D0B}
