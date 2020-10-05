@@ -125,6 +125,36 @@ namespace ZWave
             return Encoding.ASCII.GetString(bytes.ToArray(), 0, bytes.Count);
         }
 
+        public double ReadDouble(out byte scale)
+        {
+            var descriptor = ReadByte();
+
+            // bits 7,6,5: precision, bits 4,3: scale, bits 2,1,0 : size
+            var precision = (byte)((descriptor & 0xE0) >> 5);
+            scale = (byte)((descriptor & 0x18) >> 3);
+            var size = (byte)(descriptor & 0x07);
+
+            switch (size)
+            {
+                case sizeof(sbyte):
+                    {
+                        var value = ReadByte();
+                        return value / Math.Pow(10, precision);
+                    }
+                case sizeof(short):
+                    {
+                        var value = ReadInt16();
+                        return value / Math.Pow(10, precision);
+                    }
+                case sizeof(int):
+                    {
+                        var value = ReadInt32();
+                        return value / Math.Pow(10, precision);
+                    }
+            }
+            return 0;
+        }
+
         public void Dispose()
         {
             _stream.Dispose();
